@@ -1,0 +1,9 @@
+[package]
+name = "git-hierarchy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.40", features = ["derive"] }
+derive = "1.0.0"
+git2 = "0.20.2"
