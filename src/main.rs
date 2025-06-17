@@ -7,6 +7,11 @@
 // get list of segments
 use git2::Repository;
 use clap::Parser;
+
+// This declaration will look for a file named `graph'.rs and will
+// insert its contents inside a module named `my` under this scope
+mod graph;
+
 // use std::path::PathBuf;
 
 // error: cannot find derive macro `Parser` in this scope
