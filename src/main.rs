@@ -5,8 +5,9 @@
 
 //
 // get list of segments
-use git2::Repository;
+use git2::{Repository,Reference,Error};
 use clap::Parser;
+// use std::error::Error;
 
 // This declaration will look for a file named `graph'.rs and will
 // insert its contents inside a module named `my` under this scope
