@@ -33,8 +33,10 @@ pub trait NodeExpander {
 
     // not object-safe:
     // so Self is not ok, but NodeExpander is ?
-    fn NodePrepare(&self) -> &dyn NodeExpander; // upgrade itself? or what
-    fn NodeChildren(&self) -> [&dyn NodeExpander]; // owned!
+    fn NodePrepare(&mut self); // -> &dyn NodeExpander; // upgrade itself? or what
+    fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
+}
+
 }
 
 struct Segment<'repo> {
