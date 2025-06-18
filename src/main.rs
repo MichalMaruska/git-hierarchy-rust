@@ -160,7 +160,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
                     //    Segment(s) =>
                     // lifetime? who keeps c up? .... so I need a Vec of Segments?
                     // or Rc .... a hashMap.
-                    self = &mut c; // .Segment =
+                    *self = c; // .Segment =
                     // return self
                 }
                 // } else { panic!("missing repo");}
