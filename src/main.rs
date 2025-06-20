@@ -199,6 +199,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
             Self::Name(x) => x,
             GitHierarchy::Segment(s) => s.reference.name().unwrap(),
             GitHierarchy::Sum(s) => s.reference.name().unwrap(),
+            GitHierarchy::Reference(r) => r.name().unwrap(),
         }
     }
 
@@ -218,6 +219,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
             }
             Self::Segment(s) => {}
             Self::Sum(s) => {}
+            Self::Reference(r) => {} // are you sure?
             //
             // GitHierarchy::segment(s) => s.name,
             // GitHierarchy::sum(s) => s.name,
@@ -242,6 +244,9 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
                 // copy
                 Vec::new()
             }
+            Self::Reference(r) => {
+                Vec::new()
+            } // are you sure?
             //
             // GitHierarchy::segment(s) => s.name,
             // GitHierarchy::sum(s) => s.name,
