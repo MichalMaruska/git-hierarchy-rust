@@ -85,8 +85,8 @@ pub fn discover_graph(mut start: Vec<&mut dyn NodeExpander>) // expander: &dyn N
 }
 
 struct Segment<'repo> {
-    reference: Reference<'repo>,
-    base: Reference<'repo>,
+    reference: Reference<'repo>, // this could point at GitHierarchy.
+    base: &'repo mut GitHierarchy<'repo>,  //  Reference<'repo>
     start: Reference<'repo>,
 }
 
@@ -158,7 +158,7 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 
             return Ok(GitHierarchy::Segment( Segment {
                 reference: reference,
-                base: symbolic_base,
+                base: &mut GitHierarchy::Reference(symbolic_base),
                 // so it's a name, not Reference, not GitHierarchy !? but it could be
                 start: start
             }));
