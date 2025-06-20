@@ -13,6 +13,9 @@
 use git2::{Repository,Reference,Error};
 use clap::Parser;
 // use std::error::Error;
+use log::{self,info,error};
+use stderrlog::LogLevelNum;
+// use tracing::{Level, event, instrument};
 
 use std::collections::HashMap;
 // This declaration will look for a file named `graph'.rs and will
@@ -265,6 +268,11 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
 
 fn main() {
     let cli = Cli::parse();
+
+    stderrlog::new().module(module_path!())
+        .verbosity(LogLevelNum::Info) // Cli.verbose Warn
+        .init()
+        .unwrap();
 
     let repo = match Repository::open(cli.directory.unwrap_or(".".to_string())) {
         Ok(repo) => repo,
