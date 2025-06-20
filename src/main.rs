@@ -140,6 +140,54 @@ fn get_repository() -> &'static Repository {
 }
 
 
+
+impl<'a> NodeExpander for GitHierarchy<'a> {
+
+    fn NodeIdentity(&self) -> &str {
+        match self {
+            Self::Name(x) => x,
+            GitHierarchy::Segment(s) => s.reference.name().unwrap(),
+            GitHierarchy::Sum(s) => s.reference.name().unwrap(),
+        }
+    }
+
+    // we need a repository!
+    fn NodePrepare(&mut self) { //  -> &str {   '1 lifetime
+        match self {
+            Self::Name(x) => {
+                if let Ok(c) = convert(x) {
+                    // match c {
+                    //    Segment(s) =>
+                    // lifetime? who keeps c up? .... so I need a Vec of Segments?
+                    // or Rc .... a hashMap.
+                    self = &mut c; // .Segment =
+                    // return self
+                }
+                // } else { panic!("missing repo");}
+            }
+            Self::Segment(s) => {}
+            Self::Sum(s) => {}
+            //
+            // GitHierarchy::segment(s) => s.name,
+            // GitHierarchy::sum(s) => s.name,
+        }
+    }
+
+    fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>> // array?
+    {
+        // just get the Names.
+
+        match self {
+            Self::Name(x) => {panic!()}
+            Self::Segment(s) => {Vec::new()}
+            Self::Sum(s) => {Vec::new()}
+            //
+            // GitHierarchy::segment(s) => s.name,
+            // GitHierarchy::sum(s) => s.name,
+        }
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
