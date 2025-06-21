@@ -86,7 +86,7 @@ pub fn discover_graph(mut start: Vec<&mut dyn NodeExpander>) // expander: &dyn N
 
 struct Segment<'repo> {
     reference: Reference<'repo>, // this could point at GitHierarchy.
-    base: &'repo mut GitHierarchy<'repo>,  //  Reference<'repo>
+    base: Reference<'repo>, //&'repo mut GitHierarchy<'repo>,  //  Reference<'repo>
     start: Reference<'repo>,
 }
 
@@ -153,12 +153,10 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
-            let symbolic_base = repository.find_reference(base.symbolic_target().
-                expect("base should be a symbolic reference")).unwrap() ;
 
             return Ok(GitHierarchy::Segment( Segment {
                 reference: reference,
-                base: &mut GitHierarchy::Reference(symbolic_base),
+                base,
                 // so it's a name, not Reference, not GitHierarchy !? but it could be
                 start: start
             }));
@@ -229,11 +227,15 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
     fn NodeChildren(&self) -> Vec<&mut dyn NodeExpander> // array?
     {
         // just get the Names.
-
+        let repository = get_repository();
         match self {
             // regular branch. say `master'
             Self::Name(x) => {Vec::new()}
-            Self::Segment(s) => {vec!( s.base)}
+            Self::Segment(s) => {
+                let symbolic_base = repository.find_reference(s.base.symbolic_target().
+                    expect("base should be a symbolic reference")).unwrap();
+                vec!( GitHierarchy::Reference(symbolic_base)) // Box::new(
+            }
             Self::Sum(s) => {
                 // copy
                 Vec::new()
