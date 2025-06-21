@@ -60,7 +60,7 @@ pub fn discover_graph(mut start: Vec<&mut dyn NodeExpander>) // expander: &dyn N
     //
     let mut current = 0;
     loop {
-        let mut this = &mut vertices[current];
+        let this = vertices.get_mut(current).unwrap();
 
         info!("visiting node {}", this.NodeIdentity()); // target: "yak_events",
         this.NodePrepare();
