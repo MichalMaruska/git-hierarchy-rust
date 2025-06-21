@@ -233,13 +233,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
         match self {
             // regular branch. say `master'
             Self::Name(x) => {Vec::new()}
-            Self::Segment(s) => {vec!(
-                Box::new(
-                    GitHierarchy::Name(
-                        // map symbolic ref !!
-                        // why to_string ?
-                        s.base.name().unwrap().to_string()
-                    )))}
+            Self::Segment(s) => {vec!( s.base)}
             Self::Sum(s) => {
                 // copy
                 Vec::new()
