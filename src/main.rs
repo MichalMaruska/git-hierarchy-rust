@@ -256,7 +256,11 @@ fn main() {
         }
     }
 
+    let mut root = GitHierarchy::Name("mmc-fixes".to_string());
+    println!("root is {}", root.NodeIdentity());
 
+
+    discover_graph(vec!(Box::new(root)) );
 
     // let msg = repo.message();
     // println!("{:?}", &head);
