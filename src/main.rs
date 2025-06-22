@@ -229,7 +229,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
         // just get the Names.
 
         match self {
-            Self::Name(x) => {panic!()}
+            Self::Name(x) => {Vec::new()}
             Self::Segment(s) => {Vec::new()}
             Self::Sum(s) => {Vec::new()}
             //
