@@ -272,18 +272,12 @@ fn main() {
     let repo = get_repository();
     // `git2::Repository` cannot be formatted with the default formatter
     // `git2::Repository` cannot be formatted using `{:?}` because it doesn't implement `std::fmt::Debug`
-    println!("{:?}", repo.namespace());
+    // println!("{:?}", repo.namespace());
     let head = repo.head();
 
-    if let Ok(refsi) = repo.references_glob (&GLOB_REFS_BASES) {
-        for reference in refsi {
-            println!("{:?}", reference.unwrap().name());
-        }
-    }
-
+    // load one Segment:
     let mut root = GitHierarchy::Name("mmc-fixes".to_string());
-
-
+    println!("root is {}", root.node_identity());
     discover_graph(vec!(Box::new(root)) );
 
     // let msg = repo.message();
