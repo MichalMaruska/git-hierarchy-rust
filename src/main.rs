@@ -231,7 +231,10 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
         match self {
             Self::Name(x) => {Vec::new()}
             Self::Segment(s) => {Vec::new()}
-            Self::Sum(s) => {Vec::new()}
+            Self::Sum(s) => {
+                // copy
+                Vec::new()
+            }
             //
             // GitHierarchy::segment(s) => s.name,
             // GitHierarchy::sum(s) => s.name,
