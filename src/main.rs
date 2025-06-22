@@ -35,16 +35,18 @@ pub trait NodeExpander {
     // not object-safe:
     // so Self is not ok, but NodeExpander is ?
     fn NodePrepare(&mut self); // -> &dyn NodeExpander; // upgrade itself? or what
-    fn NodeChildren(&self) -> Vec<&mut dyn NodeExpander>; // owned!
+    fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 }
 
 
-pub fn discover_graph(mut start: Vec<&mut dyn NodeExpander>) // expander: &dyn NodeExpander) { // -> (vertices, graph) {
+pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn NodeExpander) { // -> (vertices, graph) {
 {
     let mut graph = graph::Graph::new();
     graph.add_vertices(start.len());
 
-    let mut vertices : Vec<&mut dyn NodeExpander> = Vec::new();
+    // not mutable. but internal mutability!
+
+    let mut vertices : Vec<Box<dyn NodeExpander>> = Vec::new();
     // |start|.....
     // |------|-------------|......|  vertices
     //        ^ reader      ^appender
@@ -224,7 +226,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
         }
     }
 
-    fn NodeChildren(&self) -> Vec<&mut dyn NodeExpander> // array?
+    fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>> // array?
     {
         // just get the Names.
         let repository = get_repository();
@@ -234,7 +236,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
             Self::Segment(s) => {
                 let symbolic_base = repository.find_reference(s.base.symbolic_target().
                     expect("base should be a symbolic reference")).unwrap();
-                vec!( GitHierarchy::Reference(symbolic_base)) // Box::new(
+                vec!( Box::new(GitHierarchy::Reference(symbolic_base)))
             }
             Self::Sum(s) => {
                 // copy
@@ -277,7 +279,7 @@ fn main() {
     println!("root is {}", root.NodeIdentity());
 
 
-    discover_graph(vec!(&mut root) );
+    discover_graph(vec!(Box::new(root)) );
 
     // let msg = repo.message();
     // println!("{:?}", &head);
