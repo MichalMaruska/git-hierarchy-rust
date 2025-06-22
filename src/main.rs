@@ -229,6 +229,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
         // just get the Names.
 
         match self {
+            // regular branch. say `master'
             Self::Name(x) => {Vec::new()}
             Self::Segment(s) => {vec!(
                 Box::new(
