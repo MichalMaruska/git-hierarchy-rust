@@ -38,6 +38,20 @@ pub trait NodeExpander {
 }
 
 
+// static
+static mut GLOBAL_REPOSITORY : Option<Repository> = None;
+
+
+fn get_repository() -> &'static Repository {
+
+    let mut repository : & Repository;
+
+    unsafe {
+        repository = GLOBAL_REPOSITORY.as_ref().expect("no repository"); // unwrap custom msg?
+    };
+    return repository;
+}
+
 
 fn main() {
     let cli = Cli::parse();
@@ -46,6 +60,11 @@ fn main() {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
+    unsafe {
+        GLOBAL_REPOSITORY = Some(repo);
+    }
+
+    let repo = get_repository();
     // `git2::Repository` cannot be formatted with the default formatter
     // `git2::Repository` cannot be formatted using `{:?}` because it doesn't implement `std::fmt::Debug`
     println!("{:?}", repo.namespace());
@@ -61,4 +80,8 @@ fn main() {
 
     // let msg = repo.message();
     // println!("{:?}", &head);
+
+    unsafe {
+        GLOBAL_REPOSITORY = None;
+    }
 }
