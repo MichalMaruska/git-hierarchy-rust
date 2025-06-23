@@ -30,12 +30,12 @@ const GLOB_REFS_BASES: &str = "refs/base/*";
 // fn refsWithPrefixIter(iterator storer.ReferenceIter, prefix string) storer.ReferenceIter {
 
 pub trait NodeExpander {
-    fn NodeIdentity(&self) -> &str; // same lifetime
+    fn node_identity(&self) -> &str; // same lifetime
 
     // not object-safe:
     // so Self is not ok, but NodeExpander is ?
-    fn NodePrepare(&mut self); // -> &dyn NodeExpander; // upgrade itself? or what
-    fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
+    fn node_prepare(&mut self); // -> &dyn NodeExpander; // upgrade itself? or what
+    fn node_children(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 }
 
 
@@ -64,11 +64,10 @@ pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn N
     loop {
         let this = vertices.get_mut(current).unwrap();
 
-        info!("visiting node {}", this.NodeIdentity()); // target: "yak_events",
-        this.NodePrepare();
-        let children =  this.NodeChildren();
+        this.node_prepare();
+        let children =  this.node_children();
         for child in children {
-            if let Some(found) = known.get(child.NodeIdentity()) {
+            if let Some(found) = known.get(child.node_identity()) {
                 graph.add_edge(current, *found);
             } else {
                 vertices.push(child);
@@ -76,7 +75,7 @@ pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn N
                 graph.add_vertices(new_index);
                 graph.add_edge(current, new_index);
 
-                known.insert(vertices[new_index].NodeIdentity().to_string(), new_index);
+                known.insert(vertices[new_index].node_identity().to_string(), new_index);
             }
         }
 
@@ -194,7 +193,7 @@ fn get_repository() -> &'static Repository {
 
 impl<'a> NodeExpander for GitHierarchy<'a> {
 
-    fn NodeIdentity(&self) -> &str {
+    fn node_identity(&self) -> &str {
         match self {
             Self::Name(x) => x,
             GitHierarchy::Segment(s) => s.reference.name().unwrap(),
@@ -204,7 +203,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
     }
 
     // we need a repository!
-    fn NodePrepare(&mut self) { //  -> &str {   '1 lifetime
+    fn node_prepare(&mut self) { //  -> &str {   '1 lifetime
         match self {
             Self::Name(x) => {
                 if let Ok(c) = convert(x) {
@@ -226,7 +225,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
         }
     }
 
-    fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>> // array?
+    fn node_children(&self) -> Vec<Box<dyn NodeExpander>> // array?
     {
         // just get the Names.
         let repository = get_repository();
@@ -276,7 +275,6 @@ fn main() {
     }
 
     let mut root = GitHierarchy::Name("mmc-fixes".to_string());
-    println!("root is {}", root.NodeIdentity());
 
 
     discover_graph(vec!(Box::new(root)) );
