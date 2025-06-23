@@ -236,7 +236,9 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
             }
             Self::Segment(s) => {}
             Self::Sum(s) => {}
-            Self::Reference(r) => {} // are you sure?
+            Self::Reference(r) => {
+                info!("Reference!"); // bug!
+            } // are you sure?
             //
             // GitHierarchy::segment(s) => s.name,
             // GitHierarchy::sum(s) => s.name,
