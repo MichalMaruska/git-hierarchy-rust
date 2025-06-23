@@ -127,6 +127,7 @@ fn start_name(name: &str) -> String {
 fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Reference<'repo>> {
     let mut v = Vec::new();
 
+    info!("searching for sum {}",  name);
     if let Ok(ref_iterator) = repository.references_glob (&(concatenate(SUM_SUMMAND_PATTERN, name) + "/*")) {
         for r in ref_iterator {
             v.push(r.unwrap());
