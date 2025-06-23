@@ -282,7 +282,7 @@ fn main() {
     let cli = Cli::parse();
 
     stderrlog::new().module(module_path!())
-        .verbosity(LogLevelNum::Info) // Cli.verbose Warn
+        .verbosity(LogLevelNum::Warn) // Cli.verbose Warn Info
         .init()
         .unwrap();
 
