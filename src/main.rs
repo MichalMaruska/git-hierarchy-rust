@@ -55,6 +55,29 @@ fn concatenate(prefix: &str, suffix: &str) -> String {
     s
 }
 
+const SEGMENT_BASE_PATTERN : &str = "refs/base/";
+const SEGMENT_START_PATTERN : &str = "refs/start/";
+const SUM_SUMMAND_PATTERN : &str = "refs/sums/";
+
+fn base_name(name: &str) -> String {
+    concatenate(SEGMENT_BASE_PATTERN, name)
+}
+
+fn start_name(name: &str) -> String {
+        concatenate(SEGMENT_START_PATTERN, name)
+}
+
+fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Reference<'repo>> {
+    let mut v = Vec::new();
+
+    if let Ok(ref_iterator) = repository.references_glob (&(concatenate(SUM_SUMMAND_PATTERN, name) + "/*")) {
+        for r in ref_iterator {
+            v.push(r.unwrap());
+        }}
+
+    return v;
+}
+
 enum GitHierarchy<'repo> {
     Name(String),
 
