@@ -72,11 +72,12 @@ pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn N
     loop {
         let this = vertices.get_mut(current).unwrap();
 
-        info!("visiting node {}", this.node_identity());
+        info!("visiting node {} {}", current, this.node_identity());
         this.node_prepare();
         let children =  this.node_children();
         for child in children {
             if let Some(found) = known.get(child.node_identity()) {
+                info!("adding edge to already known node {}", child.node_identity());
                 graph.add_edge(current, *found);
             } else {
                 vertices.push(child);
@@ -220,6 +221,7 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
 
     // we need a repository!
     fn node_prepare(&mut self) { //  -> &str {   '1 lifetime
+        info!("prepare {:?}", self.node_identity());
         match self {
             Self::Name(x) => {
                 if let Ok(c) = convert(x) {
