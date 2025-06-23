@@ -37,6 +37,18 @@ pub trait NodeExpander {
     fn NodeChildren(&self) -> [&dyn NodeExpander]; // owned!
 }
 
+struct Segment<'repo> {
+    reference: Reference<'repo>,
+    base: Reference<'repo>,
+    start: Reference<'repo>,
+}
+
+
+struct Sum<'repo> {
+    reference: Reference<'repo>,
+    summands: Vec<Reference<'repo>>,
+}
+
 
 // static
 static mut GLOBAL_REPOSITORY : Option<Repository> = None;
