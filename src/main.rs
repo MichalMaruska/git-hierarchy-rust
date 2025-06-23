@@ -54,6 +54,7 @@ pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn N
 
     // not mutable. but internal mutability!
 
+    // of the graph!
     let mut vertices : Vec<Box<dyn NodeExpander>> = Vec::new();
     // |start|.....
     // |------|-------------|......|  vertices
