@@ -235,11 +235,18 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
             Self::Segment(s) => {
                 let symbolic_base = repository.find_reference(s.base.symbolic_target().
                     expect("base should be a symbolic reference")).unwrap();
-                vec!( Box::new(GitHierarchy::Reference(symbolic_base)))
+                vec!( Box::new(GitHierarchy::Name(symbolic_base.name().unwrap().to_string())))
             }
             Self::Sum(s) => {
                 // copy
-                Vec::new()
+                let mut v : Vec<Box<dyn NodeExpander>> = Vec::new();
+                for summand in &s.summands {
+                    let symbolic_base = repository.find_reference(summand.symbolic_target().
+                        expect("base should be a symbolic reference")).unwrap();
+                    v.push(Box::new(GitHierarchy::Name(
+                        symbolic_base.name().unwrap().to_string())))
+                }
+                return v;
             }
             Self::Reference(r) => {
                 Vec::new()
