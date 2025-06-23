@@ -72,6 +72,7 @@ pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn N
     loop {
         let this = vertices.get_mut(current).unwrap();
 
+        info!("visiting node {}", this.node_identity());
         this.node_prepare();
         let children =  this.node_children();
         for child in children {
@@ -165,6 +166,9 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
 
+            // event!(Level::INFO, "segment found!");
+            info!("segment found");
+
             return Ok(GitHierarchy::Segment( Segment {
                 reference: reference,
                 base,
@@ -176,12 +180,14 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 
     let summands = sum_summands(repository, name);
     if ! summands.is_empty() {
+        info!("a sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum {
             reference: reference,
             summands
         }));
     }
 
+    info!("plain reference");
     return Err(git2::Error::from_str("not hierarchy"));
 }
 
