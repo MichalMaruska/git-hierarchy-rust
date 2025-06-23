@@ -9,6 +9,7 @@ use git2::{Repository,Reference,Error};
 use clap::Parser;
 // use std::error::Error;
 
+use std::collections::HashMap;
 // This declaration will look for a file named `graph'.rs and will
 // insert its contents inside a module named `my` under this scope
 mod graph;
@@ -37,6 +38,50 @@ pub trait NodeExpander {
     fn NodeChildren(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 }
 
+
+pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn NodeExpander) { // -> (vertices, graph) 
+{
+    let mut graph = graph::Graph::new();
+    graph.add_vertices(start.len());
+
+    let mut vertices : Vec<Box<dyn NodeExpander>> = Vec::new();
+    // |start|.....
+    // |------|-------------|......|  vertices
+    //        ^ reader      ^appender
+    //
+    vertices.append(&mut start);  // _from_slice(start);
+    /*
+    vertices.reserve(start.len());
+    start.into_iter().map(|x| vertices.push(x)); // move
+     */
+    // I give up: &str
+    let mut known : HashMap<String, usize> = HashMap::new(); // knowledge  name -> index
+
+    //
+    let mut current = 0;
+    loop {
+        let mut this = &mut vertices[current];
+
+        info!("visiting node {}", this.NodeIdentity()); // target: "yak_events",
+        this.NodePrepare();
+        let children =  this.NodeChildren();
+        for child in children {
+            if let Some(found) = known.get(child.NodeIdentity()) {
+                graph.add_edge(current, *found);
+            } else {
+                vertices.push(child);
+                let new_index = vertices.len() - 1;
+                graph.add_vertices(new_index);
+                graph.add_edge(current, new_index);
+
+                known.insert(vertices[new_index].NodeIdentity().to_string(), new_index);
+            }
+        }
+
+        current+= 1;
+        if current == vertices.len() {break}
+    }
+    graph.dump_graph();
 }
 
 struct Segment<'repo> {
