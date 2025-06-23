@@ -1,3 +1,8 @@
+#![allow(unused)]
+// deny, warn, allow...
+#![warn(static_mut_refs)]
+// #![warn(unused_imports)]
+//# allow
 
 // walk the hierarchy
 // - assemble list of segments/sums.
