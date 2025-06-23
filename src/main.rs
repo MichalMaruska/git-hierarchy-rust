@@ -136,6 +136,12 @@ enum GitHierarchy<'repo> {
 }
 
 
+fn extract_name(refname: &str) -> &str {
+    let mut a = refname.strip_prefix("ref: ").unwrap_or(refname);
+    a = a.strip_prefix("refs/").unwrap_or(a);
+    a = a.strip_prefix("heads/").unwrap_or(a);
+    return a;
+}
 
 fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 
