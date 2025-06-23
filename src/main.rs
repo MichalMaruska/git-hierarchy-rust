@@ -89,7 +89,8 @@ enum GitHierarchy<'repo> {
 }
 
 
-fn convert(name: &str) -> Result<GitHierarchy, git2::Error> {
+
+fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 
     let repository = get_repository();
 
