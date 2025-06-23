@@ -49,6 +49,15 @@ struct Sum<'repo> {
     summands: Vec<Reference<'repo>>,
 }
 
+enum GitHierarchy<'repo> {
+    Name(String),
+
+    Segment(Segment<'repo>),
+    Sum(Sum<'repo>),
+
+    Reference(Reference<'repo>),
+}
+
 
 // static
 static mut GLOBAL_REPOSITORY : Option<Repository> = None;
