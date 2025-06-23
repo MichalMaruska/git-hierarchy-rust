@@ -58,6 +58,7 @@ fn concatenate(prefix: &str, suffix: &str) -> String {
 const SEGMENT_BASE_PATTERN : &str = "refs/base/";
 const SEGMENT_START_PATTERN : &str = "refs/start/";
 const SUM_SUMMAND_PATTERN : &str = "refs/sums/";
+const GIT_HEADS_PATTERN : &str = "refs/heads/";
 
 fn base_name(name: &str) -> String {
     concatenate(SEGMENT_BASE_PATTERN, name)
@@ -87,6 +88,39 @@ enum GitHierarchy<'repo> {
     Reference(Reference<'repo>),
 }
 
+
+fn convert(name: &str) -> Result<GitHierarchy, git2::Error> {
+
+    let repository = get_repository();
+
+    let name = extract_name(name);
+    println!("find reference {name}");
+    let reference = repository.find_reference(&concatenate(GIT_HEADS_PATTERN, name))?;
+
+    if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
+        if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
+            let symbolic_base = repository.find_reference(base.symbolic_target().
+                expect("base should be a symbolic reference")).unwrap() ;
+
+            return Ok(GitHierarchy::Segment( Segment {
+                reference: reference,
+                base: symbolic_base,
+                // so it's a name, not Reference, not GitHierarchy !? but it could be
+                start: start
+            }));
+        } else { return Err(git2::Error::from_str("start not found")) };
+    }
+
+    let summands = sum_summands(repository, name);
+    if ! summands.is_empty() {
+        return Ok(GitHierarchy::Sum(Sum {
+            reference: reference,
+            summands
+        }));
+    }
+
+    return Err(git2::Error::from_str("not hierarchy"));
+}
 
 // static
 static mut GLOBAL_REPOSITORY : Option<Repository> = None;
