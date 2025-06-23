@@ -49,6 +49,12 @@ struct Sum<'repo> {
     summands: Vec<Reference<'repo>>,
 }
 
+fn concatenate(prefix: &str, suffix: &str) -> String {
+    let mut s = String::from(prefix);
+    s.push_str(suffix);
+    s
+}
+
 enum GitHierarchy<'repo> {
     Name(String),
 
