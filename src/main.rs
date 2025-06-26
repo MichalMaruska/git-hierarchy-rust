@@ -1,6 +1,7 @@
 #![allow(unused)]
+
 // deny, warn, allow...
-#![warn(static_mut_refs)]
+
 // #![warn(unused_imports)]
 //# allow
 
@@ -21,6 +22,8 @@ use std::collections::HashMap;
 // This declaration will look for a file named `graph'.rs and will
 // insert its contents inside a module named `my` under this scope
 mod graph;
+mod base;
+use base::{get_repository,set_repository,unset_repository};
 
 // use std::path::PathBuf;
 
@@ -193,21 +196,6 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
     return Err(git2::Error::from_str("not hierarchy"));
 }
 
-// static
-static mut GLOBAL_REPOSITORY : Option<Repository> = None;
-
-
-fn get_repository() -> &'static Repository {
-
-    let mut repository : & Repository;
-
-    unsafe {
-        repository = GLOBAL_REPOSITORY.as_ref().expect("no repository"); // unwrap custom msg?
-    };
-    return repository;
-}
-
-
 
 impl<'a> NodeExpander for GitHierarchy<'a> {
 
@@ -292,7 +280,7 @@ fn main() {
         Err(e) => panic!("failed to open: {}", e),
     };
     unsafe {
-        GLOBAL_REPOSITORY = Some(repo);
+        set_repository(repo);
     }
 
     let repo = get_repository();
@@ -310,6 +298,6 @@ fn main() {
     // println!("{:?}", &head);
 
     unsafe {
-        GLOBAL_REPOSITORY = None;
+        unset_repository();
     }
 }
