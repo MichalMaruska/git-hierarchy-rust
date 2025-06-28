@@ -1,5 +1,7 @@
 
+pub mod discover;
 use std::vec;
+
 
 type Range = usize;
 pub struct Graph {
@@ -46,4 +48,3 @@ impl Graph {
         }
     }
 }
-
