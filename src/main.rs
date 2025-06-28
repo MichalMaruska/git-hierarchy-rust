@@ -40,7 +40,8 @@ use graph::topology_sort::topological_sort;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    directory: Option<String>
+    directory: Option<String>,
+    root_reference: Option<String>,
 }
 
 
