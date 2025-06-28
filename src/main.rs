@@ -31,6 +31,7 @@ use git_hierarchy::*;
 
 mod graph;
 use graph::discover::NodeExpander;
+use graph::topology_sort::topological_sort;
 
 
 // use std::path::PathBuf;
@@ -68,12 +69,15 @@ fn main() {
     let head = repo.head();
 
     // load one Segment:
-    let mut root = GitHierarchy::Name("mmc-fixes".to_string());
+    let mut root = GitHierarchy::Name(cli.root_reference.unwrap_or("mmc".to_string()));
     println!("root is {}", root.node_identity());
-    let (graph, vertices ) = graph::discover::discover_graph(vec!(Box::new(root)) );
+    let (graph, vertices ) =
+        graph::discover::discover_graph(vec!(Box::new(root)));
 
-    graph.dump_graph();
-
+    let order = graph.toposort();
+    for i in &order {
+        println!("{i} {}", vertices[*i].node_identity());
+    }
 
     // let msg = repo.message();
     // println!("{:?}", &head);
