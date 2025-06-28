@@ -1,5 +1,7 @@
 
 pub mod discover;
+pub mod topology_sort;
+use crate::graph::topology_sort::topological_sort;
 use std::vec;
 
 
@@ -37,6 +39,18 @@ impl Graph {
 
         // list.get(from);
         list[from].push(to);
+    }
+
+    pub fn toposort(&self) -> Vec<usize> {
+
+        let matrix = &self.adjacency_list;
+
+        if let Some(order) = topological_sort(matrix) {
+            // println!("found order {:?}", order);
+            order
+        } else {
+            panic!("bad topo order");
+        }
     }
 
     pub fn dump_graph(&self) {
