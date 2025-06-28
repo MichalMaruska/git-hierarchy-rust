@@ -12,36 +12,37 @@ pub trait NodeExpander {
     fn node_children(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 }
 
-
-pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn NodeExpander) { // -> (vertices, graph) {
+pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) -> (Graph, Vec<Box<dyn NodeExpander>>)
 {
     let mut graph = Graph::new();
     graph.add_vertices(start.len());
 
-    // not mutable. but internal mutability!
-
-    // of the graph!
+    // this will be produced, we could use the start Vector! todo!
     let mut vertices : Vec<Box<dyn NodeExpander>> = Vec::new();
+
     // |start|.....
     // |------|-------------|......|  vertices
     //        ^ reader      ^appender
     //
-    vertices.append(&mut start);  // _from_slice(start);
+    vertices.append(&mut start);
+
     /*
     vertices.reserve(start.len());
     start.into_iter().map(|x| vertices.push(x)); // move
      */
-    // I give up: &str
-    let mut known : HashMap<String, usize> = HashMap::new(); // knowledge  name -> index
 
-    //
+    // mmc: it's a set!  so maps into the vector indices
+    let mut known : HashMap<String, usize> = HashMap::new();
+
     let mut current = 0;
     loop {
         let this = vertices.get_mut(current).unwrap();
-
         info!("visiting node {} {}", current, this.node_identity());
+
         this.node_prepare();
+
         let children =  this.node_children();
+
         for child in children {
             if let Some(found) = known.get(child.node_identity()) {
                 info!("adding edge to already known node {}", child.node_identity());
@@ -57,8 +58,9 @@ pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) // expander: &dyn N
             }
         }
 
-        current+= 1;
+        current += 1;
         if current == vertices.len() {break}
     }
-    graph.dump_graph();
+
+    return (graph, vertices);
 }

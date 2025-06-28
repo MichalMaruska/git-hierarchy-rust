@@ -70,7 +70,10 @@ fn main() {
     // load one Segment:
     let mut root = GitHierarchy::Name("mmc-fixes".to_string());
     println!("root is {}", root.node_identity());
-    graph::discover::discover_graph(vec!(Box::new(root)) );
+    let (graph, vertices ) = graph::discover::discover_graph(vec!(Box::new(root)) );
+
+    graph.dump_graph();
+
 
     // let msg = repo.message();
     // println!("{:?}", &head);
