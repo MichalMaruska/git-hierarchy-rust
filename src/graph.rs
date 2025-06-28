@@ -21,16 +21,19 @@ impl Graph {
         if n > self.vertices {
             self.vertices = n;
         }
+
+        // reserve:
+        let list = &mut self.adjacency_list;
+        if (list.len() <= n) {
+            list.resize(n + 1, Vec::new());
+            list.resize_with(n + 1, || Vec::new());
+        }
     }
+
 
     pub fn add_edge(&mut self, from: Range, to: Range) {
         // Index::index_mut(self.adjacency_list,from);
         let list = &mut self.adjacency_list;
-
-        if (list.len() <= from) {
-            list.resize(from + 1, Vec::new());
-            list.resize_with(from + 1, || Vec::new());
-        }
 
         // list.get(from);
         list[from].push(to);
