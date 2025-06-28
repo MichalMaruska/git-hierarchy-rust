@@ -1,3 +1,10 @@
+[workspace]
+members = [
+   "src/bin/main.rs",
+   # "src/"
+]
+
+
 [package]
 name = "git-hierarchy"
 version = "0.1.0"
