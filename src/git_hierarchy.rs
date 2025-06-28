@@ -68,7 +68,6 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
     let repository = get_repository();
 
     let name = extract_name(name);
-    println!("find reference {name}");
     let reference = repository.find_reference(&concatenate(GIT_HEADS_PATTERN, name))?;
 
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
