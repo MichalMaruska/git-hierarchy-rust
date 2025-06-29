@@ -1,7 +1,7 @@
 use log::info;
 
 use crate::base::*;
-
+use std::any::Any;
 
 use crate::graph::discover::NodeExpander;
 
@@ -105,6 +105,10 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
             GitHierarchy::Sum(s) => s.reference.name().unwrap(),
             GitHierarchy::Reference(r) => r.name().unwrap(),
         }
+    }
+
+    fn as_any(& self) -> &dyn Any {
+        self
     }
 
     // we need a repository!
