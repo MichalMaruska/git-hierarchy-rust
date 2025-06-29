@@ -46,7 +46,7 @@ pub fn discover_graph(start: Vec<Box<dyn NodeExpander>>) -> (Graph, Vec<Box<dyn 
                 let new_index = vertices.len() - 1;
                 graph.add_vertices(new_index);
                 graph.add_edge(current, new_index);
-                info!("adding unknown child to the list {} {}", &vertices[new_index].node_identity(), new_index);
+                info!("adding new vertex: child to the list {} {}", &vertices[new_index].node_identity(), new_index);
 
                 known.insert(vertices[new_index].node_identity().to_string(), new_index);
             }
