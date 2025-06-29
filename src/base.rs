@@ -1,7 +1,7 @@
 #![allow(static_mut_refs)]
 #![deny(elided_lifetimes_in_paths)]
 
-use std::cell::{OnceCell,Ref};
+use std::cell::{OnceCell};
 use git2::{Repository};
 
 // owned git.
@@ -46,8 +46,7 @@ pub fn get_repository() -> &'static Repository {
 pub fn set_repository(repo: Repository) {
     // borrow_mut or replace
     unsafe {
-        GLOBAL_REPOSITORY.set(repo);
-        // get_or_init(|| repo);
+        let Ok(_v) = GLOBAL_REPOSITORY.set(repo) else { panic!()};
     }
 }
 pub fn unset_repository() {
