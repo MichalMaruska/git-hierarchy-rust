@@ -1,4 +1,4 @@
-use log::{self,info,error};
+use log::{self,info};
 use std::collections::HashMap;
 
 use crate::graph::Graph;
