@@ -96,7 +96,7 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 }
 
 // note: trait items always share the visibility of their trait
-impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
+impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
 
     fn node_identity(&self) -> &str {
         match self {
