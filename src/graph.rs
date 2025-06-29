@@ -2,12 +2,9 @@
 pub mod discover;
 pub mod topology_sort;
 use crate::graph::topology_sort::topological_sort;
-use std::vec;
-
 
 type Range = usize;
 pub struct Graph {
-    //
     vertices: usize,
     adjacency_list: Vec<Vec<Range>>,
 }
@@ -26,7 +23,7 @@ impl Graph {
 
         // reserve:
         let list = &mut self.adjacency_list;
-        if (list.len() <= n) {
+        if list.len() <= n {
             list.resize(n + 1, Vec::new());
             list.resize_with(n + 1, || Vec::new());
         }
