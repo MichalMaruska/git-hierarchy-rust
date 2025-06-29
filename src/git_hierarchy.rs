@@ -95,7 +95,7 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
     }
 
     info!("plain reference");
-    return Err(git2::Error::from_str("not hierarchy"));
+    return Ok(GitHierarchy::Reference(reference));
 }
 
 // note: trait items always share the visibility of their trait
