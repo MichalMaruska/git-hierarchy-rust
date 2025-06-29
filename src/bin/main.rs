@@ -21,15 +21,18 @@ use stderrlog::LogLevelNum;
 // This declaration will look for a file named `graph'.rs and will
 // insert its contents inside a module named `my` under this scope
 
-mod base;
-use base::{get_repository,set_repository,unset_repository};
+use ::git_hierarchy::base::{get_repository,set_repository,unset_repository};
 
-mod utils;
+use ::git_hierarchy::*;
+/*
+ note: ambiguous because of a conflict between a name from a glob import and an outer scope during import or macro resolution
+   = note: `git_hierarchy` could refer to a crate passed with `--extern`
+   = help: use `::git_hierarchy` to refer to this crate unambiguously
+*/
 
-mod git_hierarchy;
-use git_hierarchy::*;
+use crate::git_hierarchy::*;
 
-mod graph;
+use ::git_hierarchy::graph;
 use graph::discover::NodeExpander;
 use graph::topology_sort::topological_sort;
 
