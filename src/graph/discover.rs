@@ -12,24 +12,18 @@ pub trait NodeExpander {
     fn node_children(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 }
 
-pub fn discover_graph(mut start: Vec<Box<dyn NodeExpander>>) -> (Graph, Vec<Box<dyn NodeExpander>>)
+pub fn discover_graph(start: Vec<Box<dyn NodeExpander>>) -> (Graph, Vec<Box<dyn NodeExpander>>)
 {
     let mut graph = Graph::new();
     graph.add_vertices(start.len());
 
     // this will be produced, we could use the start Vector! todo!
-    let mut vertices : Vec<Box<dyn NodeExpander>> = Vec::new();
+    let mut vertices = start;
 
     // |start|.....
     // |------|-------------|......|  vertices
     //        ^ reader      ^appender
     //
-    vertices.append(&mut start);
-
-    /*
-    vertices.reserve(start.len());
-    start.into_iter().map(|x| vertices.push(x)); // move
-     */
 
     // mmc: it's a set!  so maps into the vector indices
     let mut known : HashMap<String, usize> = HashMap::new();
