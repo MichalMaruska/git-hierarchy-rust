@@ -1,14 +1,11 @@
-[workspace]
-members = [
-   "src/bin/main.rs",
-   # "src/"
-]
-
-
 [package]
 name = "git-hierarchy"
 version = "0.1.0"
 edition = "2024"
+
+[[bin]]
+name = "git-walk-down"
+path = "src/bin/main.rs"
 
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
