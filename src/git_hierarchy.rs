@@ -43,7 +43,7 @@ fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Referen
 pub struct Segment<'repo> {
     reference: Reference<'repo>, // this could point at GitHierarchy.
     base: Reference<'repo>, //&'repo mut GitHierarchy<'repo>,  //  Reference<'repo>
-    start: Reference<'repo>,
+    _start: Reference<'repo>,
 }
 
 
@@ -80,7 +80,7 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
                 reference: reference,
                 base,
                 // so it's a name, not Reference, not GitHierarchy !? but it could be
-                start: start
+                _start: start
             }));
         } else { return Err(git2::Error::from_str("start not found")) };
     }
