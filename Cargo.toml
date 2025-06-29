@@ -3,9 +3,21 @@ name = "git-hierarchy"
 version = "0.1.0"
 edition = "2024"
 
+# [[lib]]
+# invalid type: map, expected a string
+[[lib1]]
+name = "git-hierarchy"
+path = "src/lib.rs"
+
+
 [[bin]]
 name = "git-walk-down"
 path = "src/bin/main.rs"
+
+[[bin2]]
+name = "git-rebase-poset"
+path = "src/bin/rebase/main.rs"
+
 
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
