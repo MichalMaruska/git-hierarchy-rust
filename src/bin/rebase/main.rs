@@ -16,7 +16,7 @@ use stderrlog::LogLevelNum;
 // This declaration will look for a file named `graph'.rs and will
 // insert its contents inside a module named `my` under this scope
 
-use ::git_hierarchy::base::{get_repository,set_repository,unset_repository};
+use ::git_hierarchy::base::{get_repository,set_repository,unset_repository,git_same_ref};
 use ::git_hierarchy::permutation::reorder_by_permutation;
 use ::git_hierarchy::utils::{extract_name,divide_str};
 

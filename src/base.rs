@@ -1,7 +1,7 @@
 #![allow(static_mut_refs)]
 
 use std::cell::{OnceCell};
-use git2::{Repository};
+use git2::{Repository,Reference};
 
 // owned git.
 
@@ -55,3 +55,8 @@ pub fn unset_repository() {
     }
 }
 
+pub fn git_same_ref(repository: &Repository, reference: &Reference, next: &Reference) -> bool {
+    let commit1 = repository.find_commit(reference.target().unwrap()).unwrap();
+    let commit2 = repository.find_commit(next.target().unwrap()).unwrap();
+    commit1.id() == commit2.id()
+}
