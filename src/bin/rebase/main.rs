@@ -4,7 +4,7 @@
 
 //
 // get list of segments
-use git2::{Repository,Reference,Error};
+use git2::{Repository,Reference,Error,Branch,BranchType,ReferenceFormat};
 use clap::Parser;
 // use std::error::Error;
 
@@ -20,7 +20,7 @@ use ::git_hierarchy::base::{get_repository,set_repository,unset_repository};
 use ::git_hierarchy::permutation::reorder_by_permutation;
 
 // I need both:
-use ::git_hierarchy::git_hierarchy::GitHierarchy;
+use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
 
 /*
  note: ambiguous because of a conflict between a name from a glob import and an outer scope during import or macro resolution
@@ -34,9 +34,64 @@ use graph::discover::NodeExpander;
 use graph::topology_sort::topological_sort;
 
 
-fn start_rebase(vec: Vec<Box<dyn NodeExpander>>, fetch: bool) {
-    let (graph, vertices ) =
-        graph::discover::discover_graph(vec);
+enum RebaseResult {
+    Nothing,
+    Done,
+    Failed,
+}
+
+
+// todo: method
+//
+fn rebase_segment(repo: &Repository, segment: &Segment) -> RebaseResult {
+    warn!("should rebase");
+
+        println!("{}", vertex.node_identity());
+    return RebaseResult::Failed;
+}
+
+fn fetch_upstream_of(repository: &Repository, reference: &Reference) {
+    warn!("should fetch");
+    // remote ->
+    if reference.is_remote() {
+        // mmc: I think it's dangerous ... better avoid using this.
+        // let remote: RemoteHead;
+        // just fetch
+        // Remote.fetch()
+        unimplemented!("Remote");
+    } else if reference.is_branch() {
+        let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
+        let branch = repository.find_branch(&name, BranchType::Local).unwrap();
+
+        // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
+        branch.upstream();
+        // is is a
+    // branch -> find remote
+    // load config, see
+    // double check if still in sync, then
+    }
+}
+
+
+fn rebase_node(repo: &Repository, node: &GitHierarchy, fetch: bool) {
+    match node {
+        GitHierarchy::Name(_n) => {panic!();}
+        GitHierarchy::Reference(r) => {
+            if fetch {
+                fetch_upstream_of(repo, r);
+            }}
+        GitHierarchy::Segment(segment)=> {
+            rebase_segment(repo, segment);
+        }
+        GitHierarchy::Sum(sum) => {
+            warn!("should re-merge");
+        }
+    }
+}
+
+fn start_rebase(repo: &Repository, vec: Vec<Box<dyn NodeExpander>>, fetch: bool) {
+    let (graph, mut vertices) =
+       graph::discover::discover_graph(vec);
 
     let order = graph.toposort();
     reorder_by_permutation(&mut vertices, &order);
@@ -47,17 +102,9 @@ fn start_rebase(vec: Vec<Box<dyn NodeExpander>>, fetch: bool) {
 
         println!("{}", vertex.node_identity());
 
-        match vertex {
-            GitHierarchy::Name(_n) => {panic!();}
-            GitHierarchy::Reference(r) => {
-                if !fetch {}
-            }
-            GitHierarchy::Segment(segment)=> {}
-            GitHierarchy::Sum(sum) => {}
-        }
+        rebase_node(repo, vertex, fetch);
     }
 }
-
 
 // error: cannot find derive macro `Parser` in this scope
 #[derive(Parser, Debug)]
