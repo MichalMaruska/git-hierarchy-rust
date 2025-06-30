@@ -38,11 +38,29 @@ fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Referen
 
 ///
 pub struct Segment<'repo> {
-    reference: Reference<'repo>, // this could point at GitHierarchy.
+    pub reference: Reference<'repo>, // this could point at GitHierarchy.
     base: Reference<'repo>, //&'repo mut GitHierarchy<'repo>,  //  Reference<'repo>
-    _start: Reference<'repo>,
+    pub _start: Reference<'repo>,
 }
 
+impl<'repo> Segment<'_> {
+    pub fn name(&self) -> &str {
+        self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap()
+    }
+
+    pub fn reset(&self) {
+        // fixme! &mut
+        // set start to resolve(base)
+    }
+    // pub fn base(&self, repository: &Repository) -> Reference {
+    // complains!!!
+    pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
+        let step = repository.find_reference(self.base.symbolic_target()
+            .expect("base should be a symbolic reference")).unwrap();
+
+        return step;
+    }
+}
 
 pub struct Sum<'repo> {
     reference: Reference<'repo>,
@@ -101,7 +119,7 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     fn node_identity(&self) -> &str {
         match self {
             Self::Name(x) => x,
-            GitHierarchy::Segment(s) => s.reference.name().unwrap(),
+            GitHierarchy::Segment(s) => s.name(),
             GitHierarchy::Sum(s) => s.reference.name().unwrap(),
             GitHierarchy::Reference(r) => r.name().unwrap(),
         }
@@ -145,8 +163,8 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
             // regular branch. say `master'
             Self::Name(_x) => {panic!("unprepared")}// {Vec::new()}
             Self::Segment(s) => {
-                let symbolic_base = repository.find_reference(s.base.symbolic_target().
-                    expect("base should be a symbolic reference")).unwrap();
+                let symbolic_base = s.base(&repository);
+                // back to name...
                 vec!( Box::new(GitHierarchy::Name(symbolic_base.name().unwrap().to_string())))
             }
             Self::Sum(s) => {
