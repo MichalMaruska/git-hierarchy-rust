@@ -19,6 +19,7 @@ use stderrlog::LogLevelNum;
 use ::git_hierarchy::base::{get_repository,set_repository,unset_repository,git_same_ref};
 use ::git_hierarchy::permutation::reorder_by_permutation;
 use ::git_hierarchy::utils::{extract_name,divide_str};
+use ::git_hierarchy::execute::git_run;
 
 // I need both:
 use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
@@ -31,6 +32,7 @@ use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
 
 
 use ::git_hierarchy::graph;
+use ::git_hierarchy::utils::concatenate;
 use graph::discover::NodeExpander;
 use graph::topology_sort::topological_sort;
 
@@ -42,13 +44,69 @@ enum RebaseResult {
 }
 
 
-// todo: method
-//
-fn rebase_segment(repo: &Repository, segment: &Segment) -> RebaseResult {
-    warn!("should rebase");
+fn rebase_segment(repository: &Repository, segment: &Segment) -> RebaseResult {
+    warn!("should rebase {}", segment.name());
 
-        println!("{}", vertex.node_identity());
-    return RebaseResult::Failed;
+    // persistent mark, if we fail, and during the session.
+    /*
+    mark := plumbing.NewSymbolicReference(".segment-cherry-pick", segment.Ref.Name());
+    err := repository.Storer.SetReference(mark)
+    */
+
+    let new_start = segment.base(repository);
+    if git_same_ref(repository, &new_start, &segment._start ) {
+        info!("nothing to do");
+        return RebaseResult::Nothing;
+    }
+
+    // todo: segment_empty()
+    if git_same_ref(repository, &segment.reference, &segment._start) {
+        rebase_empty_segment(segment);
+        return RebaseResult::Done;
+    }
+
+    // const
+    let temp_head = "temp-segment";
+    Branch::name_is_valid(&temp_head).unwrap();
+    debug!("rebasing by Cherry-picking {}!", segment.name());
+
+    // checkout to that ref
+    // todo: git stash
+    // must change to the directory!
+    git_run(repository, &["checkout", "--no-track", "-B", temp_head, new_start.name().unwrap()]);
+
+    // segment git-range
+    let mut what_to_cherrypick = concatenate(segment._start.name().unwrap(), "..");
+    what_to_cherrypick.push_str(segment.reference.name().unwrap());
+
+    if !git_run(repository, &["cherry-pick", &what_to_cherrypick] ).success() {
+        panic!("cherry-pick failed");
+    }
+
+    let status = rebase_segment_finish(repository, segment,
+                                       repository.find_branch(&temp_head, BranchType::Local).unwrap().get()
+    );
+
+    git_run(repository, &["branch", "--delete", temp_head]);
+    return status;
+}
+
+fn rebase_empty_segment(segment: &Segment) {
+    debug!("rebase empty segment: {}", segment.name());
+    // fixme:  move Start to Base!
+
+    //segment.ResetStart()
+    // setReferenceTo(TheRepository, segment.Ref, segment.Base)
+}
+
+fn rebase_segment_finish(repository: &Repository, segment: &Segment, new_head: &Reference) -> RebaseResult {
+    // unimplemented!("Remote");
+    segment.reset(); // fixme!
+    // reflog etc.
+    git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
+    git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
+
+    return RebaseResult::Done;
 }
 
 
@@ -72,7 +130,7 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference) -> Result<(
 
         // and this is host/branch
         // fixme:
-        if same_ref(repository, reference, upstream.get()) {
+        if git_same_ref(repository, reference, upstream.get()) {
             info!("in sync");
         } else {
             warn!("NOT in sync");

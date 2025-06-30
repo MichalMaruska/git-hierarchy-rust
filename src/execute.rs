@@ -9,6 +9,7 @@ pub fn git_run(repository: &Repository, cmd_line: &[&str]) -> ExitStatus {
     let mut command = Command::new("git");
     command.args(cmd_line);
     command.current_dir(repository.workdir().unwrap());
+    debug!("must cd into {}", repository.workdir().unwrap().display());
     warn!("git-run: {}", cmd_line.join(" "));
 
     let child = command.spawn().expect("git command failed to start");
