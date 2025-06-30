@@ -64,7 +64,7 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference) -> Result<(
     } else if reference.is_branch() {
         let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
         warn!("fetch local {name}");
-        let branch = repository.find_branch(extract_name(&name), BranchType::Local).unwrap();
+        let mut branch = repository.find_branch(extract_name(&name), BranchType::Local).unwrap();
         // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
         let upstream = branch.upstream().unwrap();
         // todo: double check if still in sync, then
@@ -81,8 +81,12 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference) -> Result<(
         let (rem, br) = divide_str(upstream_name, '/');
         let mut remote = repository.find_remote(rem)?;
         // repo.find_remote("origin")?.fetch(&["main"], None, None)
-        if false {
-            remote.fetch(&[br], None, None);
+        if true {
+            warn!("fetch {} {} ....", rem, br);
+            if remote.fetch(&[br], None, None).is_ok() {
+                let oid = branch.upstream().unwrap().get().target().expect("upstream disappeared");
+                branch.get_mut().set_target(oid, "fetch"); // & fast-forward ?
+            }
         }
         // sync the local
     }
