@@ -18,6 +18,7 @@ use stderrlog::LogLevelNum;
 
 use ::git_hierarchy::base::{get_repository,set_repository,unset_repository};
 use ::git_hierarchy::permutation::reorder_by_permutation;
+use ::git_hierarchy::utils::{extract_name,divide_str};
 
 // I need both:
 use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
