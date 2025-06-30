@@ -1,10 +1,3 @@
-#![allow(unused)]
-
-// deny, warn, allow...
-
-// #![warn(unused_imports)]
-//# allow
-
 // walk the hierarchy
 // - assemble list of segments/sums.
 // - graph, toposort
@@ -14,7 +7,9 @@
 use git2::{Repository,Reference,Error};
 use clap::Parser;
 // use std::error::Error;
-use log::{self,info,error};
+
+#[allow(unused)]
+use log::{self,info,warn,error,debug};
 use stderrlog::LogLevelNum;
 // use tracing::{Level, event, instrument};
 
