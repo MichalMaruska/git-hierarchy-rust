@@ -159,7 +159,7 @@ fn rebase_node(repo: &Repository, node: &GitHierarchy, fetch: bool) {
             if fetch {
                 fetch_upstream_of(repo, r);
             }}
-        GitHierarchy::Segment(segment)=> {
+        GitHierarchy::Segment(segment)=> { // ref mut
             rebase_segment(repo, segment);
         }
         GitHierarchy::Sum(sum) => {
