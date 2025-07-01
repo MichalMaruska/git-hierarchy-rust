@@ -73,13 +73,10 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
 
-            // event!(Level::INFO, "segment found!");
             info!("segment found");
-
             return Ok(GitHierarchy::Segment( Segment {
                 reference: reference,
                 base,
-                // so it's a name, not Reference, not GitHierarchy !? but it could be
                 _start: start
             }));
         } else { return Err(git2::Error::from_str("start not found")) };
