@@ -22,6 +22,7 @@ use ::git_hierarchy::utils::{extract_name,divide_str};
 use ::git_hierarchy::execute::git_run;
 
 // I need both:
+#[allow(unused)]
 use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
 
 /*
