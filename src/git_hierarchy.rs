@@ -111,38 +111,30 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     }
 
     // we need a repository!
-    fn node_prepare(&mut self) { //  -> &str {   '1 lifetime
+    fn node_prepare(&mut self) {
         info!("prepare {:?}", self.node_identity());
         match self {
             Self::Name(x) => {
                 if let Ok(c) = convert(x) {
-                    // match c {
-                    //    Segment(s) =>
-                    // lifetime? who keeps c up? .... so I need a Vec of Segments?
-                    // or Rc .... a hashMap.
-                    *self = c; // .Segment =
-                    // return self
+                    *self = c;
                 }
-                // } else { panic!("missing repo");}
             }
+            // all these... a bug? Nothing to do:
             Self::Segment(_s) => {}
             Self::Sum(_s) => {}
             Self::Reference(_r) => {
-                info!("Reference!"); // bug!
-            } // are you sure?
-            //
-            // GitHierarchy::segment(s) => s.name,
-            // GitHierarchy::sum(s) => s.name,
+                info!("Reference!");
+            }
         }
     }
 
-    fn node_children(&self) -> Vec<Box<dyn NodeExpander>> // array?
+    // just get the Names.
+    fn node_children(&self) -> Vec<Box<dyn NodeExpander>>
     {
-        // just get the Names.
         let repository = get_repository();
         match self {
             // regular branch. say `master'
-            Self::Name(_x) => {panic!("unprepared")}// {Vec::new()}
+            Self::Name(_x) => {panic!("unprepared")}
             Self::Segment(s) => {
                 let symbolic_base = repository.find_reference(s.base.symbolic_target().
                     expect("base should be a symbolic reference")).unwrap();
@@ -161,10 +153,7 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
             }
             Self::Reference(_r) => {
                 Vec::new()
-            } // are you sure?
-            //
-            // GitHierarchy::segment(s) => s.name,
-            // GitHierarchy::sum(s) => s.name,
+            }
         }
     }
 }
