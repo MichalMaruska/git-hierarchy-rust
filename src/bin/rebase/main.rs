@@ -51,7 +51,8 @@ fn rebase_segment(repo: &Repository, segment: &Segment) -> RebaseResult {
     return RebaseResult::Failed;
 }
 
-fn fetch_upstream_of(repository: &Repository, reference: &Reference) {
+
+fn fetch_upstream_of(repository: &Repository, reference: &Reference) -> Result<(), Error>{
     warn!("should fetch");
     // remote ->
     if reference.is_remote() {
@@ -62,15 +63,30 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference) {
         unimplemented!("Remote");
     } else if reference.is_branch() {
         let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
-        let branch = repository.find_branch(&name, BranchType::Local).unwrap();
-
+        warn!("fetch local {name}");
+        let branch = repository.find_branch(extract_name(&name), BranchType::Local).unwrap();
         // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
-        branch.upstream();
-        // is is a
-    // branch -> find remote
-    // load config, see
-    // double check if still in sync, then
+        let upstream = branch.upstream().unwrap();
+        // todo: double check if still in sync, then
+        let upstream_name = upstream.name().unwrap().unwrap();
+
+        // and this is host/branch
+        // fixme:
+        if same_ref(repository, reference, upstream.get()) {
+            info!("in sync");
+        } else {
+            warn!("NOT in sync");
+        }
+        //
+        let (rem, br) = divide_str(upstream_name, '/');
+        let mut remote = repository.find_remote(rem)?;
+        // repo.find_remote("origin")?.fetch(&["main"], None, None)
+        if false {
+            remote.fetch(&[br], None, None);
+        }
+        // sync the local
     }
+    Ok(())
 }
 
 
