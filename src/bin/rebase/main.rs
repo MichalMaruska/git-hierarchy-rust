@@ -82,7 +82,9 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
                                        // temp_head.get()
                                        repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
 
-    git_run(repository, &["branch", "--delete", temp_head]);
+    // todo: in code
+    temp_head.delete().expect("failed to delete a branch");
+    // git_run(repository, &["branch", "--delete", temp_head]);
     return status;
 }
 
