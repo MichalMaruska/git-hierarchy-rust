@@ -42,11 +42,10 @@ pub fn get_repository() -> &'static Repository {
     return repository.expect("no repository");
 }
 
-// consumes!
+// consumes, so moves?
 pub fn set_repository(repo: Repository) {
-    // borrow_mut or replace
     unsafe {
-        let Ok(_v) = GLOBAL_REPOSITORY.set(repo) else { panic!()};
+        let _ = GLOBAL_REPOSITORY.set(repo).or_else(|_e| -> Result<(), ()> {panic!()});
     }
 }
 pub fn unset_repository() {
