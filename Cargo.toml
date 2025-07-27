@@ -5,7 +5,7 @@ edition = "2024"
 
 [[bin]]
 name = "git-walk-down"
-path = "src/bin/main.rs"
+path = "src/bin/git-walk-down.rs"
 
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
