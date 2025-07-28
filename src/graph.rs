@@ -1,5 +1,6 @@
 
 pub mod discover;
+pub mod discover_pet;
 pub mod topology_sort;
 use crate::graph::topology_sort::topological_sort;
 
