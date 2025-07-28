@@ -196,16 +196,17 @@ fn start_rebase(repository: &Repository,
     }
 }
 
-// error: cannot find derive macro `Parser` in this scope
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
+    #[arg(long, short='g')]
     directory: Option<String>,
-    root_reference: Option<String>,
     #[arg(short, long)]
     fetch: bool,
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+
+    root_reference: Option<String>,
 }
 
 ///
