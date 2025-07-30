@@ -146,10 +146,6 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
         }
     }
 
-    fn as_any(& self) -> &dyn Any {
-        self
-    }
-
     // we need a repository!
     fn node_prepare(&mut self) {
         info!("prepare {:?}", self.node_identity());

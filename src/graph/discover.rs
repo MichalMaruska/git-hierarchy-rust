@@ -1,6 +1,5 @@
 use log::{self,info};
 use std::collections::HashMap;
-use std::any::Any;
 
 use crate::graph::Graph;
 
@@ -12,7 +11,6 @@ pub trait NodeExpander {
     fn node_prepare(&mut self); // -> &dyn NodeExpander; // upgrade itself? or what
     fn node_children(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 
-    fn as_any(& self) -> &dyn Any;
 }
 
 pub fn discover_graph(start: Vec<Box<dyn NodeExpander>>) -> (Graph, Vec<Box<dyn NodeExpander>>)
