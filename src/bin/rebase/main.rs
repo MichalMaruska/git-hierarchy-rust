@@ -31,7 +31,7 @@ use graph::discover::NodeExpander;
 enum RebaseResult {
     Nothing,
     Done,
-    Failed,
+    // Failed,
 }
 
 const TEMP_HEAD_NAME : &str = "tempSegment";
@@ -74,6 +74,7 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
                             &new_start.peel_to_commit().unwrap());
 
     if !git_run(repository, &["cherry-pick", segment.git_revisions().as_str() ]).success() {
+        // return RebaseResult::Failed;
         panic!("cherry-pick failed");
     }
 
