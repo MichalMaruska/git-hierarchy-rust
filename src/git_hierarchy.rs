@@ -232,7 +232,7 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     }
 
     // just get the Names.
-    fn node_children(&self) -> Vec<Box<dyn NodeExpander + 'a>>
+    fn node_children(&self) -> Vec<Box<dyn NodeExpander>>
     {
         let repository = get_repository();
         match self {

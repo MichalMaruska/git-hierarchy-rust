@@ -5,6 +5,7 @@ pub trait NodeExpander {
     // not object-safe:
     // so Self is not ok, but NodeExpander is ?
     fn node_prepare(&mut self); // -> &dyn NodeExpander; // upgrade itself? or what
-    fn node_children(&self) -> Vec<Box<dyn NodeExpander + '_>>; // owned!
 
+    // fixme:
+    fn node_children(&self) -> Vec<Box<dyn NodeExpander>>; // owned!
 }
