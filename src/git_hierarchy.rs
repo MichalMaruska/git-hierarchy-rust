@@ -136,8 +136,7 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
 }
 
 // note: trait items always share the visibility of their trait
-impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
-
+impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     fn node_identity(&self) -> &str {
         match self {
             Self::Name(x) => x,
