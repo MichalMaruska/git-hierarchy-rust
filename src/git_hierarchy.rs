@@ -210,6 +210,4 @@ impl<'a> NodeExpander for GitHierarchy<'a> {
             GitHierarchy::Reference(r) => r.name().unwrap(),
         }
     }
-
-    // just get the Names.
 }
