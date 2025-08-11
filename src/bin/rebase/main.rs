@@ -168,7 +168,7 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
 
 
 // lifetime irrelevant?
-fn get_merge_commit_message<'a, Iter>(sum_name: &str, first: &str, others: Iter) -> String
+fn get_merge_commit_message<'a,'b,'c,Iter>(sum_name: &'b str, first: &'c str, others: Iter) -> String
     where
     Iter : Iterator<Item = &'a str>
 {
@@ -212,8 +212,10 @@ fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<Stri
         let others = summands.iter().skip(1);
 
         #[allow(unused)]
-        let message = get_merge_commit_message(sum.name(), first.node_identity(),
-                                               others.map(|x: &GitHierarchy | x.node_identity()));
+        let message = get_merge_commit_message(sum.name(),
+                                               first.node_identity(),
+                                               // : &GitHierarchy
+                                               others.map(|x | x.node_identity()));
         // proceed:
         #[allow(unused)]
         let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
