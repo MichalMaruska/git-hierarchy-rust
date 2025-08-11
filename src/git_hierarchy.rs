@@ -80,9 +80,7 @@ pub enum GitHierarchy<'repo> {
     Reference(Reference<'repo>),
 }
 
-pub fn load<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
-
-    let repository = get_repository();
+pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHierarchy<'repo>, git2::Error> {
 
     let name = extract_name(name);
     let reference = repository.find_reference(&concatenate(GIT_HEADS_PATTERN, name))?;
@@ -129,7 +127,9 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
         info!("prepare {:?}", self.node_identity());
         match self {
             Self::Name(x) => {
-                if let Ok(c) = load(x) {
+                let repository = get_repository();
+                if let Ok(c) = load(repository, x) {
+                    // c is GitHierarchy<'static> here I move
                     *self = c;
                 }
             }
