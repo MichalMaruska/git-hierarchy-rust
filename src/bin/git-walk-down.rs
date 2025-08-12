@@ -18,9 +18,8 @@ use ::git_hierarchy::base::{set_repository,get_repository,unset_repository};
    = help: use `::git_hierarchy` to refer to this crate unambiguously
 */
 
-use ::discover_graph::GraphDiscoverer;
 use ::git_hierarchy::graph::discover::NodeExpander;
-use ::git_hierarchy::graph::discover_pet::GitHierarchyProvider;
+use ::git_hierarchy::graph::discover_pet::{find_hierarchy};
 
 #[allow(unused)]
 use tracing::debug;
@@ -46,17 +45,15 @@ fn main() {
     // load one Segment:
     let root = cli.root_reference.unwrap();
 
-    // 1. Perform discovery
-    let provider = GitHierarchyProvider::new(get_repository());
-    let mut discoverer = GraphDiscoverer::new(provider);
-    let discovery_order = discoverer.dfs_discover(root);
+    let (object_map, // String -> GitHierarchy
+         hash_to_graph,  // stable graph:  String -> index ?
+         graph,          // index -> String?
+         discovery_order) = find_hierarchy(get_repository(), root);
 
-    let graph = discoverer.get_graph();
-    let (provider, hash_to_graph) = discoverer.get_provider();
-
+    // convert the gh objects?
     for v in discovery_order {
         println!("{:?} {:?} {:?}", v,
-                 provider.object_map.get(&v).unwrap().node_identity(),
+                 object_map.get(&v).unwrap().node_identity(),
                  graph.node_weight(
                      hash_to_graph.get(&v).unwrap().clone()).unwrap()
         );
