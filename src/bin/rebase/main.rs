@@ -212,9 +212,14 @@ struct Cli {
 
 ///
 fn main() {
-    let cli = Cli::parse();
 
-    tracing_subscriber::fmt::init();
+    let cli = Cli::parse();
+    // cli can override the Env variable.
+    if cli.verbose > 0 {
+        tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
+    } else {
+        tracing_subscriber::fmt::init();
+    }
 
     let repo = match Repository::open(cli.directory.unwrap_or(".".to_string())) {
         Ok(repo) => repo,
