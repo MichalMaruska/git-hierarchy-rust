@@ -60,7 +60,10 @@ impl<'repo> Segment<'repo> {
     pub fn uptodate(&self, repository: &Repository) -> bool {
         // debug!("looking at segment: {:?} {:?}", self.base.name().unwrap(), self._start.name().unwrap());
         git_same_ref(repository, &self.base, &self._start)
-        // `&Reference<'_>`, found `Ref<'_, Reference<'_>>`
+    }
+
+    pub fn empty(&self, repository: &Repository) -> bool {
+        git_same_ref(repository, &self.reference, &self._start)
     }
 
     pub fn git_revisions(&self) -> String {
