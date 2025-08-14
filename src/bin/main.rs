@@ -18,9 +18,6 @@ use log::{self,info,error};
 use stderrlog::LogLevelNum;
 // use tracing::{Level, event, instrument};
 
-// This declaration will look for a file named `graph'.rs and will
-// insert its contents inside a module named `my` under this scope
-
 use ::git_hierarchy::base::{get_repository,set_repository,unset_repository};
 
 use ::git_hierarchy::*;
@@ -47,10 +44,6 @@ struct Cli {
     root_reference: Option<String>,
 }
 
-
-const GLOB_REFS_BASES: &str = "refs/base/*";
-
-///
 // fn refsWithPrefixIter(iterator storer.ReferenceIter, prefix string) storer.ReferenceIter {
 
 fn main() {
