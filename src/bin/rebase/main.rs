@@ -9,6 +9,7 @@ use git2::{Repository,Reference,Error,Branch,BranchType,ReferenceFormat,Remote};
 use tracing::{warn,info,debug};
 
 use std::collections::{HashMap};
+use std::iter::Iterator;
 use ::git_hierarchy::base::{get_repository,set_repository,unset_repository,git_same_ref,checkout_new_head_at};
 use ::git_hierarchy::utils::{extract_name,divide_str,concatenate,find_non_matching_elements};
 use ::git_hierarchy::execute::git_run;
@@ -163,6 +164,29 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
 
     // reflog etc.
     force_head_to(repository, segment.name(), new_head);
+}
+
+
+// lifetime irrelevant?
+fn get_merge_commit_message<'a, Iter>(sum_name: &str, first: &Reference, others: Iter) -> String
+    where
+    Iter : Iterator<Item = &'a Reference<'a>>
+{
+    let mut message = format!("Sum: {sum_name}\n\n{}", first.name().unwrap());
+
+    const NAMES_PER_LINE : usize = 3;
+    for (i, reference) in others.enumerate() {
+        // resolve them! maybe sum.Summands should be a map N -> ref
+        // pointerRef, _ := TheRepository.Reference(ref.Target(), false)
+        message.push_str(" + ");
+        message.push_str(reference.name().unwrap());
+
+        if i % NAMES_PER_LINE == 0 {
+            // exactly same as push_str()
+            message += "\n"
+        }
+    }
+    return message;
 }
 
 /// Given @sum, check if it's up-to-date.
