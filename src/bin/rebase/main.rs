@@ -17,6 +17,9 @@ use crate::graph::discover_pet::find_hierarchy;
 // I need both:
 #[allow(unused)]
 use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
+use std::fs;
+use std::io;
+use std::path::PathBuf;
 
 /*
  note: ambiguous because of a conflict between a name from a glob import and an outer scope during import or macro resolution
@@ -35,14 +38,18 @@ enum RebaseResult {
 }
 
 const TEMP_HEAD_NAME : &str = "tempSegment";
+const MARKER_FILENAME : &str = ".segment-cherry-pick";
 
+fn marker_filename(repository: &Repository) -> PathBuf {
+    repository.commondir().join(MARKER_FILENAME)
+}
 
-fn create_marker_file() {
+fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> {
+    let path = marker_filename(repository);
+    // todo: a Git reference?
     // persistent mark, if we fail, and during the session.
-    /*
-    mark := plumbing.NewSymbolicReference(".segment-cherry-pick", segment.Ref.Name());
-    err := repository.Storer.SetReference(mark)
-    */
+    debug!("Create marker: {:?}", path);
+    fs::write(path, content)
 }
 
 // either exit or rewrite the segment ....its reference should update oid.
@@ -63,7 +70,7 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
 
     debug!("rebasing by Cherry-picking {}!", segment.name());
     // can I raii ? so drop() would remove the file?
-    create_marker_file();
+    create_marker_file(repository, segment.name()).unwrap();
 
     // checkout to that ref
     // todo: git stash
@@ -88,6 +95,11 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
         panic!("branch -D failed");
     }
     // temp_head.delete().expect("failed to delete a branch");
+
+    let path = marker_filename(repository);
+    debug!("delete: {:?}", path);
+    fs::remove_file(path).unwrap();
+
     return status;
 }
 
