@@ -5,6 +5,7 @@
 use tracing::{info,warn,debug};
 
 use crate::base::*;
+use crate::base::git_same_ref;
 
 use crate::graph::discover::NodeExpander;
 
@@ -54,6 +55,12 @@ impl<'repo> Segment<'repo> {
 
     pub fn name(&self) -> &str {
         self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap()
+    }
+
+    pub fn uptodate(&self, repository: &Repository) -> bool {
+        // debug!("looking at segment: {:?} {:?}", self.base.name().unwrap(), self._start.name().unwrap());
+        git_same_ref(repository, &self.base, &self._start)
+        // `&Reference<'_>`, found `Ref<'_, Reference<'_>>`
     }
 
     pub fn git_revisions(&self) -> String {
