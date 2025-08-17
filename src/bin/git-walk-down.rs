@@ -1,13 +1,8 @@
-#![allow(unused)]
-
-// deny, warn, allow...
-
-// #![warn(unused_imports)]
-//# allow
-
 // walk the hierarchy
 // - assemble list of segments/sums.
-// - graph, toposort
+// todo:
+// - clone
+// - replaceInHierarchy ...the base from->to, mapping
 
 //
 // get list of segments
@@ -33,8 +28,9 @@ use ::git_hierarchy::graph;
 use graph::discover::NodeExpander;
 use graph::topology_sort::topological_sort;
 
-
 // use std::path::PathBuf;
+use tracing::debug;
+use tracing_subscriber;
 
 // error: cannot find derive macro `Parser` in this scope
 #[derive(Parser, Debug)]
@@ -44,26 +40,16 @@ struct Cli {
     root_reference: Option<String>,
 }
 
-// fn refsWithPrefixIter(iterator storer.ReferenceIter, prefix string) storer.ReferenceIter {
-
 fn main() {
     let cli = Cli::parse();
-
-    stderrlog::new().module(module_path!())
-        .verbosity(LogLevelNum::Warn) // Cli.verbose Warn Info
-        .init()
-        .unwrap();
+    tracing_subscriber::fmt::init();
 
     let repo = match Repository::open(cli.directory.unwrap_or(".".to_string())) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
-    unsafe {
-        set_repository(repo);
-    }
 
-    let repo = get_repository();
-    let head = repo.head();
+    set_repository(repo);
 
     // load one Segment:
     let mut root = GitHierarchy::Name(cli.root_reference.unwrap_or("mmc".to_string()));
@@ -79,7 +65,5 @@ fn main() {
     // let msg = repo.message();
     // println!("{:?}", &head);
 
-    unsafe {
-        unset_repository();
-    }
+    unset_repository();
 }
