@@ -57,7 +57,7 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 
 // either exit or rewrite the segment ....its reference should update oid.
 fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) -> RebaseResult {
-    info!("should rebase {}", segment.name());
+    info!("maybe rebase {}", segment.name());
 
     if segment.uptodate(repository) {
         info!("nothing to do -- base and start equal");
@@ -123,7 +123,7 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
             panic!();
         }
     } else {
-     RebaseResult::Nothing
+        RebaseResult::Nothing
     }
 }
 
@@ -354,11 +354,10 @@ fn rebase_node<'repo>(repo: &'repo Repository,
     }
 }
 
-
 fn start_rebase(repository: &Repository,
                 root: String,
                 fetch: bool) {
-
+    // summand -> object_map ->
     let (object_map, // String -> GitHierarchy
          hash_to_graph,  // stable graph:  String -> index ?
          graph,          // index -> String?
@@ -382,6 +381,7 @@ struct Cli {
     directory: Option<String>,
     #[arg(short, long)]
     fetch: bool,
+
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
@@ -425,6 +425,5 @@ fn main() {
 
     start_rebase(repo, root.node_identity().to_owned(),
                  cli.fetch);
-
     unset_repository();
 }

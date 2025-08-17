@@ -96,9 +96,12 @@ impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
 pub fn find_hierarchy<'repo>(repo: &'repo Repository, root: String) ->
     (
         // how to return these types?
+        // labels -> object
         HashMap<String, GitHierarchy<'repo>>,
+        // label->index
         HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
         petgraph::stable_graph::StableGraph<std::string::String, ()>,
+        // order labels
         Vec<std::string::String>
     )
     // GraphDiscoverer<String,GitHierarchyProvider<'repo>>

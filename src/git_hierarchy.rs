@@ -116,13 +116,13 @@ impl<'repo> Segment<'repo> {
 pub struct Sum<'repo> {
     pub reference: Reference<'repo>,
     summands: Vec<Reference<'repo>>,
+    // resolved: RefCell<Option<Vec<GitHierarchy<'repo>>>>,
 }
 
 impl<'repo>  Sum<'repo> {
 
-    // vec to vec
     pub fn summands(&self, repository: &'repo Repository) -> Vec<GitHierarchy<'repo>> {
-
+        debug!("resolving summands for {:?}", self.name());
         let mut resolved : Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
 
         for summand in &self.summands {
@@ -130,11 +130,18 @@ impl<'repo>  Sum<'repo> {
                                                           expect("base should be a symbolic reference")).unwrap();
             resolved.push(GitHierarchy::Name(
                 symbolic_base.name().unwrap().to_string()
-            ))
+            ));
+            debug!("{:?} -> {:?}", summand.name().unwrap(), symbolic_base.name().unwrap());
         }
         return resolved;
     }
 
+    /*
+    pub fn rewrite_summands(&self, value: Vec<&GitHierarchy<'repo>>) {
+        // fixme: replace_with
+        self.resolved.replace(Some(value));
+    }
+    */
 
     pub fn name(&self) -> &str {
         // fixme: same as ....
@@ -196,7 +203,8 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
         info!("a sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum {
             reference: reference,
-            summands
+            summands: summands,
+            // resolved: RefCell::new(None),
         }));
     }
 
@@ -206,7 +214,8 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
 
 // note: trait items always share the visibility of their trait
 impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
-    fn node_identity(&self) -> &str {
+    fn node_identity(&self) -> &str { // indeed it lives as long as the node/Reference.
+        // why is it needed? temporarily?
         match self {
             Self::Name(x) => x,
             GitHierarchy::Segment(s) => s.name(),
@@ -217,6 +226,7 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
 
     // we need a repository!
     fn node_prepare(&mut self) {
+        todo!();
         info!("prepare {:?}", self.node_identity());
         match self {
             Self::Name(x) => {
@@ -238,6 +248,7 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     // just get the Names.
     fn node_children(&self) -> Vec<Box<dyn NodeExpander>>
     {
+        todo!();
         let repository = get_repository();
         match self {
             // regular branch. say `master'
