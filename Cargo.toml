@@ -12,6 +12,10 @@ path = "src/lib.rs"
 name = "git-walk-down"
 path = "src/bin/git-walk-down.rs"
 
+[[bin]]
+name = "git-rebase-poset"
+path = "src/bin/rebase/main.rs"
+
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
 derive = "1.0.0"
