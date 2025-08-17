@@ -116,13 +116,13 @@ impl<'repo> Segment<'repo> {
 pub struct Sum<'repo> {
     pub reference: Reference<'repo>,
     summands: Vec<Reference<'repo>>,
+    // resolved: RefCell<Option<Vec<GitHierarchy<'repo>>>>,
 }
 
 impl<'repo>  Sum<'repo> {
 
-    // vec to vec
     pub fn summands(&self, repository: &'repo Repository) -> Vec<GitHierarchy<'repo>> {
-
+        debug!("resolving summands for {:?}", self.name());
         let mut resolved : Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
 
         for summand in &self.summands {
@@ -130,11 +130,18 @@ impl<'repo>  Sum<'repo> {
                                                           expect("base should be a symbolic reference")).unwrap();
             resolved.push(GitHierarchy::Name(
                 symbolic_base.name().unwrap().to_string()
-            ))
+            ));
+            debug!("{:?} -> {:?}", summand.name().unwrap(), symbolic_base.name().unwrap());
         }
         return resolved;
     }
 
+    /*
+    pub fn rewrite_summands(&self, value: Vec<&GitHierarchy<'repo>>) {
+        // fixme: replace_with
+        self.resolved.replace(Some(value));
+    }
+    */
 
     pub fn name(&self) -> &str {
         // fixme: same as ....
@@ -196,7 +203,8 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
         info!("a sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum {
             reference: reference,
-            summands
+            summands: summands,
+            // resolved: RefCell::new(None),
         }));
     }
 

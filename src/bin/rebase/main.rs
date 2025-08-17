@@ -122,7 +122,7 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
             panic!();
         }
     } else {
-     RebaseResult::Nothing
+        RebaseResult::Nothing
     }
 }
 
@@ -382,11 +382,10 @@ fn rebase_node<'repo>(repo: &'repo Repository,
     }
 }
 
-
 fn start_rebase(repository: &Repository,
                 root: String,
                 fetch: bool) {
-
+    // summand -> object_map ->
     let (object_map, // String -> GitHierarchy
          hash_to_graph,  // stable graph:  String -> index ?
          graph,          // index -> String?
@@ -410,6 +409,7 @@ struct Cli {
     directory: Option<String>,
     #[arg(short, long)]
     fetch: bool,
+
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
