@@ -1,4 +1,6 @@
-use log::{self,info};
+#[allow(unused)]
+use log::{self,info,warn};
+
 use std::collections::HashMap;
 use std::any::Any;
 
