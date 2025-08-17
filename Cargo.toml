@@ -3,6 +3,11 @@ name = "git-hierarchy"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "git_hierarchy"
+path = "src/lib.rs"
+
+
 [[bin]]
 name = "git-walk-down"
 path = "src/bin/git-walk-down.rs"
