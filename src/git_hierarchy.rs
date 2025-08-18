@@ -80,8 +80,7 @@ pub enum GitHierarchy<'repo> {
     Reference(Reference<'repo>),
 }
 
-
-fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
+pub fn load<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
 
     let repository = get_repository();
 
@@ -130,7 +129,7 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
         info!("prepare {:?}", self.node_identity());
         match self {
             Self::Name(x) => {
-                if let Ok(c) = convert(x) {
+                if let Ok(c) = load(x) {
                     *self = c;
                 }
             }
