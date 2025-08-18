@@ -91,7 +91,7 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
 
-            info!("segment found");
+            info!("segment found {}", name);
             return Ok(GitHierarchy::Segment( Segment {
                 reference: reference,
                 base,
@@ -109,7 +109,7 @@ fn convert<'a>(name: &'a str) -> Result<GitHierarchy<'static>, git2::Error> {
         }));
     }
 
-    info!("plain reference");
+    info!("plain reference {}", name);
     return Ok(GitHierarchy::Reference(reference));
 }
 
