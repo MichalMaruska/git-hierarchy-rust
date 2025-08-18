@@ -2,8 +2,11 @@
 #![deny(elided_lifetimes_in_paths)]
 
 use std::cell::{OnceCell};
-use git2::{Repository,Reference,Commit};
-use tracing::debug;
+use git2::{Repository,Reference,Commit,Branch};
+use git2::build::CheckoutBuilder;
+use crate::utils::{concatenate};
+#[allow(unused)]
+use tracing::{warn,info,debug};
 
 // owned git.
 
@@ -66,4 +69,30 @@ pub fn git_same_ref(repository: &Repository, reference: &Reference<'_>, next: &R
     }
 
     sha(repository, reference).id() == sha(repository, next).id()
+}
+
+// git checkout name -b target
+pub fn checkout_new_head_at<'repo>(repository: &'repo Repository,
+                                   name: &'_ str, target: &Commit) -> Branch<'repo> {
+    // reflog?
+    info!("create temp branch {:?}", name);
+    let new_branch = repository.branch(name,
+                                       // .peel_to_commit().unwrap()
+                                       target, false).unwrap();
+    let full_name = new_branch.name().unwrap().unwrap();
+    let full_name = concatenate("refs/heads/",  full_name);
+    info!("checkout {:?}", full_name);
+
+    // repository.reset()
+    // git_run(repository, &["checkout", "--no-track", "-B", temp_head, new_start.name().unwrap()]);
+    // wrong:
+    // https://libgit2.org/docs/reference/main/checkout/git_checkout_head.html
+    repository.set_head(&full_name).expect("failed to create a branch on given commit");
+
+    repository.checkout_head(
+        Some(CheckoutBuilder::new().force().remove_untracked(true))
+        // git_checkout_strategy_t::GIT_CHECKOUT_FORCE
+        // None
+        ).expect("failed to checkout the newly created branch");
+    return new_branch;
 }
