@@ -56,6 +56,12 @@ impl<'repo> Segment<'repo> {
         self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap()
     }
 
+    pub fn git_revisions(&self) -> String {
+        format!("{}..{}",
+                self._start.name().unwrap(),
+                self.reference.name().unwrap())
+    }
+
     pub fn reset(&self, repository: &'repo Repository) {
         let mut start_ref = repository.find_reference(self._start.name().unwrap()).unwrap();
         let oid = self.base(&repository).target_peel().unwrap();
