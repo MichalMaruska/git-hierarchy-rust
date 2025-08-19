@@ -1,7 +1,13 @@
 use discover_graph::GraphProvider;
 
-use crate::git_hierarchy::{GitHierarchy};
+use crate::git_hierarchy::{GitHierarchy,load};
+
+// GitHierarchy implements this, but we have to import explicitly.
+// ^^^^^^^^^^^^^ method not found in `GitHierarchy<'_>`
+use crate::graph::discover::NodeExpander;
+
 use git2::{Repository};
+
 
 // Example with external data source
 pub struct GitHierarchyProvider<'repo> {
@@ -31,18 +37,41 @@ impl<'repo>  GitHierarchyProvider<'repo> {
 
     fn fetch_neighbors(&mut self, vertex: &String) -> Vec<String> {
         self.call_count += 1;
-        println!("API call #{}: fetching neighbors for '{}'", self.call_count, vertex);
         // get from the object_map
         let repository = self.repository;
-
+        let gh = load(repository, vertex).unwrap();
         // convert if necessary
 
         // Get the children,
+        let mut ch = Vec::new();
+
+        match gh {
+            // regular branch. say `master'
+            GitHierarchy::Name(_x) => {panic!("unprepared")}
+            GitHierarchy::Segment(s) => {
+                let symbolic_base = s.base(&repository);
+                // back to name...
+                ch.push(symbolic_base.name().unwrap().to_owned());
+            }
+            GitHierarchy::Sum(s) => {
+                // copy
+                for summand in s.summands(&repository) {
+                    ch.push(summand.node_identity().to_owned());
+                }
+            }
+            GitHierarchy::Reference(_r) => {
+                // Vec::new()
+            }
+        }
+
+        // let ch = gh.node_children();
+        // this should be Strings
 
         // put in the object_map
 
         // return as Strings
-        return Vec::new();
+        // convert vec<&str> to vec<String> ?
+        return ch;
     }
 }
 
