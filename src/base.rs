@@ -1,4 +1,5 @@
 #![allow(static_mut_refs)]
+#![deny(elided_lifetimes_in_paths)]
 
 use std::cell::{OnceCell,Ref};
 use git2::{Repository};
