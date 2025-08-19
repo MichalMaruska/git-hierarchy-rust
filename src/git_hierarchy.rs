@@ -13,7 +13,7 @@ use crate::graph::discover::NodeExpander;
 use crate::utils::{concatenate,extract_name};
 
 use std::any::Any;
-use git2::{Repository,Reference,Commit};
+use git2::{Repository,Reference,Commit,Oid};
 
 // low level sum & segment
 const SEGMENT_BASE_PATTERN : &str = "refs/base/";
@@ -141,7 +141,12 @@ impl<'repo>  Sum<'repo> {
         // fixme: same as ....
         return branch_name(&self.reference);
     }
-}
+
+    pub fn parent_commits(&self) -> Vec<Oid> {
+        let commit =  self.reference.peel_to_commit().unwrap();
+        commit.parent_ids().collect()
+    }
+ }
 
 pub enum GitHierarchy<'repo> {
     Name(String),
