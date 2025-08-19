@@ -28,12 +28,54 @@ use ::git_hierarchy::graph;
 use graph::discover::NodeExpander;
 
 
+fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Result<(), Error> {
+    warn!("should fetch");
+    // remote ->
+    if reference.is_remote() {
+        // mmc: I think it's dangerous ... better avoid using this.
+        // let remote: RemoteHead;
+        // just fetch
+        // Remote.fetch()
+        unimplemented!("Remote");
+    } else if reference.is_branch() {
+        let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
+        warn!("fetch local {name}");
+        let mut branch = repository.find_branch(extract_name(&name), BranchType::Local).unwrap();
+        // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
+        let upstream = branch.upstream().unwrap();
+        // todo: double check if still in sync, then
+        let upstream_name = upstream.name().unwrap().unwrap();
+
+        // and this is host/branch
+        // fixme:
+        if git_same_ref(repository, reference, upstream.get()) {
+            info!("in sync, so let's fetch & update");
+        } else {
+            warn!("NOT in sync; should not update.");
+        }
+        //
+        let (rem, br) = divide_str(upstream_name, '/');
+        let mut remote = repository.find_remote(rem)?;
+        // repo.find_remote("origin")?.fetch(&["main"], None, None)
+        if true {
+            warn!("fetch {} {} ....", rem, br);
+            if remote.fetch(&[br], None, None).is_ok() {
+                let oid = branch.upstream().unwrap().get().target().expect("upstream disappeared");
+                branch.get_mut().set_target(oid, "fetch & fast-forward").expect("fetch/sync failed");
+            }
+        }
+        // sync the local
+    }
+    Ok(())
+}
+
+
 fn rebase_node<'repo>(repo: &Repository, node: &GitHierarchy<'_>, fetch: bool) {
     match node {
         GitHierarchy::Name(_n) => {panic!();}
         GitHierarchy::Reference(r) => {
             if fetch {
-                fetch_upstream_of(repo, r);
+                fetch_upstream_of(repo, r).expect("fetch failed");
             }}
         GitHierarchy::Segment(segment)=> {
             rebase_segment(repo, segment);
