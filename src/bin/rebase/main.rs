@@ -77,7 +77,9 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
         panic!("cherry-pick failed");
     }
 
-    let status = rebase_segment_finish(repository, segment,
+    // I have to re-find it?
+    rebase_segment_finish(repository, segment,
+                                       // temp_head.get()
                                        repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
 
     git_run(repository, &["branch", "--delete", temp_head]);
@@ -91,20 +93,23 @@ fn rebase_empty_segment(segment: &Segment<'_>, repository: &Repository) -> Rebas
     return RebaseResult::Done;
 }
 
-fn rebase_segment_finish(repository: &Repository, segment: &Segment<'_>, new_head: &Reference<'_>)  -> RebaseResult {
-    segment.reset(repository);
-    // reflog etc.
-    let name = segment.name();
+fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {
     debug!("relocating {:?} to {:?}", name, new_head.name().unwrap());
     let oid = new_head.peel_to_commit().unwrap();
     repository.branch(name, &oid, true);
     // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
 
+    // checkout, since then I drop ...:
     let full_name = concatenate("refs/heads/",  name);
     repository.set_head(&full_name).expect("failed to checkout");
     // git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
+}
 
-    return RebaseResult::Done;
+fn rebase_segment_finish(repository: &Repository, segment: &Segment<'_>, new_head: &Reference<'_>) {
+    segment.reset(repository);
+
+    // reflog etc.
+    force_head_to(repository, segment.name(), new_head);
 }
 
 
