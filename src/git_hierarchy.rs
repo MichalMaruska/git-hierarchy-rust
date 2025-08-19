@@ -19,7 +19,6 @@ use std::any::Any;
 const SEGMENT_BASE_PATTERN : &str = "refs/base/";
 const SEGMENT_START_PATTERN : &str = "refs/start/";
 const SUM_SUMMAND_PATTERN : &str = "refs/sums/";
-const GIT_HEADS_PATTERN : &str = "refs/heads/";
 
 fn base_name(name: &str) -> String {
     concatenate(SEGMENT_BASE_PATTERN, name)

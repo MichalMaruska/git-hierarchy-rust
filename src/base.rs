@@ -72,6 +72,7 @@ pub fn git_same_ref(repository: &Repository, reference: &Reference<'_>, next: &R
 }
 
 // git checkout name -b target
+pub const GIT_HEADS_PATTERN : &str = "refs/heads/";
 pub fn checkout_new_head_at<'repo>(repository: &'repo Repository,
                                    name: &'_ str, target: &Commit) -> Branch<'repo> {
     // reflog?
