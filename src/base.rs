@@ -2,7 +2,8 @@
 #![deny(elided_lifetimes_in_paths)]
 
 use std::cell::{OnceCell};
-use git2::{Repository};
+use git2::{Repository,Reference,Commit};
+use tracing::debug;
 
 // owned git.
 
@@ -55,3 +56,14 @@ pub fn unset_repository() {
     }
 }
 
+// this consults the store.
+pub fn git_same_ref(repository: &Repository, reference: &Reference<'_>, next: &Reference<'_>) -> bool {
+
+    fn sha<'a>(repository: &'a Repository, reference: &Reference<'a>) -> Commit<'a> {
+        let direct = reference.resolve().unwrap();
+        debug!("git_same_ref: {:?} {:?}", reference.name().unwrap(), direct.target());
+        repository.find_commit(direct.target().unwrap()).unwrap()
+    }
+
+    sha(repository, reference).id() == sha(repository, next).id()
+}
