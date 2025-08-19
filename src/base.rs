@@ -3,7 +3,6 @@
 
 use std::cell::{OnceCell};
 use git2::{Repository,Reference,Commit,Branch};
-use git2::build::CheckoutBuilder;
 use crate::utils::{concatenate};
 #[allow(unused)]
 use tracing::{warn,info,debug};
@@ -71,29 +70,29 @@ pub fn git_same_ref(repository: &Repository, reference: &Reference<'_>, next: &R
     sha(repository, reference).id() == sha(repository, next).id()
 }
 
-// git checkout name -b target
 pub const GIT_HEADS_PATTERN : &str = "refs/heads/";
+
+/// alternative to:
+/// git checkout name -b target
+/// git_run(repository, &["checkout", "--no-track", "-B", temp_head, new_start.name().unwrap()]);
 pub fn checkout_new_head_at<'repo>(repository: &'repo Repository,
-                                   name: &'_ str, target: &Commit) -> Branch<'repo> {
+                                   name: &'_ str,
+                                   target: &Commit<'_>) -> Branch<'repo> {
     // reflog?
     info!("create temp branch {:?}", name);
-    let new_branch = repository.branch(name,
-                                       // .peel_to_commit().unwrap()
-                                       target, false).unwrap();
+
+    // target = target.peel_to_commit().unwrap()
+    let new_branch = repository.branch(name, target, false).unwrap();
+
     let full_name = new_branch.name().unwrap().unwrap();
-    let full_name = concatenate("refs/heads/",  full_name);
-    info!("checkout {:?}", full_name);
+    let full_name = concatenate(GIT_HEADS_PATTERN,  full_name);
+    info!("checkout {:?} to {:?}", full_name, target);
 
-    // repository.reset()
-    // git_run(repository, &["checkout", "--no-track", "-B", temp_head, new_start.name().unwrap()]);
-    // wrong:
     // https://libgit2.org/docs/reference/main/checkout/git_checkout_head.html
-    repository.set_head(&full_name).expect("failed to create a branch on given commit");
+    // error: temporary value is freed at the end of this statement
+    let tree = target.tree().unwrap();
+    repository.checkout_tree(tree.as_object(), None).expect("failed to checkout the newly created branch");
 
-    repository.checkout_head(
-        Some(CheckoutBuilder::new().force().remove_untracked(true))
-        // git_checkout_strategy_t::GIT_CHECKOUT_FORCE
-        // None
-        ).expect("failed to checkout the newly created branch");
+    repository.set_head(&full_name).expect("failed to create a branch on given commit");
     return new_branch;
 }
