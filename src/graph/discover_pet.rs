@@ -1,12 +1,13 @@
 use discover_graph::GraphProvider;
+
 use crate::git_hierarchy::{GitHierarchy};
+use git2::{Repository};
 
 // Example with external data source
-pub struct GitHierarchyProvider {
+pub struct GitHierarchyProvider<'repo> {
+    repository: &'repo Repository,
     call_count: usize,
 }
-
-
 
 // What kind of structure do I want at the end?  .... (why?) topological order ... iterator? lookup? walk down?
 // what operations do I want .... on the graph still?  Stitch/clone/replace nodes?
@@ -20,9 +21,10 @@ pub struct GitHierarchyProvider {
 // Example with external data source
 
 // hardcoded to use String as
-impl GitHierarchyProvider {
-    pub fn new() -> Self {
+impl<'repo>  GitHierarchyProvider<'repo> {
+    pub fn new(repo: &'repo Repository) -> Self {
         Self {
+            repository: repo,
             call_count: 0
         }
     }
@@ -31,6 +33,7 @@ impl GitHierarchyProvider {
         self.call_count += 1;
         println!("API call #{}: fetching neighbors for '{}'", self.call_count, vertex);
         // get from the object_map
+        let repository = self.repository;
 
         // convert if necessary
 
@@ -43,7 +46,7 @@ impl GitHierarchyProvider {
     }
 }
 
-impl GraphProvider<String> for GitHierarchyProvider {
+impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
     fn get_neighbors(&mut self, vertex: &String) -> Vec<String> {
         std::thread::sleep(std::time::Duration::from_millis(10));
         self.fetch_neighbors(vertex)
