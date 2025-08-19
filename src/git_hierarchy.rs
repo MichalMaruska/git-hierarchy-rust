@@ -66,10 +66,33 @@ impl<'repo> Segment<'repo> {
 }
 
 pub struct Sum<'repo> {
-    reference: Reference<'repo>,
-    summands: Vec<Reference<'repo>>,
+    pub reference: Reference<'repo>,
+    pub summands: Vec<Reference<'repo>>,
 }
 
+impl<'repo>  Sum<'repo> {
+
+    // vec to vec
+    pub fn summands(&self, repository: &'repo Repository) -> Vec<GitHierarchy<'repo>> {
+
+        let mut resolved : Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
+
+        for summand in &self.summands {
+            let symbolic_base = repository.find_reference(summand.symbolic_target().
+                                                          expect("base should be a symbolic reference")).unwrap();
+            resolved.push(GitHierarchy::Name(
+                symbolic_base.name().unwrap().to_string()
+            ))
+        }
+        return resolved;
+    }
+
+
+    pub fn name(&self) -> &str {
+        // fixme: same as ....
+        return self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap();
+    }
+}
 
 pub enum GitHierarchy<'repo> {
     Name(String),
@@ -117,7 +140,7 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
         match self {
             Self::Name(x) => x,
             GitHierarchy::Segment(s) => s.name(),
-            GitHierarchy::Sum(s) => s.reference.name().unwrap(),
+            GitHierarchy::Sum(s) => s.name(),
             GitHierarchy::Reference(r) => r.name().unwrap(),
         }
     }
