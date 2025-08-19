@@ -1,5 +1,4 @@
-use discover_graph::GraphProvider;
-
+use discover_graph::{GraphProvider,GraphDiscoverer};
 use crate::git_hierarchy::{GitHierarchy,load};
 
 // GitHierarchy implements this, but we have to import explicitly.
@@ -92,3 +91,37 @@ impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
     }
     */
 }
+
+
+pub fn find_hierarchy<'repo>(repo: &'repo Repository, root: String) ->
+    (
+        // how to return these types?
+        HashMap<String, GitHierarchy<'repo>>,
+        HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
+        petgraph::stable_graph::StableGraph<std::string::String, ()>,
+        Vec<std::string::String>
+    )
+    // GraphDiscoverer<String,GitHierarchyProvider<'repo>>
+{
+    // 1. Perform discovery
+    // not `mut' ?
+    let provider = GitHierarchyProvider::new(repo);
+    let mut discoverer = GraphDiscoverer::new(provider); // consumes!
+
+    // T P ... P is provider, T String?
+    // GraphProvider<String>
+    // So we work with strings. Then ... how do we map to GitHierarchy ?
+    let discovery_order = discoverer.dfs_discover(root);
+
+    let graph = discoverer.get_graph();
+    // is this different from provider ?
+    let (provider, hash_to_graph) = discoverer.get_provider();
+
+    // we cannot drop the provider.
+    // but we can move out of it?
+    return (provider.object_map, // String -> GitHierarchy
+            hash_to_graph,  // stable graph:  String -> index ?
+            graph,          // index -> String?
+            discovery_order);   //  indices?
+}
+
