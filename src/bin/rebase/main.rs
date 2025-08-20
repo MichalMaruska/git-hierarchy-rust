@@ -195,21 +195,40 @@ fn get_merge_commit_message<'a,'b,'c,Iter>(sum_name: &'b str, first: &'c str, ot
 fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<String, GitHierarchy<'_>>) -> RebaseResult {
 
     let summands = sum.summands(repository);
+
+    let mut graphed_summands : Vec<&GitHierarchy<'_>> = summands.iter().map(
+        |s| {
+            let gh = object_map.get(s.node_identity()).unwrap();
+            debug!("convert {:?} to {:?}", s.node_identity(), gh.node_identity());
+            gh
+        }
+        // here we might use object_map
+        // vec<GitHierarchy> not Name but real.
+    ).collect();
+
+    // Vec<GitHierarchy<'repo>> is useless.
+    // convert to the nodes?
+
     let v = find_non_matching_elements(
-        summands.iter(),   // these are <&GitHierarchy>
+        graphed_summands.iter(),   // these are <&GitHierarchy>
 
         // we get reference.
         // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
         sum.parent_commits().into_iter(),
-        |gh|{ gh.commit().id() }
+        //
+        |gh|{
+            debug!("mapping {:?}", gh.node_identity());
+            gh.commit().id() }
         // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
     );
 
     if ! v.is_empty() {
         info!("so the sum is not up-to-date!");
 
-        let first = &summands[0];
-        let others = summands.iter().skip(1);
+        let first = graphed_summands.remove(0);
+        // &graphed_summands[0];
+        let others = graphed_summands.iter(); // .skip(1)
+        // let v = vec!();
 
         #[allow(unused)]
         let message = get_merge_commit_message(sum.name(),
@@ -219,6 +238,52 @@ fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<Stri
         // proceed:
         #[allow(unused)]
         let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
+
+        // use  git_run or?
+        let mut cmdline = vec!["merge",
+                               "-m", &message, // why is this not automatic?
+                               "--rerere-autoupdate",
+                               "--strategy", "octopus",
+                               "--strategy", "recursive",
+                               "--strategy-option", "patience",
+                               "--strategy-option", "ignore-space-change",
+        ];
+        for s in graphed_summands {
+            cmdline.push(s.node_identity());
+        }
+
+        git_run(repository, &cmdline);
+
+/*
+        piecewise
+
+        otherNames := lo.Map(others,
+        func (ref *plumbing.Reference, _ int) string {
+        return ref.Name().String()})
+
+        // otherNames...  cannot use otherNames (variable of type []string) as []any value in argument to
+        fmt.Println("summands are:", first, otherNames)
+
+        if piecewise {
+        // reset & retry
+        // piecewise:
+        for _, next := range others {
+        gitRun("merge", "-m",
+        "Sum: " + next.Name().String() + " into " + sum.Name(),
+        "--rerere-autoupdate", next.Name().String())
+    */
+
+
+        // finish
+        force_head_to(repository, sum.name(),
+                      // have to sync
+                      repository.find_branch("temp-sum", BranchType::Local).unwrap().get());
+        // git_run("branch", "--force", sum.Name(), tempHead)
+
+        debug!("delete: {:?}", temp_head.name());
+        if !git_run(repository, &["branch", "-D", temp_head.name().unwrap().unwrap() ]).success() {
+            panic!("branch -D failed");
+        }
     }
 
     // do we have a hint -- another merge?
