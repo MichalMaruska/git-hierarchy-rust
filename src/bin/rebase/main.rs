@@ -10,7 +10,7 @@ use tracing::{warn,info,debug};
 
 use std::collections::{HashMap};
 use ::git_hierarchy::base::{get_repository,set_repository,unset_repository,git_same_ref,checkout_new_head_at};
-use ::git_hierarchy::utils::{extract_name,divide_str,concatenate};
+use ::git_hierarchy::utils::{extract_name,divide_str,concatenate,find_non_matching_elements};
 use ::git_hierarchy::execute::git_run;
 
 use crate::graph::discover_pet::find_hierarchy;
@@ -165,6 +165,41 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
     force_head_to(repository, segment.name(), new_head);
 }
 
+/// Given @sum, check if it's up-to-date.
+///
+/// If not: create a new git merge commit.
+fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<String, GitHierarchy<'_>>) -> RebaseResult {
+
+    let summands = sum.summands(repository);
+    let v = find_non_matching_elements(
+        summands.iter(),   // these are <&GitHierarchy>
+
+        // we get reference.
+        // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
+        sum.parent_commits().into_iter(),
+        |gh|{ gh.commit().id() }
+        // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
+    );
+
+    if ! v.is_empty() {
+        info!("so the sum is not up-to-date!");
+
+        let first = &summands[0];
+        let others = summands.iter().skip(1);
+
+        #[allow(unused)]
+        let message = get_merge_commit_message(sum.name(), first.reference_of(),
+                                               others.map(|x: &GitHierarchy | x.reference_of()));
+        // proceed:
+        #[allow(unused)]
+        let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
+    }
+
+    // do we have a hint -- another merge?
+    // git merge
+
+    return RebaseResult::Done;
+}
 
 /// Given full git-reference name /refs/remotes/xx/bb return xx and bb
 fn extract_remote_name<'a>(name: &'a str) -> (&'a str, &'a str) {
@@ -240,7 +275,7 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
 fn rebase_node<'repo>(repo: &'repo Repository,
                       node: &GitHierarchy<'repo>,
                       fetch: bool,
-                      _object_map: &HashMap<String, GitHierarchy<'repo>>) {
+                      object_map: &HashMap<String, GitHierarchy<'repo>>) {
     match node {
         GitHierarchy::Name(_n) => {panic!();}
         GitHierarchy::Reference(r) => {
@@ -250,8 +285,8 @@ fn rebase_node<'repo>(repo: &'repo Repository,
         GitHierarchy::Segment(segment)=> {
             rebase_segment(repo, segment);
         }
-        GitHierarchy::Sum(_sum) => {
-            warn!("should re-merge");
+        GitHierarchy::Sum(sum) => {
+            remerge_sum(repo, sum, object_map);
         }
     }
 }
