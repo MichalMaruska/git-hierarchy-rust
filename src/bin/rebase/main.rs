@@ -168,18 +168,18 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
 
 
 // lifetime irrelevant?
-fn get_merge_commit_message<'a, Iter>(sum_name: &str, first: &Reference, others: Iter) -> String
+fn get_merge_commit_message<'a, Iter>(sum_name: &str, first: &str, others: Iter) -> String
     where
-    Iter : Iterator<Item = &'a Reference<'a>>
+    Iter : Iterator<Item = &'a str>
 {
-    let mut message = format!("Sum: {sum_name}\n\n{}", first.name().unwrap());
+    let mut message = format!("Sum: {sum_name}\n\n{}", first);
 
     const NAMES_PER_LINE : usize = 3;
-    for (i, reference) in others.enumerate() {
+    for (i, name) in others.enumerate() {
         // resolve them! maybe sum.Summands should be a map N -> ref
         // pointerRef, _ := TheRepository.Reference(ref.Target(), false)
         message.push_str(" + ");
-        message.push_str(reference.name().unwrap());
+        message.push_str(name);
 
         if i % NAMES_PER_LINE == 0 {
             // exactly same as push_str()
@@ -212,8 +212,8 @@ fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<Stri
         let others = summands.iter().skip(1);
 
         #[allow(unused)]
-        let message = get_merge_commit_message(sum.name(), first.reference_of(),
-                                               others.map(|x: &GitHierarchy | x.reference_of()));
+        let message = get_merge_commit_message(sum.name(), first.node_identity(),
+                                               others.map(|x: &GitHierarchy | x.node_identity()));
         // proceed:
         #[allow(unused)]
         let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
