@@ -82,10 +82,10 @@ impl<'repo> Segment<'repo> {
     // pub fn base(&self, repository: &Repository) -> Reference {
     // complains!!!
     pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
-        let step = repository.find_reference(self.base.symbolic_target()
+        let reference = repository.find_reference(self.base.symbolic_target()
             .expect("base should be a symbolic reference")).unwrap();
-
-        return step;
+        debug!("segment|base points at {:?}", reference.name().unwrap());
+        return reference;
     }
 }
 
