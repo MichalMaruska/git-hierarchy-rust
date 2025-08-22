@@ -115,7 +115,7 @@ impl<'repo> Segment<'repo> {
 
 pub struct Sum<'repo> {
     pub reference: Reference<'repo>,
-    pub summands: Vec<Reference<'repo>>,
+    summands: Vec<Reference<'repo>>,
 }
 
 impl<'repo>  Sum<'repo> {
