@@ -8,10 +8,12 @@ use crate::graph::discover::NodeExpander;
 
 use git2::{Repository};
 
+use std::collections::HashMap;
 
 // Example with external data source
 pub struct GitHierarchyProvider<'repo> {
     repository: &'repo Repository,
+    pub object_map: HashMap<String, GitHierarchy<'repo> >,
     call_count: usize,
 }
 
@@ -31,6 +33,7 @@ impl<'repo>  GitHierarchyProvider<'repo> {
     pub fn new(repo: &'repo Repository) -> Self {
         Self {
             repository: repo,
+            object_map: HashMap::new(),
             call_count: 0
         }
     }
@@ -48,18 +51,18 @@ impl<'repo>  GitHierarchyProvider<'repo> {
         match gh {
             // regular branch. say `master'
             GitHierarchy::Name(_x) => {panic!("unprepared")}
-            GitHierarchy::Segment(s) => {
+            GitHierarchy::Segment(ref s) => {
                 let symbolic_base = s.base(repository);
                 // back to name...
                 ch.push(symbolic_base.name().unwrap().to_owned());
             }
-            GitHierarchy::Sum(s) => {
+            GitHierarchy::Sum(ref s) => {
                 // copy
                 for summand in s.summands(&repository) {
                     ch.push(summand.node_identity().to_owned());
                 }
             }
-            GitHierarchy::Reference(_r) => {
+            GitHierarchy::Reference(ref _r) => {
                 // Vec::new()
             }
         }
@@ -68,7 +71,7 @@ impl<'repo>  GitHierarchyProvider<'repo> {
         // this should be Strings
 
         // put in the object_map
-
+        self.object_map.insert(vertex.to_owned(), gh);
         // return as Strings
         // convert vec<&str> to vec<String> ?
         return ch;
