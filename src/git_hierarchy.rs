@@ -4,8 +4,7 @@
 #[allow(unused)]
 use tracing::{info,warn,debug};
 
-use crate::base::*;
-use crate::base::git_same_ref;
+use crate::base::{git_same_ref,GIT_HEADS_PATTERN,get_repository};
 
 use crate::graph::discover::NodeExpander;
 
