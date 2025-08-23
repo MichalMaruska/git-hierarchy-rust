@@ -49,7 +49,7 @@ impl<'repo>  GitHierarchyProvider<'repo> {
             // regular branch. say `master'
             GitHierarchy::Name(_x) => {panic!("unprepared")}
             GitHierarchy::Segment(s) => {
-                let symbolic_base = s.base(&repository);
+                let symbolic_base = s.base(repository);
                 // back to name...
                 ch.push(symbolic_base.name().unwrap().to_owned());
             }
