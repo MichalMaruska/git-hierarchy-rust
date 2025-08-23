@@ -89,7 +89,12 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
     rebase_segment_finish(repository, segment,
                                        // temp_head.get()
                                        repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
+    cleanup_segment_rebase(repository, segment, temp_head);
+    return RebaseResult::Done;
+}
 
+// bad name:
+fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_head: Branch<'_> ) {
     debug!("delete: {:?}", temp_head.name());
     if !git_run(repository, &["branch", "-D", temp_head.name().unwrap().unwrap() ]).success() {
         panic!("branch -D failed");
@@ -99,8 +104,6 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
     let path = marker_filename(repository);
     debug!("delete: {:?}", path);
     fs::remove_file(path).unwrap();
-
-    return status;
 }
 
 fn rebase_empty_segment(segment: &Segment<'_>, repository: &Repository) -> RebaseResult {
