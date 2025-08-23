@@ -148,7 +148,8 @@ fn rebase_empty_segment(segment: &Segment<'_>, repository: &Repository) -> Rebas
 fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {
     debug!("relocating {:?} to {:?}", name, new_head.name().unwrap());
     let oid = new_head.peel_to_commit().unwrap();
-    repository.branch(name, &oid, true);
+    // create it:
+    repository.branch(name, &oid, true).unwrap();
     // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
 
     // checkout, since then I drop ...:
