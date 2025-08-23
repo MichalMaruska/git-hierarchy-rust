@@ -20,7 +20,6 @@ use crate::git_hierarchy::*;
 
 use ::git_hierarchy::graph;
 use graph::discover::NodeExpander;
-use graph::topology_sort::topological_sort;
 
 // use std::path::PathBuf;
 use tracing_subscriber;
