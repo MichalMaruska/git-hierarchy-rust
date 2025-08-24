@@ -94,8 +94,15 @@ fn rebase_empty_segment(segment: &Segment<'_>, repository: &Repository) -> Rebas
 fn rebase_segment_finish(repository: &Repository, segment: &Segment<'_>, new_head: &Reference<'_>)  -> RebaseResult {
     segment.reset(repository);
     // reflog etc.
-    git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
-    git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
+    let name = segment.name();
+    debug!("relocating {:?} to {:?}", name, new_head.name().unwrap());
+    let oid = new_head.peel_to_commit().unwrap();
+    repository.branch(name, &oid, true);
+    // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
+
+    let full_name = concatenate("refs/heads/",  name);
+    repository.set_head(&full_name).expect("failed to checkout");
+    // git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
 
     return RebaseResult::Done;
 }
