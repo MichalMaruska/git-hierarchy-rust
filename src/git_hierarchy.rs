@@ -39,6 +39,9 @@ fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Referen
     return v;
 }
 
+fn branch_name<'a,'repo>(reference: &'a Reference<'repo>) -> &'a str {
+    return reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap();
+}
 
 ///
 pub struct Segment<'repo> {
@@ -113,7 +116,7 @@ impl<'repo>  Sum<'repo> {
 
     pub fn name(&self) -> &str {
         // fixme: same as ....
-        return self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap();
+        return branch_name(&self.reference);
     }
 }
 
