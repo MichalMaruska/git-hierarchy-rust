@@ -11,10 +11,9 @@ use std::cell::RefCell;
 use crate::graph::discover::NodeExpander;
 
 use crate::utils::{concatenate,extract_name};
-use git2::{Repository,Reference};
 
 use std::any::Any;
-
+use git2::{Repository,Reference,Commit};
 
 // low level sum & segment
 const SEGMENT_BASE_PATTERN : &str = "refs/base/";
@@ -145,6 +144,28 @@ pub enum GitHierarchy<'repo> {
     Reference(Reference<'repo>),
 }
 
+impl<'repo> GitHierarchy<'repo> {
+
+    pub fn commit(&self) -> Commit<'_> {
+        let reference: &Reference<'_> =
+            match &self {
+                GitHierarchy::Name(x) => {
+                    eprintln!("trying {x}");
+                    panic!("bad state");
+                    // unimplemented!(),
+                }
+                GitHierarchy::Segment(s) => &s.reference.borrow(),
+                GitHierarchy::Sum(s) => &s.reference,
+                GitHierarchy::Reference(r) => &r
+            };
+        return reference.peel_to_commit().unwrap();
+    }
+}
+
+//  Vertex -> 1st stage children       ..... looked up if already in the graph/queue.
+//            1st stage ----(convert)---> Vertices.
+// Given GH::Name,
+// spreadsheet  Cell -> Formula & references.
 pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHierarchy<'repo>, git2::Error> {
 
     let name = extract_name(name);
