@@ -1,7 +1,9 @@
+// can I put this into ../Cargo.toml
+#![deny(elided_lifetimes_in_paths)]
+
 use log::info;
 
 use crate::base::*;
-
 
 use crate::graph::*;
 use crate::graph::discover::NodeExpander;
