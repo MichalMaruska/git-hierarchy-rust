@@ -88,6 +88,7 @@ impl<'repo> Segment<'repo> {
     pub fn reset(&self, repository: &'repo Repository) {
         // re-resolve:
         let name = self.reference.borrow();
+        // we cannot extract other references from there.
         self.reference.replace(repository.find_reference(name.name().unwrap()).unwrap());
 
         let mut start_ref = repository.find_reference(self._start.name().unwrap()).unwrap();
