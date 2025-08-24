@@ -12,7 +12,6 @@ use crate::graph::discover::NodeExpander;
 
 use crate::utils::{concatenate,extract_name};
 
-use std::any::Any;
 use git2::{Repository,Reference,Commit,Oid};
 
 // low level sum & segment
