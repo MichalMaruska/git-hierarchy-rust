@@ -85,7 +85,7 @@ impl<'repo> Segment<'repo> {
                 self.reference.borrow().name().unwrap())
     }
 
-    pub fn reset(&self, repository: &'static Repository) {
+    pub fn reset(&self, repository: &'repo Repository) {
         // re-resolve:
         let name = self.reference.borrow();
         self.reference.replace(repository.find_reference(name.name().unwrap()).unwrap());
