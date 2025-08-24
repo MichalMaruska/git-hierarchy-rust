@@ -48,14 +48,21 @@ pub struct Segment<'repo> {
     pub _start: Reference<'repo>,
 }
 
+const REBASED_REFLOG :&str = "Rebased";
+
 impl<'repo> Segment<'repo> {
+
     pub fn name(&self) -> &str {
         self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap()
     }
 
-    pub fn reset(&self) {
-        // set start to resolve(base)
-        // bug: mut needed !
+    pub fn reset(&self, repository: &'repo Repository) {
+        let mut start_ref = repository.find_reference(self._start.name().unwrap()).unwrap();
+        let oid = self.base(&repository).target_peel().unwrap();
+        warn!("setting {} to {}", start_ref.name().unwrap(), oid);
+        if start_ref.set_target(oid, REBASED_REFLOG).is_err() {
+            panic!("failed to set start to new base")
+        }
     }
     // pub fn base(&self, repository: &Repository) -> Reference {
     // complains!!!
