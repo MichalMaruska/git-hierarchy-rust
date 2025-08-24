@@ -54,7 +54,7 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 }
 
 // either exit or rewrite the segment ....its reference should update oid.
-fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResult {
+fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) -> RebaseResult {
     info!("should rebase {}", segment.name());
 
     if segment.uptodate(repository) {
@@ -138,7 +138,7 @@ fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_
     fs::remove_file(path).unwrap();
 }
 
-fn rebase_empty_segment(segment: &Segment<'_>, repository: &Repository) -> RebaseResult {
+fn rebase_empty_segment<'repo>(segment: &Segment<'repo>, repository: &'repo Repository) -> RebaseResult {
     debug!("rebase empty segment: {}", segment.name());
     // fixme:  move Start to Base!
     segment.reset(repository);
@@ -158,7 +158,7 @@ fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) 
     // git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
 }
 
-fn rebase_segment_finish(repository: &Repository, segment: &Segment<'_>, new_head: &Reference<'_>) {
+fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment<'repo>, new_head: &Reference<'_>) {
     segment.reset(repository);
 
     // reflog etc.
@@ -208,7 +208,9 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
 }
 
 
-fn rebase_node<'repo>(repo: &Repository, node: &GitHierarchy<'_>, fetch: bool) {
+fn rebase_node<'repo>(repo: &'repo Repository,
+                      node: &GitHierarchy<'repo>,
+                      fetch: bool) {
     match node {
         GitHierarchy::Name(_n) => {panic!();}
         GitHierarchy::Reference(r) => {
