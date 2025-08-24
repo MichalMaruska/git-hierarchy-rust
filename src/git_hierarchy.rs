@@ -1,11 +1,11 @@
 // can I put this into ../Cargo.toml
 #![deny(elided_lifetimes_in_paths)]
 
-use log::info;
+#[allow(unused)]
+use tracing::{info,warn,debug};
 
 use crate::base::*;
 
-use crate::graph::*;
 use crate::graph::discover::NodeExpander;
 
 use crate::utils::{concatenate,extract_name};
