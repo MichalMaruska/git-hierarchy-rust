@@ -130,7 +130,7 @@ pub enum GitHierarchy<'repo> {
 pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHierarchy<'repo>, git2::Error> {
 
     let name = extract_name(name);
-    let reference = repository.find_reference(&concatenate(GIT_HEADS_PATTERN, name))?;
+    let reference = repository.resolve_reference_from_short_name(name)?;
 
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
@@ -158,8 +158,7 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
 }
 
 // note: trait items always share the visibility of their trait
-impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
-
+impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     fn node_identity(&self) -> &str {
         match self {
             Self::Name(x) => x,
@@ -167,10 +166,6 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
             GitHierarchy::Sum(s) => s.name(),
             GitHierarchy::Reference(r) => r.name().unwrap(),
         }
-    }
-
-    fn as_any(& self) -> &dyn Any {
-        self
     }
 
     // we need a repository!
@@ -194,7 +189,7 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     }
 
     // just get the Names.
-    fn node_children(&self) -> Vec<Box<dyn NodeExpander>>
+    fn node_children(&self) -> Vec<Box<dyn NodeExpander +'_>>
     {
         let repository = get_repository();
         match self {
