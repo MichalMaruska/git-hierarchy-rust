@@ -108,7 +108,7 @@ pub enum GitHierarchy<'repo> {
 pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHierarchy<'repo>, git2::Error> {
 
     let name = extract_name(name);
-    let reference = repository.find_reference(&concatenate(GIT_HEADS_PATTERN, name))?;
+    let reference = repository.resolve_reference_from_short_name(name)?;
 
     if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
