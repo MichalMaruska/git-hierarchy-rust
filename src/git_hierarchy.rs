@@ -91,9 +91,16 @@ impl<'repo> Segment<'repo> {
         // we cannot extract other references from there.
         self.reference.replace(repository.find_reference(name.name().unwrap()).unwrap());
 
-        let mut start_ref = repository.find_reference(self._start.name().unwrap()).unwrap();
-        let oid = self.base(&repository).target_peel().unwrap();
-        warn!("setting {} to {}", start_ref.name().unwrap(), oid);
+        // fixme: what? ref -> name -> ref? b/c &self is not &mut?
+        let start_ref_name = self._start.name().unwrap();
+        let mut start_ref = repository.find_reference(start_ref_name).unwrap();
+
+        let base = self.base(repository);
+        debug!("base to {:?}", base.target());
+        // _peel fails!
+        let oid = base.target().unwrap();
+        // debug!("reset: {} to {}", self.name(), oid);
+        warn!("setting {} to {}", start_ref_name, oid);
         if start_ref.set_target(oid, REBASED_REFLOG).is_err() {
             panic!("failed to set start to new base")
         }
