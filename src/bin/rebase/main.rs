@@ -16,7 +16,8 @@ use crate::graph::discover_pet::find_hierarchy;
 
 // I need both:
 #[allow(unused)]
-use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum};
+use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum,load};
+
 use std::fs;
 use std::io;
 use std::path::PathBuf;
@@ -91,6 +92,37 @@ fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResul
                                        repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
     cleanup_segment_rebase(repository, segment, temp_head);
     return RebaseResult::Done;
+}
+
+fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
+    let path = marker_filename(repository);
+
+    if fs::exists(&path).unwrap() {
+        let name :String = fs::read_to_string(path).unwrap();
+        debug!("continue on {}", name);
+        if !git_run(repository, &["cherry-pick", "--continue"]).success() {
+            info!("Good?")
+            // panic!("cherry-pick failed");
+        }
+        if let GitHierarchy::Segment(segment) = load(repository, &name).unwrap() {
+
+            let tmp_head : Branch<'_> = repository.find_branch(TEMP_HEAD_NAME, BranchType::Local).unwrap();
+            if tmp_head.is_head() {
+                //name: &str, branch_type: BranchType) -> Result<Branch<'_>, Error> {head();
+                rebase_segment_finish(repository, &segment,
+                                                   repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
+                cleanup_segment_rebase(repository, &segment, tmp_head);
+                return RebaseResult::Done;
+            } else {
+                // mismatch
+                panic!();
+            }
+        } else {
+            panic!();
+        }
+    } else {
+     RebaseResult::Nothing
+    }
 }
 
 // bad name:
@@ -222,6 +254,8 @@ struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
+    #[arg(short, long="continue")]
+    cont: bool,
     root_reference: Option<String>,
 }
 
@@ -253,6 +287,10 @@ fn main() {
     let root = GitHierarchy::Name(root);
 
     println!("root is {}", root.node_identity());
+
+    if cli.cont {
+        rebase_segment_continue(repo);
+    }
 
     start_rebase(repo, root.node_identity().to_owned(),
                  cli.fetch);
