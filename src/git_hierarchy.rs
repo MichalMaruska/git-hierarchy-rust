@@ -9,7 +9,7 @@ use crate::graph::*;
 use crate::graph::discover::NodeExpander;
 
 use crate::utils::{concatenate,extract_name};
-use git2::{Repository,Reference,Error};
+use git2::{Repository,Reference};
 
 
 // low level sum & segment
@@ -125,9 +125,9 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
                 }
                 // } else { panic!("missing repo");}
             }
-            Self::Segment(s) => {}
-            Self::Sum(s) => {}
-            Self::Reference(r) => {
+            Self::Segment(_s) => {}
+            Self::Sum(_s) => {}
+            Self::Reference(_r) => {
                 info!("Reference!"); // bug!
             } // are you sure?
             //
@@ -142,7 +142,7 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
         let repository = get_repository();
         match self {
             // regular branch. say `master'
-            Self::Name(x) => {Vec::new()}
+            Self::Name(_x) => {panic!("unprepared")}// {Vec::new()}
             Self::Segment(s) => {
                 let symbolic_base = repository.find_reference(s.base.symbolic_target().
                     expect("base should be a symbolic reference")).unwrap();
@@ -159,7 +159,7 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
                 }
                 return v;
             }
-            Self::Reference(r) => {
+            Self::Reference(_r) => {
                 Vec::new()
             } // are you sure?
             //
