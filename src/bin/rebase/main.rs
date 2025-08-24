@@ -28,6 +28,79 @@ use ::git_hierarchy::graph;
 use graph::discover::NodeExpander;
 
 
+enum RebaseResult {
+    Nothing,
+    Done,
+    Failed,
+}
+
+const TEMP_HEAD_NAME : &str = "tempSegment";
+
+
+fn create_marker_file() {
+    // persistent mark, if we fail, and during the session.
+    /*
+    mark := plumbing.NewSymbolicReference(".segment-cherry-pick", segment.Ref.Name());
+    err := repository.Storer.SetReference(mark)
+    */
+}
+
+// either exit or rewrite the segment ....its reference should update oid.
+fn rebase_segment(repository: &Repository, segment: &Segment<'_>) -> RebaseResult {
+    info!("should rebase {}", segment.name());
+
+    if segment.uptodate(repository) {
+        info!("nothing to do -- base and start equal");
+        return RebaseResult::Nothing;
+    }
+
+    let new_start = segment.base(repository);
+
+    // todo: segment_empty()
+    if segment.empty(repository)  {
+        return rebase_empty_segment(segment, repository);
+    }
+
+    debug!("rebasing by Cherry-picking {}!", segment.name());
+    // can I raii ? so drop() would remove the file?
+    create_marker_file();
+
+    // checkout to that ref
+    // todo: git stash
+    // must change to the directory!
+    let temp_head = TEMP_HEAD_NAME;
+    Branch::name_is_valid(temp_head).unwrap();
+    let temp_head = checkout_new_head_at(repository, temp_head,
+                            &new_start.peel_to_commit().unwrap());
+
+    if !git_run(repository, &["cherry-pick", segment.git_revisions().as_str() ]).success() {
+        panic!("cherry-pick failed");
+    }
+
+    let status = rebase_segment_finish(repository, segment,
+                                       repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
+
+    git_run(repository, &["branch", "--delete", temp_head]);
+    return status;
+}
+
+fn rebase_empty_segment(segment: &Segment<'_>, repository: &Repository) -> RebaseResult {
+    debug!("rebase empty segment: {}", segment.name());
+    // fixme:  move Start to Base!
+    segment.reset(repository);
+    return RebaseResult::Done;
+}
+
+fn rebase_segment_finish(repository: &Repository, segment: &Segment<'_>, new_head: &Reference<'_>)  -> RebaseResult {
+    segment.reset(repository);
+    // reflog etc.
+    git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
+    git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
+
+    return RebaseResult::Done;
+}
+
+
 fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Result<(), Error> {
     warn!("should fetch");
     // remote ->
