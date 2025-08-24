@@ -6,6 +6,8 @@ use tracing::{info,warn,debug};
 
 use crate::base::{git_same_ref,GIT_HEADS_PATTERN,get_repository};
 
+use std::cell::RefCell;
+
 use crate::graph::discover::NodeExpander;
 
 use crate::utils::{concatenate,extract_name};
@@ -45,8 +47,10 @@ fn branch_name<'a,'repo>(reference: &'a Reference<'repo>) -> &'a str {
 
 ///
 pub struct Segment<'repo> {
-    pub reference: Reference<'repo>, // this could point at GitHierarchy.
-    base: Reference<'repo>, //&'repo mut GitHierarchy<'repo>,  //  Reference<'repo>
+    name: String,
+    pub reference: RefCell<Reference<'repo>>,
+
+    base: Reference<'repo>,
     pub _start: Reference<'repo>,
 }
 
@@ -54,8 +58,17 @@ const REBASED_REFLOG :&str = "Rebased";
 
 impl<'repo> Segment<'repo> {
 
+    pub fn new(reference: Reference<'repo>, base: Reference<'repo>, start: Reference<'repo>) -> Segment<'repo> {
+        Segment::<'repo> {
+            name: branch_name(&reference).to_owned(),
+            reference: RefCell::new(reference),
+            base,
+            _start: start
+        }
+    }
+
     pub fn name(&self) -> &str {
-        self.reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap()
+        self.name.as_ref()
     }
 
     pub fn uptodate(&self, repository: &Repository) -> bool {
@@ -64,16 +77,20 @@ impl<'repo> Segment<'repo> {
     }
 
     pub fn empty(&self, repository: &Repository) -> bool {
-        git_same_ref(repository, &self.reference, &self._start)
+        git_same_ref(repository, &self.reference.borrow(), &self._start)
     }
 
     pub fn git_revisions(&self) -> String {
         format!("{}..{}",
                 self._start.name().unwrap(),
-                self.reference.name().unwrap())
+                self.reference.borrow().name().unwrap())
     }
 
-    pub fn reset(&self, repository: &'repo Repository) {
+    pub fn reset(&self, repository: &'static Repository) {
+        // re-resolve:
+        let name = self.reference.borrow();
+        self.reference.replace(repository.find_reference(name.name().unwrap()).unwrap());
+
         let mut start_ref = repository.find_reference(self._start.name().unwrap()).unwrap();
         let oid = self.base(&repository).target_peel().unwrap();
         warn!("setting {} to {}", start_ref.name().unwrap(), oid);
@@ -81,8 +98,7 @@ impl<'repo> Segment<'repo> {
             panic!("failed to set start to new base")
         }
     }
-    // pub fn base(&self, repository: &Repository) -> Reference {
-    // complains!!!
+
     pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
         let reference = repository.find_reference(self.base.symbolic_target()
             .expect("base should be a symbolic reference")).unwrap();
@@ -138,11 +154,7 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
 
             info!("segment found {}", name);
-            return Ok(GitHierarchy::Segment( Segment {
-                reference: reference,
-                base,
-                _start: start
-            }));
+            return Ok(GitHierarchy::Segment(Segment::new(reference, base, start)));
         } else { return Err(git2::Error::from_str("start not found")) };
     }
 
