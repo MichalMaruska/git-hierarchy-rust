@@ -11,6 +11,8 @@ use crate::graph::discover::NodeExpander;
 use crate::utils::{concatenate,extract_name};
 use git2::{Repository,Reference};
 
+use std::any::Any;
+
 
 // low level sum & segment
 const SEGMENT_BASE_PATTERN : &str = "refs/base/";
@@ -143,6 +145,10 @@ impl<'a : 'static> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
             GitHierarchy::Sum(s) => s.name(),
             GitHierarchy::Reference(r) => r.name().unwrap(),
         }
+    }
+
+    fn as_any(& self) -> &dyn Any {
+        self
     }
 
     // we need a repository!
