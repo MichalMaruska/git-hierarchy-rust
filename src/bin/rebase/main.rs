@@ -8,6 +8,7 @@ use git2::{Repository,Reference,Error,Branch,BranchType,ReferenceFormat,Remote};
 
 use tracing::{warn,info,debug};
 
+use std::collections::{HashMap};
 use ::git_hierarchy::base::{get_repository,set_repository,unset_repository,git_same_ref,checkout_new_head_at};
 use ::git_hierarchy::utils::{extract_name,divide_str,concatenate};
 use ::git_hierarchy::execute::git_run;
@@ -238,7 +239,8 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
 
 fn rebase_node<'repo>(repo: &'repo Repository,
                       node: &GitHierarchy<'repo>,
-                      fetch: bool) {
+                      fetch: bool,
+                      _object_map: &HashMap<String, GitHierarchy<'repo>>) {
     match node {
         GitHierarchy::Name(_n) => {panic!();}
         GitHierarchy::Reference(r) => {
@@ -271,7 +273,7 @@ fn start_rebase(repository: &Repository,
                      hash_to_graph.get(&v).unwrap().clone()).unwrap()
         );
         let vertex = object_map.get(&v).unwrap();
-        rebase_node(repository, vertex, fetch);
+        rebase_node(repository, vertex, fetch, &object_map);
     }
 }
 
