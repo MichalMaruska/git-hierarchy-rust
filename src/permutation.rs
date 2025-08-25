@@ -28,3 +28,17 @@ pub fn reorder_by_permutation<T>(vec: &mut Vec<T>, permutation: &[usize]) {
         visited[current] = true;
     }
 }
+
+#[test]
+fn test_simple() {
+    let string = "Hello World";
+
+    let mut characters:Vec<char> = string.chars().collect();
+    let mut permutation : Vec<usize> = (0..string.len()).collect();
+
+    permutation.swap(0,6);
+    reorder_by_permutation(&mut characters, &permutation);
+
+    let s: String = characters.into_iter().collect();
+    assert_eq!(s, "Wello Horld");
+}
