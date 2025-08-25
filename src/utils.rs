@@ -18,3 +18,28 @@ pub fn divide_str(s: &'_ str, split_char: char) -> (&'_ str, &'_ str) {
     return (v[0],v[1]);
 }
 
+
+#[cfg(test)]
+mod test {
+    use super::*;
+#[test]
+    fn test_concatenate() {
+        assert_eq!("Hello World",
+                   concatenate("Hello ", "World"));
+    }
+
+#[test]
+    fn test_divide_str() {
+        assert_eq!(
+            divide_str("Hello World", ' '),
+            ("Hello", "World")
+        );
+    }
+
+    #[test]
+    fn test_extract_name() {
+        assert_eq!("name", extract_name("name"));
+        assert_eq!("name", extract_name("heads/name"));
+        assert_eq!("name", extract_name("refs/heads/name"));
+    }
+}
