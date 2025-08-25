@@ -1,0 +1,22 @@
+#!/usr/bin/zsh -feu
+
+# verify nothing staged!
+# git diff --cached
+if ! git diff --cached  --exit-code
+then
+    exit 1
+fi
+
+# git submodule foreach git pull origin main
+# --merge
+# --force --rebase
+git submodule update --remote --merge
+git submodule status
+git add submodules/
+
+# if anything staged
+if ! git diff --cached  --exit-code;
+then
+   git commit -m "update submodules"
+   git show
+fi
