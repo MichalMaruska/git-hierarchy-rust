@@ -6,6 +6,7 @@
 
 use clap::Parser;
 use git2::{Repository,};
+use std::path::PathBuf;
 
 use ::git_hierarchy::base::{set_repository,get_repository,unset_repository};
 use ::git_hierarchy::utils::init_tracing;
@@ -25,7 +26,9 @@ use tracing::debug;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    directory: Option<String>,
+    #[arg(long, short='g')]
+    directory: Option<PathBuf>,
+
     root_reference: Option<String>,
 
     #[arg(short, long, action = clap::ArgAction::Count)]
@@ -37,7 +40,7 @@ fn main() {
 
     init_tracing(cli.verbose);
 
-    let repo = match Repository::open(cli.directory.unwrap_or(".".to_string())) {
+    let repo = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
