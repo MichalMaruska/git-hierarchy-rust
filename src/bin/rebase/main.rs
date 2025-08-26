@@ -426,7 +426,7 @@ fn start_rebase(repository: &Repository,
 #[command(version, about, long_about = None)]
 struct Cli {
     #[arg(long, short='g')]
-    directory: Option<String>,
+    directory: Option<PathBuf>,
     #[arg(short, long)]
     fetch: bool,
 
@@ -445,7 +445,7 @@ fn main() {
     // cli can override the Env variable.
     init_tracing(cli.verbose);
 
-    let repo = match Repository::open(cli.directory.unwrap_or(".".to_string())) {
+    let repo = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
