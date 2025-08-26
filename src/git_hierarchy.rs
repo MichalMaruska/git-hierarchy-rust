@@ -2,7 +2,7 @@
 #![deny(elided_lifetimes_in_paths)]
 
 #[allow(unused)]
-use tracing::{info,warn,debug};
+use tracing::{debug, info, warn};
 
 use crate::base::{GIT_HEADS_PATTERN, git_same_ref};
 
@@ -10,37 +10,44 @@ use std::cell::RefCell;
 
 use crate::graph::discover::NodeExpander;
 
-use crate::utils::{concatenate,extract_name};
+use crate::utils::{concatenate, extract_name};
 
-use git2::{Repository,Reference,Commit,Oid};
+use git2::{Commit, Oid, Reference, Repository};
 
 // low level sum & segment
-const SEGMENT_BASE_PATTERN : &str = "refs/base/";
-const SEGMENT_START_PATTERN : &str = "refs/start/";
-const SUM_SUMMAND_PATTERN : &str = "refs/sums/";
+const SEGMENT_BASE_PATTERN: &str = "refs/base/";
+const SEGMENT_START_PATTERN: &str = "refs/start/";
+const SUM_SUMMAND_PATTERN: &str = "refs/sums/";
 
 fn base_name(name: &str) -> String {
     concatenate(SEGMENT_BASE_PATTERN, name)
 }
 
 fn start_name(name: &str) -> String {
-        concatenate(SEGMENT_START_PATTERN, name)
+    concatenate(SEGMENT_START_PATTERN, name)
 }
 
 fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Reference<'repo>> {
     let mut v = Vec::new();
 
-    debug!("searching for sum {}",  name);
-    if let Ok(ref_iterator) = repository.references_glob (&(concatenate(SUM_SUMMAND_PATTERN, name) + "/*")) {
+    debug!("searching for sum {}", name);
+    if let Ok(ref_iterator) =
+        repository.references_glob(&(concatenate(SUM_SUMMAND_PATTERN, name) + "/*"))
+    {
         for r in ref_iterator {
             v.push(r.unwrap());
-        }}
+        }
+    }
 
     return v;
 }
 
-fn branch_name<'a,'repo>(reference: &'a Reference<'repo>) -> &'a str {
-    return reference.name().unwrap().strip_prefix(GIT_HEADS_PATTERN).unwrap();
+fn branch_name<'a, 'repo>(reference: &'a Reference<'repo>) -> &'a str {
+    return reference
+        .name()
+        .unwrap()
+        .strip_prefix(GIT_HEADS_PATTERN)
+        .unwrap();
 }
 
 ///
@@ -52,16 +59,19 @@ pub struct Segment<'repo> {
     pub _start: Reference<'repo>,
 }
 
-const REBASED_REFLOG :&str = "Rebased";
+const REBASED_REFLOG: &str = "Rebased";
 
 impl<'repo> Segment<'repo> {
-
-    pub fn new(reference: Reference<'repo>, base: Reference<'repo>, start: Reference<'repo>) -> Segment<'repo> {
+    pub fn new(
+        reference: Reference<'repo>,
+        base: Reference<'repo>,
+        start: Reference<'repo>,
+    ) -> Segment<'repo> {
         Segment::<'repo> {
             name: branch_name(&reference).to_owned(),
             reference: RefCell::new(reference),
             base,
-            _start: start
+            _start: start,
         }
     }
 
@@ -79,9 +89,11 @@ impl<'repo> Segment<'repo> {
     }
 
     pub fn git_revisions(&self) -> String {
-        format!("{}..{}",
-                self._start.name().unwrap(),
-                self.reference.borrow().name().unwrap())
+        format!(
+            "{}..{}",
+            self._start.name().unwrap(),
+            self.reference.borrow().name().unwrap()
+        )
     }
 
     pub fn reset(&self, repository: &'repo Repository, oid: Oid) {
@@ -113,8 +125,13 @@ impl<'repo> Segment<'repo> {
     }
 
     pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
-        let reference = repository.find_reference(self.base.symbolic_target()
-            .expect("base should be a symbolic reference")).unwrap();
+        let reference = repository
+            .find_reference(
+                self.base
+                    .symbolic_target()
+                    .expect("base should be a symbolic reference"),
+            )
+            .unwrap();
         debug!("segment|base points at {:?}", reference.name().unwrap());
         return reference;
     }
@@ -127,19 +144,27 @@ pub struct Sum<'repo> {
     // resolved: RefCell<Option<Vec<GitHierarchy<'repo>>>>,
 }
 
-impl<'repo>  Sum<'repo> {
-
+impl<'repo> Sum<'repo> {
     pub fn summands(&self, repository: &'repo Repository) -> Vec<GitHierarchy<'repo>> {
         debug!("resolving summands for {:?}", self.name());
-        let mut resolved : Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
+        let mut resolved: Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
 
         for summand in &self.summands {
-            let symbolic_base = repository.find_reference(summand.symbolic_target().
-                                                          expect("base should be a symbolic reference")).unwrap();
+            let symbolic_base = repository
+                .find_reference(
+                    summand
+                        .symbolic_target()
+                        .expect("base should be a symbolic reference"),
+                )
+                .unwrap();
             resolved.push(GitHierarchy::Name(
-                symbolic_base.name().unwrap().to_string()
+                symbolic_base.name().unwrap().to_string(),
             ));
-            debug!("{:?} -> {:?}", summand.name().unwrap(), symbolic_base.name().unwrap());
+            debug!(
+                "{:?} -> {:?}",
+                summand.name().unwrap(),
+                symbolic_base.name().unwrap()
+            );
         }
         return resolved;
     }
@@ -160,7 +185,7 @@ impl<'repo>  Sum<'repo> {
         let commit = self.reference.borrow().peel_to_commit().unwrap();
         commit.parent_ids().collect()
     }
- }
+}
 
 pub enum GitHierarchy<'repo> {
     Name(String),
@@ -172,20 +197,17 @@ pub enum GitHierarchy<'repo> {
 }
 
 impl<'repo> GitHierarchy<'repo> {
-
     pub fn commit(&self) -> Commit<'_> {
-        let reference: &Reference<'_> =
-            match &self {
-                GitHierarchy::Name(x) => {
-                    eprintln!("trying {x}");
-                    panic!("bad state");
-                    // unimplemented!(),
-                }
-                GitHierarchy::Segment(s) => &s.reference.borrow(),
-                GitHierarchy::Sum(s) => &s.reference.borrow(),
-                GitHierarchy::Reference(r) => &r
-            };
-
+        let reference: &Reference<'_> = match &self {
+            GitHierarchy::Name(x) => {
+                eprintln!("trying {x}");
+                panic!("bad state");
+                // unimplemented!(),
+            }
+            GitHierarchy::Segment(s) => &s.reference.borrow(),
+            GitHierarchy::Sum(s) => &s.reference.borrow(),
+            GitHierarchy::Reference(r) => &r,
+        };
         return reference.peel_to_commit().unwrap();
     }
 }
@@ -194,21 +216,24 @@ impl<'repo> GitHierarchy<'repo> {
 //            1st stage ----(convert)---> Vertices.
 // Given GH::Name,
 // spreadsheet  Cell -> Formula & references.
-pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHierarchy<'repo>, git2::Error> {
-
+pub fn load<'repo>(
+    repository: &'repo Repository,
+    name: &'_ str,
+) -> Result<GitHierarchy<'repo>, git2::Error> {
     let name = extract_name(name);
     let reference = repository.resolve_reference_from_short_name(name)?;
 
-    if let Ok(base) =  repository.find_reference(base_name(name).as_str()) {
+    if let Ok(base) = repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
-
             info!("segment found {}", name);
             return Ok(GitHierarchy::Segment(Segment::new(reference, base, start)));
-        } else { return Err(git2::Error::from_str("start not found")) };
+        } else {
+            return Err(git2::Error::from_str("start not found"));
+        };
     }
 
     let summands = sum_summands(&repository, name);
-    if ! summands.is_empty() {
+    if !summands.is_empty() {
         info!("a sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum {
             name: branch_name(&reference).to_owned(),
