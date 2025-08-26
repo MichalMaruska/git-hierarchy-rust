@@ -5,12 +5,10 @@
 // - replaceInHierarchy ...the base from->to, mapping
 
 use clap::Parser;
-
-use tracing_subscriber;
-
 use git2::{Repository,};
-use ::git_hierarchy::base::{set_repository,get_repository,unset_repository};
 
+use ::git_hierarchy::base::{set_repository,get_repository,unset_repository};
+use ::git_hierarchy::utils::init_tracing;
 /*
  note: ambiguous because of a conflict between a name from a glob
        import and an outer scope during import or macro resolution
@@ -29,11 +27,15 @@ use tracing::debug;
 struct Cli {
     directory: Option<String>,
     root_reference: Option<String>,
+
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 }
 
 fn main() {
     let cli = Cli::parse();
-    tracing_subscriber::fmt::init();
+
+    init_tracing(cli.verbose);
 
     let repo = match Repository::open(cli.directory.unwrap_or(".".to_string())) {
         Ok(repo) => repo,
