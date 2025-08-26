@@ -141,8 +141,9 @@ fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_
 
 fn rebase_empty_segment<'repo>(segment: &Segment<'repo>, repository: &'repo Repository) -> RebaseResult {
     debug!("rebase empty segment: {}", segment.name());
-    // fixme:  move Start to Base!
-    segment.reset(repository);
+
+    segment.reset(repository,
+                  segment.base(repository).peel_to_commit().unwrap().id());
     return RebaseResult::Done;
 }
 
@@ -160,7 +161,7 @@ fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) 
 }
 
 fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment<'repo>, new_head: &Reference<'_>) {
-    segment.reset(repository);
+    // bug: segment.reset(repository);  // bug: does not reload the head of the segment!
 
     // reflog etc.
     force_head_to(repository, segment.name(), new_head);

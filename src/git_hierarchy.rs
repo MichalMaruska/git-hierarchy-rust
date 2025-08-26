@@ -84,11 +84,18 @@ impl<'repo> Segment<'repo> {
                 self.reference.borrow().name().unwrap())
     }
 
-    pub fn reset(&self, repository: &'repo Repository) {
-        // re-resolve:
-        let name = self.reference.borrow();
+    pub fn reset(&self, repository: &'repo Repository, oid: Oid) {
+
+        let head_reference = self.reference.borrow();
+
+        // I want to refresh this!
+        debug!("reset: the head itself? {} with {}",
+               head_reference.name().unwrap(),
+               oid
+        );
+        drop(head_reference);
         // we cannot extract other references from there.
-        self.reference.replace(repository.find_reference(name.name().unwrap()).unwrap());
+        self.reference.replace_with(|r| r.set_target(oid, "rebased").unwrap());
 
         // fixme: what? ref -> name -> ref? b/c &self is not &mut?
         let start_ref_name = self._start.name().unwrap();
