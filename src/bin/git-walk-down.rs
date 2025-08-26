@@ -20,7 +20,7 @@ use ::git_hierarchy::graph::discover::NodeExpander;
 use ::git_hierarchy::graph::discover_pet::{find_hierarchy};
 
 #[allow(unused)]
-use tracing::debug;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
