@@ -4,7 +4,7 @@
 // - graph, toposort
 
 use clap::Parser;
-use git2::{Repository,Reference,Error,Branch,BranchType,ReferenceFormat};
+use git2::{Repository,Reference,Error,Branch,BranchType,ReferenceFormat,Remote};
 
 use tracing::{warn,info,debug};
 
@@ -191,10 +191,16 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
     // remote ->
     if reference.is_remote() {
         // mmc: I think it's dangerous ... better avoid using this.
-        // let remote: RemoteHead;
-        // just fetch
-        // Remote.fetch()
-        unimplemented!("Remote");
+        let (remote_name,branch) = extract_remote_name(reference.name().unwrap());
+        //  RemoteHead;
+        // unimplemented!("Remote");
+        // extract the remote and branch:
+        let mut remote = repository.find_remote(remote_name).unwrap();
+        debug!("fetching from remote {:?}: {:?}", remote.name().unwrap(), branch);
+        if remote.fetch(&[branch], None, None).is_ok() {
+        } else {
+            panic!("** Fetch failed");
+        }
     } else if reference.is_branch() {
         let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
         warn!("fetch local {name}");
