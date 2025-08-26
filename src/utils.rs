@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::hash::Hash;
+use tracing_subscriber;
 
 pub fn concatenate(prefix: &str, suffix: &str) -> String {
     let mut s = String::from(prefix);
@@ -52,6 +53,16 @@ where
                 // iter().any(|hashed| item == hashed)
         )
         .collect()
+}
+
+
+pub fn init_tracing(verbose: u8)
+{
+    if verbose > 0 {
+        tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
+    } else {
+        tracing_subscriber::fmt::init();
+    }
 }
 
 
