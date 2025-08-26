@@ -1,25 +1,23 @@
-use discover_graph::{GraphProvider,GraphDiscoverer};
-use crate::git_hierarchy::{GitHierarchy,load};
+use crate::git_hierarchy::{GitHierarchy, load};
+use discover_graph::{GraphDiscoverer, GraphProvider};
 
 // GitHierarchy implements this, but we have to import explicitly.
 // ^^^^^^^^^^^^^ method not found in `GitHierarchy<'_>`
 use crate::graph::discover::NodeExpander;
 
-use git2::{Repository};
+use git2::Repository;
 
 use std::collections::HashMap;
 
 // Example with external data source
 pub struct GitHierarchyProvider<'repo> {
     repository: &'repo Repository,
-    pub object_map: HashMap<String, GitHierarchy<'repo> >,
+    pub object_map: HashMap<String, GitHierarchy<'repo>>,
     call_count: usize,
 }
 
 // What kind of structure do I want at the end?  .... (why?) topological order ... iterator? lookup? walk down?
 // what operations do I want .... on the graph still?  Stitch/clone/replace nodes?
-
-
 
 // can we have a hash  str () -> githierarchy?
 //
@@ -28,12 +26,12 @@ pub struct GitHierarchyProvider<'repo> {
 // Example with external data source
 
 // hardcoded to use String as
-impl<'repo>  GitHierarchyProvider<'repo> {
+impl<'repo> GitHierarchyProvider<'repo> {
     pub fn new(repo: &'repo Repository) -> Self {
         Self {
             repository: repo,
             object_map: HashMap::new(),
-            call_count: 0
+            call_count: 0,
         }
     }
 
@@ -49,7 +47,9 @@ impl<'repo>  GitHierarchyProvider<'repo> {
 
         match gh {
             // regular branch. say `master'
-            GitHierarchy::Name(_x) => {panic!("unprepared")}
+            GitHierarchy::Name(_x) => {
+                panic!("unprepared")
+            }
             GitHierarchy::Segment(ref s) => {
                 let symbolic_base = s.base(repository);
                 // back to name...
@@ -92,19 +92,20 @@ impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
     */
 }
 
-
-pub fn find_hierarchy<'repo>(repo: &'repo Repository, root: String) ->
-    (
-        // how to return these types?
-        // labels -> object
-        HashMap<String, GitHierarchy<'repo>>,
-        // label->index
-        HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
-        petgraph::stable_graph::StableGraph<std::string::String, ()>,
-        // order labels
-        Vec<std::string::String>
-    )
-    // GraphDiscoverer<String,GitHierarchyProvider<'repo>>
+pub fn find_hierarchy<'repo>(
+    repo: &'repo Repository,
+    root: String,
+) -> (
+    // how to return these types?
+    // labels -> object
+    HashMap<String, GitHierarchy<'repo>>,
+    // label->index
+    HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
+    petgraph::stable_graph::StableGraph<std::string::String, ()>,
+    // order labels
+    Vec<std::string::String>,
+)
+// GraphDiscoverer<String,GitHierarchyProvider<'repo>>
 {
     // 1. Perform discovery
     // not `mut' ?
@@ -122,9 +123,10 @@ pub fn find_hierarchy<'repo>(repo: &'repo Repository, root: String) ->
 
     // we cannot drop the provider.
     // but we can move out of it?
-    return (provider.object_map, // String -> GitHierarchy
-            hash_to_graph,  // stable graph:  String -> index ?
-            graph,          // index -> String?
-            discovery_order);   //  indices?
+    return (
+        provider.object_map, // String -> GitHierarchy
+        hash_to_graph,       // stable graph:  String -> index ?
+        graph,               // index -> String?
+        discovery_order,
+    ); //  indices?
 }
-

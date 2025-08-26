@@ -15,7 +15,8 @@ pub fn topological_sort(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
     let mut in_degree = vec![0; n];
     for u in 0..n {
         for &v in &graph[u] {
-            if v < n {  // Bounds check
+            if v < n {
+                // Bounds check
                 in_degree[v] += 1;
             }
         }
@@ -37,7 +38,8 @@ pub fn topological_sort(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
 
         // Decrease in-degree of adjacent vertices
         for &v in &graph[u] {
-            if v < n {  // Bounds check
+            if v < n {
+                // Bounds check
                 in_degree[v] -= 1;
                 if in_degree[v] == 0 {
                     queue.push_back(v);
@@ -50,7 +52,7 @@ pub fn topological_sort(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
     if result.len() == n {
         Some(result)
     } else {
-        None  // Cycle detected
+        None // Cycle detected
     }
 }
 
@@ -73,11 +75,11 @@ pub fn topological_sort_dfs(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
 
         for &v in &graph[u] {
             if v >= graph.len() {
-                continue;  // Skip invalid vertices
+                continue; // Skip invalid vertices
             }
 
             if rec_stack[v] {
-                return false;  // Back edge found - cycle detected
+                return false; // Back edge found - cycle detected
             }
 
             if !visited[v] && !dfs(graph, v, visited, rec_stack, result) {
@@ -93,7 +95,7 @@ pub fn topological_sort_dfs(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
     // Visit all vertices
     for i in 0..n {
         if !visited[i] && !dfs(graph, i, &mut visited, &mut rec_stack, &mut result) {
-            return None;  // Cycle detected
+            return None; // Cycle detected
         }
     }
 
@@ -111,9 +113,9 @@ mod tests {
         // Graph: 0 -> 1 -> 2
         //        0 -> 2
         let graph = vec![
-            vec![1, 2],  // 0 points to 1 and 2
-            vec![2],     // 1 points to 2
-            vec![],      // 2 points to nothing
+            vec![1, 2], // 0 points to 1 and 2
+            vec![2],    // 1 points to 2
+            vec![],     // 2 points to nothing
         ];
 
         let result = topological_sort(&graph).unwrap();
@@ -128,9 +130,9 @@ mod tests {
     fn test_cycle_detection() {
         // Graph with cycle: 0 -> 1 -> 2 -> 0
         let graph = vec![
-            vec![1],     // 0 -> 1
-            vec![2],     // 1 -> 2
-            vec![0],     // 2 -> 0 (creates cycle)
+            vec![1], // 0 -> 1
+            vec![2], // 1 -> 2
+            vec![0], // 2 -> 0 (creates cycle)
         ];
 
         assert!(topological_sort(&graph).is_none());
@@ -141,10 +143,10 @@ mod tests {
     fn test_disconnected_components() {
         // Two disconnected components: 0->1 and 2->3
         let graph = vec![
-            vec![1],     // 0 -> 1
-            vec![],      // 1 -> nothing
-            vec![3],     // 2 -> 3
-            vec![],      // 3 -> nothing
+            vec![1], // 0 -> 1
+            vec![],  // 1 -> nothing
+            vec![3], // 2 -> 3
+            vec![],  // 3 -> nothing
         ];
 
         let result = topological_sort(&graph).unwrap();
