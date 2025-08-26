@@ -55,16 +55,15 @@ where
         .collect()
 }
 
-
-pub fn init_tracing(verbose: u8)
-{
+pub fn init_tracing(verbose: u8) {
     if verbose > 0 {
-        tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::DEBUG)
+            .init();
     } else {
         tracing_subscriber::fmt::init();
     }
 }
-
 
 #[cfg(test)]
 mod test {

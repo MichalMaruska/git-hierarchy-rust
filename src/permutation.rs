@@ -1,11 +1,14 @@
-
 // we have a vector of elements
 // we have an order (permutation)   5 6 3....
 // which means the permutation   a[i] -> i
 // and we want to apply this permutation by swap()
 
 pub fn reorder_by_permutation<T>(vec: &mut Vec<T>, permutation: &[usize]) {
-    assert_eq!(vec.len(), permutation.len(), "Vector and permutation must have the same length");
+    assert_eq!(
+        vec.len(),
+        permutation.len(),
+        "Vector and permutation must have the same length"
+    );
 
     let mut visited = vec![false; vec.len()];
 
@@ -36,10 +39,10 @@ mod test {
     fn test_simple() {
         let string = "Hello World";
 
-        let mut characters:Vec<char> = string.chars().collect();
-        let mut permutation : Vec<usize> = (0..string.len()).collect();
+        let mut characters: Vec<char> = string.chars().collect();
+        let mut permutation: Vec<usize> = (0..string.len()).collect();
 
-        permutation.swap(0,6);
+        permutation.swap(0, 6);
         reorder_by_permutation(&mut characters, &permutation);
 
         let s: String = characters.into_iter().collect();
