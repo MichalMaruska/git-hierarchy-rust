@@ -166,6 +166,26 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
 }
 
 
+fn extract_remote_name<'a>(name: &'a str) -> (&'a str, &'a str) {
+    // reference.name()
+    debug!("extract_name: {:?}", name );
+    // useless:
+    // let norm = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
+
+    let split_char = '/';
+    let (prefix, rest) = name.split_once(split_char).unwrap();
+    assert_eq!(prefix, "refs");
+    let (prefix, rest) = rest.split_once(split_char).unwrap();
+    assert_eq!(prefix, "remotes");
+
+    let (remote, branch) = rest.split_once(split_char).unwrap();
+    //let (remote, rest) = rest.split_once(split_char).unwrap();
+    // let (prefix, remote, branch) = split_paths(unparsed);;
+    // remotes/xxx/yyy
+
+    return (remote, branch);
+}
+
 fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Result<(), Error> {
     warn!("should fetch");
     // remote ->
