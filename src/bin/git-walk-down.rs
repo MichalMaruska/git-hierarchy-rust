@@ -19,7 +19,7 @@ use ::git_hierarchy::utils::init_tracing;
 */
 
 use ::git_hierarchy::graph::discover::NodeExpander;
-use ::git_hierarchy::graph::discover_pet::{find_hierarchy};
+use ::git_hierarchy::graph::discover_pet::find_hierarchy;
 
 #[allow(unused)]
 use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
