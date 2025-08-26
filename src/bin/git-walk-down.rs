@@ -8,7 +8,6 @@ use clap::Parser;
 use git2::{Repository,};
 use std::path::PathBuf;
 
-use ::git_hierarchy::base::{set_repository,get_repository,unset_repository};
 use ::git_hierarchy::utils::init_tracing;
 /*
  note: ambiguous because of a conflict between a name from a glob
@@ -45,15 +44,14 @@ fn main() {
         Err(e) => panic!("failed to open: {}", e),
     };
 
-    set_repository(repo);
-
     // load one Segment:
     let root = cli.root_reference.unwrap();
 
     let (object_map, // String -> GitHierarchy
          hash_to_graph,  // stable graph:  String -> index ?
          graph,          // index -> String?
-         discovery_order) = find_hierarchy(get_repository(), root);
+         discovery_order) = find_hierarchy(&repo, root);
+
 
     // convert the gh objects?
     for v in discovery_order {
@@ -63,6 +61,4 @@ fn main() {
                      hash_to_graph.get(&v).unwrap().clone()).unwrap()
         );
     }
-
-    unset_repository();
 }
