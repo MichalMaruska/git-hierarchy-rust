@@ -1,4 +1,3 @@
-
 pub mod discover;
 pub mod discover_pet;
 pub mod topology_sort;
@@ -30,7 +29,6 @@ impl Graph {
         }
     }
 
-
     pub fn add_edge(&mut self, from: Range, to: Range) {
         // Index::index_mut(self.adjacency_list,from);
         let list = &mut self.adjacency_list;
@@ -40,7 +38,6 @@ impl Graph {
     }
 
     pub fn toposort(&self) -> Vec<usize> {
-
         let matrix = &self.adjacency_list;
 
         if let Some(order) = topological_sort(matrix) {
