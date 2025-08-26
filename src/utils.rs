@@ -78,4 +78,22 @@ mod test {
         assert_eq!("name", extract_name("heads/name"));
         assert_eq!("name", extract_name("refs/heads/name"));
     }
+
+    #[test]
+    fn test_find_non_matching_elements() {
+        let real = vec![1, 2, 10, 16];
+        let selected = vec![0, 2, 5, 6];
+
+        let found = find_non_matching_elements(
+            real.iter(),
+            selected.iter(),
+            // on iter1!
+            |x| x);
+        // found is only &
+        assert_eq!(
+            &found,
+            // not found in first, which *are* in 2nd
+            &[&0,&5,&6]
+        )
+    }
 }
