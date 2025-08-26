@@ -1,4 +1,4 @@
-use std::collections::{HashSet};
+use std::collections::HashSet;
 use std::hash::Hash;
 
 pub fn concatenate(prefix: &str, suffix: &str) -> String {
@@ -17,9 +17,8 @@ pub fn extract_name(refname: &str) -> &str {
 pub fn divide_str(s: &'_ str, split_char: char) -> (&'_ str, &'_ str) {
     let v: Vec<&str> = s.split(split_char).take(2).collect();
 
-    return (v[0],v[1]);
+    return (v[0], v[1]);
 }
-
 
 // todo: use hash_fn2 and use identity if necessary
 /// Find elements in iter2 that are not equal to the hash function output of iter1
@@ -31,16 +30,11 @@ pub fn divide_str(s: &'_ str, split_char: char) -> (&'_ str, &'_ str) {
 ///
 /// # Returns
 /// Vector of elements from iter2 that don't match any hash function output from iter1
-pub fn find_non_matching_elements<I1, I2, T1, T2, H, F>(
-    iter1: I1,
-    iter2: I2,
-    hash_fn: F,
-) -> Vec<T2>
+pub fn find_non_matching_elements<I1, I2, T1, T2, H, F>(iter1: I1, iter2: I2, hash_fn: F) -> Vec<T2>
 where
     I1: IntoIterator<Item = T1>,
     I2: IntoIterator<Item = T2>, // mmc: is T2 & H the same?
-
-    T2: Clone + PartialEq<H>, // T2 comparable with H
+    T2: Clone + PartialEq<H>,    // T2 comparable with H
     H: Hash + Eq,
     F: Fn(T1) -> H,
 {
@@ -58,18 +52,14 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-#[test]
+    #[test]
     fn test_concatenate() {
-        assert_eq!("Hello World",
-                   concatenate("Hello ", "World"));
+        assert_eq!("Hello World", concatenate("Hello ", "World"));
     }
 
-#[test]
+    #[test]
     fn test_divide_str() {
-        assert_eq!(
-            divide_str("Hello World", ' '),
-            ("Hello", "World")
-        );
+        assert_eq!(divide_str("Hello World", ' '), ("Hello", "World"));
     }
 
     #[test]
