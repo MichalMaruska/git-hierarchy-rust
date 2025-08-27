@@ -32,7 +32,7 @@ fn process_node<'repo>(
     node: &GitHierarchy<'repo>,
     _object_map: &HashMap<String, GitHierarchy<'repo>>, // _remapped : HashMap<String, String>,
 ) {
-    println!(
+    debug!(
         "{:?}",
         // object_map.get(&v).unwrap()
         node.node_identity(),
@@ -45,7 +45,7 @@ fn process_node<'repo>(
             panic!();
         }
         GitHierarchy::Reference(r) => {
-            println!("a ref");
+            println!("a ref {}", r.name().unwrap());
         }
         GitHierarchy::Segment(segment) => {
             let base = segment.base(repository);
@@ -60,7 +60,8 @@ fn process_node<'repo>(
                 state = "need-rebase";
             }
             println!(
-                "segment {:?} on , {:?}",
+                "segment {}: {:?} on {:?}",
+                segment.name(),
                 base.name().unwrap(),
                 state // base.peel_to_commit().unwrap().id(),
             );
@@ -70,7 +71,7 @@ fn process_node<'repo>(
 
             println!("a sum of: ");
             for s in &summands {
-                println!("{}", s.node_identity());
+                println!("  {}", s.node_identity());
             }
         }
     }
@@ -82,7 +83,7 @@ fn rename_nodes<'repo>(
     _object_map: &HashMap<String, GitHierarchy<'repo>>,
     remapped: &mut HashMap<String, String>,
 ) {
-    println!(
+    debug!(
         "{:?}",
         // object_map.get(&v).unwrap()
         node.node_identity(),
@@ -95,7 +96,7 @@ fn rename_nodes<'repo>(
             panic!();
         }
         GitHierarchy::Reference(r) => {
-            println!("a ref");
+            println!("a ref {}", r.name().unwrap());
         }
         GitHierarchy::Segment(segment) => {
             let base = segment.base(repository);
