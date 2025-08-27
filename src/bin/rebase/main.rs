@@ -210,16 +210,18 @@ fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<Stri
     // convert to the nodes?
 
     let v = find_non_matching_elements(
-        graphed_summands.iter(),   // these are <&GitHierarchy>
+        // iter2 - hash(iter1)
+        graphed_summands.iter(), // these are <&GitHierarchy>
 
+        sum.parent_commits().into_iter(), // Vec<Oid>
         // we get reference.
         // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
-        sum.parent_commits().into_iter(),
         //
-        |gh|{
-            debug!("mapping {:?}", gh.node_identity());
-            gh.commit().id() }
-        // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
+        |gh| {
+            debug!("mapping {:?} to {:?}", gh.node_identity(),
+                   gh.commit().id());
+            gh.commit().id()
+        }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
     );
 
     if ! v.is_empty() {
