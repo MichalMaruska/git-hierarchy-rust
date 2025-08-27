@@ -30,21 +30,27 @@ pub fn divide_str(s: &'_ str, split_char: char) -> (&'_ str, &'_ str) {
 ///
 /// # Returns
 /// Vector of elements from iter2 that don't match any hash function output from iter1
-pub fn find_non_matching_elements<I1, I2, T1, T2, H, F>(iter1: I1, iter2: I2, hash_fn: F) -> Vec<T2>
+pub fn find_non_matching_elements<I1, I2, T1, T2, F>(iter1: I1, iter2: I2, hash_fn: F) -> Vec<T2>
 where
     I1: IntoIterator<Item = T1>,
     I2: IntoIterator<Item = T2>, // mmc: is T2 & H the same?
-    T2: Clone + PartialEq<H>,    // T2 comparable with H
-    H: Hash + Eq,
-    F: Fn(T1) -> H,
+    T2: Clone + Hash + Eq,    // T2 comparable with H todo: or Borrow<H> ?
+// PartialEq<H>
+    // H: Hash + Eq, H,
+    F: Fn(T1) -> T2, // H
 {
+    // mmc: so  iter2 - hash(iter1)
+
     // Apply hash function to all elements in iter1 and collect into a HashSet
-    let hashed_set: HashSet<H> = iter1.into_iter().map(hash_fn).collect();
+    let hashed_set: HashSet<T2> = iter1.into_iter().map(hash_fn).collect();
 
     // Filter iter2 to find elements that don't match any hashed value
     iter2
         .into_iter()
-        .filter(|item| !hashed_set.iter().any(|hashed| item == hashed))
+        .filter(|item| // !hashed_set.iter().any(|hashed| item == hashed
+                hashed_set.get(item).is_none()
+                // iter().any(|hashed| item == hashed)
+        )
         .collect()
 }
 
