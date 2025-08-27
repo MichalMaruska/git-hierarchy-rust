@@ -114,14 +114,18 @@ fn rename_nodes<'repo>(
             println!("a ref {}", r.name().unwrap());
         }
         GitHierarchy::Segment(segment) => {
-            let base = segment.base(repository);
-            // let start = &segment._start;
-            // start == base.peel_to_commit().unwrap())
+            // if segment itself in replace ... ignore it.
+            if remapped.get(segment.reference.borrow().name().unwrap()).is_some() {
+                info!("this segment is itself to be replaced, so ignoring");
+                return;
+            }
 
+            let base = segment.base(repository);
             let base_name = base.name().unwrap();
-            debug!("should rename base {}", base_name);
-            if remapped.get(base_name).is_some() {
-                println!("Would change the base");
+
+            if let Some(replacement) = remapped.get(base_name) {
+                debug!("exchange base {}", base_name);
+                segment.base.borrow_mut().symbolic_set_target(replacement, "replacement");
             }
         }
         GitHierarchy::Sum(sum) => {
