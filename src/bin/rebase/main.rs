@@ -240,17 +240,23 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 }
 
 // bad name:
-fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_head: Branch<'_>) {
-    debug!("delete: {:?}", temp_head.name());
-    if !git_run(
-        repository,
-        &["branch", "-D", temp_head.name().unwrap().unwrap()],
-    )
-    .success()
-    {
-        panic!("branch -D failed");
+fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, mut temp_head: Branch<'_>) {
+
+    debug!("delete: {:?} {}", temp_head.name().unwrap().unwrap(),
+           temp_head.get().target().unwrap());
+
+    if true {
+        temp_head.delete().expect("failed to delete a branch");
+    } else {
+        if !git_run(
+            repository,
+            &["branch", "-D", temp_head.name().unwrap().unwrap()],
+        )
+            .success()
+        {
+            panic!("branch -D failed");
+        }
     }
-    // temp_head.delete().expect("failed to delete a branch");
 
     let path = marker_filename(repository);
     debug!("delete: {:?}", path);
