@@ -55,7 +55,7 @@ pub struct Segment<'repo> {
     name: String,
     pub reference: RefCell<Reference<'repo>>,
 
-    base: Reference<'repo>,
+    pub base: RefCell<Reference<'repo>>, // I need to call &mut methods
     pub _start: Reference<'repo>,
 }
 
@@ -70,7 +70,7 @@ impl<'repo> Segment<'repo> {
         Segment::<'repo> {
             name: branch_name(&reference).to_owned(),
             reference: RefCell::new(reference),
-            base,
+            base: RefCell::new(base),
             _start: start,
         }
     }
@@ -81,7 +81,8 @@ impl<'repo> Segment<'repo> {
 
     pub fn uptodate(&self, repository: &Repository) -> bool {
         // debug!("looking at segment: {:?} {:?}", self.base.name().unwrap(), self._start.name().unwrap());
-        git_same_ref(repository, &self.base, &self._start)
+        self.base
+            .borrow().peel_to_commit().unwrap().id() == self._start.target().unwrap()
     }
 
     pub fn empty(&self, repository: &Repository) -> bool {
@@ -127,12 +128,12 @@ impl<'repo> Segment<'repo> {
     pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
         let reference = repository
             .find_reference(
-                self.base
+                self.base.borrow()
                     .symbolic_target()
                     .expect("base should be a symbolic reference"),
             )
             .unwrap();
-        debug!("segment|base points at {:?}", reference.name().unwrap());
+        debug!("base points at {:?}", reference.name().unwrap());
         return reference;
     }
 
