@@ -27,6 +27,18 @@ use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
 #[allow(unused)]
 use tracing::{debug, info};
 
+
+fn list_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) {
+    let walk = segment.iter(repository).unwrap();
+    for c in walk {
+        let oid = c.unwrap();
+        let commit = repository.find_commit(oid).unwrap();
+        let message = commit.message().unwrap();
+        println!("{:?}: {}", oid, message.lines().next().unwrap());
+    }
+    println!();
+}
+
 fn process_node<'repo>(
     repository: &'repo Repository,
     node: &GitHierarchy<'repo>,
@@ -66,6 +78,8 @@ fn process_node<'repo>(
                 base.name().unwrap(),
                 state // base.peel_to_commit().unwrap().id(),
             );
+
+            list_segment(repository, segment);
         }
         GitHierarchy::Sum(sum) => {
             let summands = sum.summands(repository);
