@@ -4,7 +4,8 @@
 // - graph, toposort
 
 use clap::Parser;
-use git2::{Branch, BranchType, Error, Reference, ReferenceFormat, Repository};
+use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Repository,
+           MergeOptions, CherrypickOptions};
 
 use tracing::{debug, info, warn};
 
@@ -54,6 +55,76 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
     // persistent mark, if we fail, and during the session.
     debug!("Create marker: {:?}", path);
     fs::write(path, content)
+}
+
+fn cherry_pick_commits<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
+                              -> Result<Commit<'repo>, Error>  {
+    // checkout the base:
+    let iter = segment.iter(repository).unwrap();
+    let mut base_commit = segment.base(repository).peel_to_commit().unwrap();
+    // todo: use fold
+    //     iter.fold(base_commit, |commit, to_apply| sum + i);
+    for oid_to_apply in iter {
+        // todo: these are always the same
+        let mut options = MergeOptions::new();
+        options.fail_on_conflict(true)
+            .standard_style(true)
+            .ignore_whitespace(true)
+            .patience(true)
+            .minimal(true)
+            ;
+
+        let to_apply = repository.find_commit(oid_to_apply.unwrap()).unwrap();
+
+        let tree;
+
+        if false { // BROKEN!
+            // use `cherrypick_commit' -- low level, manual index handling.
+
+            // let mut index = repository.index().unwrap();
+            let mut index =
+                repository.cherrypick_commit(
+                    &to_apply,
+                    &base_commit,
+                    0, // what?
+                    Some(&options)).expect("cherry-pick should succeed. Do it manually otherwise!");
+
+            /*
+            git_index_write_tree_to
+            write_tree_to
+            git_repository_set_index.
+             */
+            let id = index.write_tree().unwrap();
+            // "Failed to write tree. the index file is not backed up by an existing repository"
+            tree = repository.find_tree(id).unwrap();
+            // let sig = repository.signature().unwrap();
+
+        } else {
+            // use `cherrypick'
+
+            let mut cherrypick_opts = CherrypickOptions::new();
+            repository.cherrypick(&to_apply, Some(&mut cherrypick_opts)).unwrap();
+
+            let id = repository.index().unwrap().write_tree().unwrap();
+            tree = repository.find_tree(id).unwrap();
+        }
+
+        let new_oid = repository.commit(
+            Some("HEAD"),
+            // copy over:
+            &to_apply.author(),
+            &to_apply.committer(),
+            &to_apply.message().unwrap(),
+            // and timestamps? part of those ^^ !
+            &tree,
+            &[&base_commit],
+        ).unwrap();
+
+        repository.cleanup_state().unwrap();
+        base_commit = repository.find_commit(new_oid).unwrap();
+    }
+
+    return Ok(base_commit);
 }
 
 // either exit or rewrite the segment ....its reference should update oid.
