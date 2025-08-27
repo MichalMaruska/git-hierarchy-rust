@@ -151,17 +151,40 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     // must change to the directory!
     let temp_head = TEMP_HEAD_NAME;
     Branch::name_is_valid(temp_head).unwrap();
-    let temp_head =
+    let mut temp_head =
         checkout_new_head_at(repository, temp_head, &new_start.peel_to_commit().unwrap());
 
-    if !git_run(
-        repository,
-        &["cherry-pick", segment.git_revisions().as_str()],
-    )
-    .success()
-    {
-        // return RebaseResult::Failed;
-        panic!("cherry-pick failed");
+    let sha = new_start.peel_to_commit().unwrap().id();
+    debug!("set-head: {:?}", &sha);
+    // If I cherry-pick with temp as HEAD, it fails with ... "old reference value does not match"
+    repository.set_head_detached(sha).unwrap();
+    /*
+    repository.set_head_bytes(sha.as_bytes()).unwrap();
+    */
+    //  "the given reference name 'bdcaa23cbe4ea0b6316caf82a9afb96e7c7f1fe6' is not valid"
+    debug!("checkout: {:?}", repository.head().unwrap().name());
+    // bug: goes out of sync.
+    if false {
+        if !git_run(
+            repository,
+            &["cherry-pick", segment.git_revisions().as_str()],
+        )
+            .success()
+        {
+            // return RebaseResult::Failed;
+            panic!("cherry-pick failed");
+        }
+    } else {
+        let commit = cherry_pick_commits(repository, segment).unwrap();
+        // move
+        segment.reset(repository, commit.id());
+
+        // set temp_head to point at commit:
+        debug!("setting {:?} at {:?} to {:?}",temp_head.name().unwrap().unwrap(),
+               temp_head.get().target().unwrap(),
+               commit.id());
+        temp_head = Branch::wrap(
+            temp_head.get_mut().set_target(commit.id(), "rebased").unwrap());
     }
 
     // I have to re-find it?
