@@ -54,7 +54,8 @@ fn process_node<'repo>(
 
             // target
             let state;
-            if base.peel_to_commit().unwrap().id() == start.target().unwrap() {
+
+            if segment.uptodate(repository) {
                 state = "up-to-date";
             } else {
                 state = "need-rebase";
