@@ -4,7 +4,7 @@
 #[allow(unused)]
 use tracing::{info,warn,debug};
 
-use crate::base::{git_same_ref,GIT_HEADS_PATTERN,get_repository};
+use crate::base::{GIT_HEADS_PATTERN, git_same_ref};
 
 use std::cell::RefCell;
 
