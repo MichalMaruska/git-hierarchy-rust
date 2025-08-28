@@ -211,26 +211,6 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
         }
     }
 
-    // we need a repository!
-    fn node_prepare(&mut self) {
-        info!("prepare {:?}", self.node_identity());
-        match self {
-            Self::Name(x) => {
-                let repository = get_repository();
-                if let Ok(c) = load(repository, x) {
-                    // c is GitHierarchy<'static> here I move
-                    *self = c;
-                }
-            }
-            // all these... a bug? Nothing to do:
-            Self::Segment(_s) => {}
-            Self::Sum(_s) => {}
-            Self::Reference(_r) => {
-                info!("Reference!");
-            }
-        }
-    }
-
     // just get the Names.
     fn node_children(&self) -> Vec<Box<dyn NodeExpander +'_>>
     {
