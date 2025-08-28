@@ -212,31 +212,4 @@ impl<'a> crate::graph::discover::NodeExpander for GitHierarchy<'a> {
     }
 
     // just get the Names.
-    fn node_children(&self) -> Vec<Box<dyn NodeExpander +'_>>
-    {
-        let repository = get_repository();
-        match self {
-            // regular branch. say `master'
-            Self::Name(_x) => {panic!("unprepared")}
-            Self::Segment(s) => {
-                let symbolic_base = s.base(&repository);
-                // back to name...
-                vec!( Box::new(GitHierarchy::Name(symbolic_base.name().unwrap().to_string())))
-            }
-            Self::Sum(s) => {
-                // copy
-                let mut v : Vec<Box<dyn NodeExpander>> = Vec::new();
-                for summand in &s.summands {
-                    let symbolic_base = repository.find_reference(summand.symbolic_target().
-                        expect("base should be a symbolic reference")).unwrap();
-                    v.push(Box::new(GitHierarchy::Name(
-                        symbolic_base.name().unwrap().to_string())))
-                }
-                return v;
-            }
-            Self::Reference(_r) => {
-                Vec::new()
-            }
-        }
-    }
 }
