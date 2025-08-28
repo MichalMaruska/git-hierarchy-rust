@@ -61,7 +61,7 @@ fn process_node<'repo>(
         }
         GitHierarchy::Segment(segment) => {
             let base = segment.base(repository);
-            let start = &segment._start;
+            // let start = &segment._start;
             // start == base.peel_to_commit().unwrap())
 
             // target
