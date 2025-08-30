@@ -5,7 +5,9 @@
 
 use clap::Parser;
 use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Repository,
-           MergeOptions, CherrypickOptions};
+           MergeOptions, CherrypickOptions,
+           build::CheckoutBuilder,
+};
 
 use tracing::{debug, info, warn};
 
@@ -26,6 +28,7 @@ use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
 use std::fs;
 use std::io;
 use std::path::PathBuf;
+use std::process::exit;
 
 /*
  note: ambiguous because of a conflict between a name from a glob import and an outer scope during import or macro resolution
@@ -102,11 +105,42 @@ fn cherry_pick_commits<'repo>(repository: &'repo Repository, segment: &Segment<'
         } else {
             // use `cherrypick'
 
-            let mut cherrypick_opts = CherrypickOptions::new();
-            repository.cherrypick(&to_apply, Some(&mut cherrypick_opts)).unwrap();
+            debug!("cherry-pick 1 commit: {:?}", to_apply);
 
-            let id = repository.index().unwrap().write_tree().unwrap();
-            tree = repository.find_tree(id).unwrap();
+            let mut checkout_opts = CheckoutBuilder::new();
+            checkout_opts.safe();
+
+            let mut cherrypick_opts = CherrypickOptions::new();
+            cherrypick_opts.checkout_builder(checkout_opts);
+
+            let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
+
+            if result.is_ok() {
+                // todo: see if conflicts ....
+                let mut index = repository.index().unwrap();
+                if index.has_conflicts() {
+                    eprintln!("SORRY conflicts detected");
+                    // so we have .git/CHERRY_PICK_HEAD ?
+                    exit(1);
+                }
+
+                if index.is_empty() {
+                    eprintln!("SORRY nothing staged -- skip?");
+                    // so we have .git/CHERRY_PICK_HEAD ?
+                    exit(1);
+                }
+
+                let id = index.write_tree().unwrap();
+                //  "cannot create a tree from a not fully merged index."
+                tree = repository.find_tree(id).unwrap();
+            } else {
+                debug!("cherrypick failed {:?}", result.err());
+                let index = repository.index().unwrap();
+                if index.has_conflicts() {
+                    eprintln!("SORRY conflicts detected");
+                }
+                panic!();
+            }
         }
 
         let new_oid = repository.commit(
