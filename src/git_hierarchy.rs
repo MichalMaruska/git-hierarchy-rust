@@ -114,7 +114,8 @@ impl<'repo> Segment<'repo> {
 }
 
 pub struct Sum<'repo> {
-    pub reference: Reference<'repo>,
+    name: String,
+    pub reference: RefCell<Reference<'repo>>,
     summands: Vec<Reference<'repo>>,
     // resolved: RefCell<Option<Vec<GitHierarchy<'repo>>>>,
 }
@@ -145,11 +146,11 @@ impl<'repo>  Sum<'repo> {
 
     pub fn name(&self) -> &str {
         // fixme: same as ....
-        return branch_name(&self.reference);
+        return &self.name; // branch_name(&self.reference.borrow());
     }
 
     pub fn parent_commits(&self) -> Vec<Oid> {
-        let commit =  self.reference.peel_to_commit().unwrap();
+        let commit = self.reference.borrow().peel_to_commit().unwrap();
         commit.parent_ids().collect()
     }
  }
@@ -174,9 +175,10 @@ impl<'repo> GitHierarchy<'repo> {
                     // unimplemented!(),
                 }
                 GitHierarchy::Segment(s) => &s.reference.borrow(),
-                GitHierarchy::Sum(s) => &s.reference,
+                GitHierarchy::Sum(s) => &s.reference.borrow(),
                 GitHierarchy::Reference(r) => &r
             };
+
         return reference.peel_to_commit().unwrap();
     }
 }
@@ -202,7 +204,8 @@ pub fn load<'repo>(repository: &'repo Repository, name: &'_ str) -> Result<GitHi
     if ! summands.is_empty() {
         info!("a sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum {
-            reference: reference,
+            name: branch_name(&reference).to_owned(),
+            reference: RefCell::new(reference),
             summands: summands,
             // resolved: RefCell::new(None),
         }));
