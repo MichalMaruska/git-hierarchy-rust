@@ -167,17 +167,20 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
 }
 
 
-// lifetime irrelevant?
-fn get_merge_commit_message<'a,'b,'c,Iter>(sum_name: &'b str, first: &'c str, others: Iter) -> String
-    where
-    Iter : Iterator<Item = &'a str>
+/// Compose commit message for the Sum/Merge of .... components given by the
+/// first/others.
+fn get_merge_commit_message<'a, 'b, 'c, Iter>(
+    sum_name: &'b str,
+    first: &'c str,
+    others: Iter,
+) -> String
+where
+    Iter: Iterator<Item = &'a str>,
 {
     let mut message = format!("Sum: {sum_name}\n\n{}", first);
 
     const NAMES_PER_LINE : usize = 3;
     for (i, name) in others.enumerate() {
-        // resolve them! maybe sum.Summands should be a map N -> ref
-        // pointerRef, _ := TheRepository.Reference(ref.Target(), false)
         message.push_str(" + ");
         message.push_str(name);
 
