@@ -306,26 +306,20 @@ fn main() {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
-    set_repository(repo);
-
-    let repo = get_repository();
 
     // todo:
     // normalize_name(refname: &str, flags: ReferenceFormat) -> Result<String, Error> {
-    // load one Segment:
 
-    let root = cli.root_reference.unwrap_or_else(
-        || repo.head().unwrap().name().unwrap().to_owned());
-    let root = GitHierarchy::Name(root);
+    let root = cli.root_reference
+        // if in detached HEAD -- will panic.
+        .unwrap_or_else(|| repo.head().unwrap().name().unwrap().to_owned());
 
+    let root = GitHierarchy::Name(root); // not load?
     println!("root is {}", root.node_identity());
 
     if cli.cont {
-        rebase_segment_continue(repo);
+        rebase_segment_continue(&repo);
     }
 
-    start_rebase(repo, root.node_identity().to_owned(),
-                 cli.fetch);
-
-    unset_repository();
+    start_rebase(&repo, root.node_identity().to_owned(), cli.fetch);
 }
