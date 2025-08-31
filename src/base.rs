@@ -2,7 +2,7 @@
 #![deny(elided_lifetimes_in_paths)]
 
 use crate::utils::concatenate;
-use git2::{Branch, Commit, Reference, Repository};
+use git2::{Branch, Commit, Reference, Repository, build::CheckoutBuilder};
 use std::cell::OnceCell;
 #[allow(unused)]
 use tracing::{debug, info, warn};
@@ -101,8 +101,13 @@ pub fn checkout_new_head_at<'repo>(
     // https://libgit2.org/docs/reference/main/checkout/git_checkout_head.html
     // error: temporary value is freed at the end of this statement
     let tree = target.tree().unwrap();
+
+    let mut checkout_opts = CheckoutBuilder::new();
+    checkout_opts.safe();
+    checkout_opts.force();
+
     repository
-        .checkout_tree(tree.as_object(), None)
+        .checkout_tree(tree.as_object(), Some(&mut checkout_opts))
         .expect("failed to checkout the newly created branch");
 
     repository
