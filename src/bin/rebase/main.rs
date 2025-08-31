@@ -166,69 +166,73 @@ fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment
 }
 
 
+/// Given full git-reference name /refs/remotes/xx/bb return xx and bb
 fn extract_remote_name<'a>(name: &'a str) -> (&'a str, &'a str) {
-    // reference.name()
-    debug!("extract_name: {:?}", name );
-    // useless:
+    debug!("extract_remote_name: {:?}", name);
     // let norm = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
 
     let split_char = '/';
+
     let (prefix, rest) = name.split_once(split_char).unwrap();
     assert_eq!(prefix, "refs");
     let (prefix, rest) = rest.split_once(split_char).unwrap();
     assert_eq!(prefix, "remotes");
 
     let (remote, branch) = rest.split_once(split_char).unwrap();
-    //let (remote, rest) = rest.split_once(split_char).unwrap();
-    // let (prefix, remote, branch) = split_paths(unparsed);;
-    // remotes/xxx/yyy
-
     return (remote, branch);
 }
 
 fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Result<(), Error> {
-    warn!("should fetch");
-    // remote ->
     if reference.is_remote() {
-        // mmc: I think it's dangerous ... better avoid using this.
-        let (remote_name,branch) = extract_remote_name(reference.name().unwrap());
-        //  RemoteHead;
-        // unimplemented!("Remote");
-        // extract the remote and branch:
+        let (remote_name, branch) = extract_remote_name(reference.name().unwrap());
         let mut remote = repository.find_remote(remote_name).unwrap();
-        debug!("fetching from remote {:?}: {:?}", remote.name().unwrap(), branch);
-        if remote.fetch(&[branch], None, None).is_ok() {
+        debug!("fetching from remote {:?}: {:?}",
+               remote.name().unwrap(),
+               branch
+        );
+
+        // FetchOptions, message
+        if remote.fetch(&[branch], None, "part of poset-rebasing").is_ok() {
         } else {
             panic!("** Fetch failed");
         }
     } else if reference.is_branch() {
         let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
-        warn!("fetch local {name}");
-        let mut branch = repository.find_branch(extract_name(&name), BranchType::Local).unwrap();
+
         // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
+        info!("fetch local {name}");
+        // why redo this? see above ^^
+        let mut branch = repository
+            .find_branch(extract_name(&name), BranchType::Local)
+            .unwrap();
+
         let upstream = branch.upstream().unwrap();
-        // todo: double check if still in sync, then
         let upstream_name = upstream.name().unwrap().unwrap();
 
-        // and this is host/branch
-        // fixme:
+        // todo: check if still in sync, to not lose local changes.
         if git_same_ref(repository, reference, upstream.get()) {
-            info!("in sync, so let's fetch & update");
+            debug!("in sync, so let's fetch & update");
         } else {
-            warn!("NOT in sync; should not update.");
+            panic!("NOT in sync; should not update.");
+            // or merge/rebase.
         }
-        //
+
         let (rem, br) = divide_str(upstream_name, '/');
         let mut remote = repository.find_remote(rem)?;
-        // repo.find_remote("origin")?.fetch(&["main"], None, None)
-        if true {
-            warn!("fetch {} {} ....", rem, br);
-            if remote.fetch(&[br], None, None).is_ok() {
-                let oid = branch.upstream().unwrap().get().target().expect("upstream disappeared");
-                branch.get_mut().set_target(oid, "fetch & fast-forward").expect("fetch/sync failed");
-            }
+
+        info!("fetch {} {} ....", rem, br);
+        if remote.fetch(&[br], None, None).is_ok() {
+            let oid = branch
+                .upstream()
+                .unwrap()
+                .get()
+                .target()
+                .expect("upstream disappeared");
+            branch
+                .get_mut()
+                .set_target(oid, "fetch & fast-forward")
+                .expect("fetch/sync failed");
         }
-        // sync the local
     }
     Ok(())
 }
