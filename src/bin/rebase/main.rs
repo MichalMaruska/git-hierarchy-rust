@@ -192,7 +192,7 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
         );
 
         // FetchOptions, message
-        if remote.fetch(&[branch], None, "part of poset-rebasing").is_ok() {
+        if remote.fetch(&[branch], None, Some("part of poset-rebasing")).is_ok() {
         } else {
             panic!("** Fetch failed");
         }
