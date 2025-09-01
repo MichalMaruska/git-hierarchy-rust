@@ -66,84 +66,88 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 // on top of HEAD
 fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                                  iter: T,
-                                 //
-                                 mut base_commit: Commit<'repo>)
+                                 base_commit: Commit<'repo>)
                                  -> Result<Commit<'repo>, Error>
     where T: Iterator<Item = Result<Oid, Error> >
 {
-    // todo: use fold
-    //     iter.fold(base_commit, |commit, to_apply| sum + i);
-    for oid_to_apply in iter {
-        // todo: these are always the same
-        let mut options = MergeOptions::new();
-        options.fail_on_conflict(true)
-            .standard_style(true)
-            .ignore_whitespace(true)
-            .patience(true)
-            .minimal(true)
-            ;
+    let final_commit =
+        iter.fold(base_commit,
+                  |base_commit, oid_to_apply| {
+                      // todo: these are always the same
+                      let mut options = MergeOptions::new();
+                      options.fail_on_conflict(true)
+                          .standard_style(true)
+                          .ignore_whitespace(true)
+                          .patience(true)
+                          .minimal(true)
+                          ;
 
-        let to_apply = repository.find_commit(oid_to_apply.unwrap()).unwrap();
+                      let to_apply = repository.find_commit(oid_to_apply.unwrap()).unwrap();
 
-        let tree;
+                      let tree;
 
-        // use `cherrypick'
+                      // use `cherrypick'
 
-        debug!("cherry-pick 1 commit: {:?}", to_apply);
+                      debug!("cherry-pick 1 commit: {:?}", to_apply);
 
-        let mut checkout_opts = CheckoutBuilder::new();
-        checkout_opts.safe();
+                      let mut checkout_opts = CheckoutBuilder::new();
+                      checkout_opts.safe();
 
-        let mut cherrypick_opts = CherrypickOptions::new();
-        cherrypick_opts.checkout_builder(checkout_opts);
+                      let mut cherrypick_opts = CherrypickOptions::new();
+                      cherrypick_opts.checkout_builder(checkout_opts);
 
-        let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
+                      let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
 
-        if result.is_ok() {
-            // todo: see if conflicts ....
-            let mut index = repository.index().unwrap();
-            if index.has_conflicts() {
-                eprintln!("SORRY conflicts detected");
-                // so we have .git/CHERRY_PICK_HEAD ?
-                exit(1);
-            }
+                      if result.is_ok() {
+                          // todo: see if conflicts ....
+                          let mut index = repository.index().unwrap();
+                          if index.has_conflicts() {
+                              eprintln!("SORRY conflicts detected");
+                              // so we have .git/CHERRY_PICK_HEAD ?
+                              exit(1);
+                          }
 
-            if index.is_empty() {
-                eprintln!("SORRY nothing staged, empty -- skip?");
-                // so we have .git/CHERRY_PICK_HEAD ?
-                exit(1);
-            }
+                          if index.is_empty() {
+                              eprintln!("SORRY nothing staged, empty -- skip?");
+                              // so we have .git/CHERRY_PICK_HEAD ?
+                              exit(1);
+                          }
 
-            let id = index.write_tree().unwrap();
-            //  "cannot create a tree from a not fully merged index."
-            tree = repository.find_tree(id).unwrap();
-        } else {
-            eprintln!("cherrypick failed {:?}", result.err());
-            let index = repository.index().unwrap();
-            if index.has_conflicts() {
-                eprintln!("SORRY conflicts detected");
-            }
-            panic!();
-        }
-    }
+                          let id = index.write_tree().unwrap();
+                          //  "cannot create a tree from a not fully merged index."
+                          tree = repository.find_tree(id).unwrap();
+                      } else {
+                          eprintln!("cherrypick failed {:?}", result.err());
+                          let index = repository.index().unwrap();
+                          if index.has_conflicts() {
+                              eprintln!("SORRY conflicts detected");
+                          }
+                          panic!();
+                      }
 
-    let new_oid = repository.commit(
-        Some("HEAD"),
-        // copy over:
-        &to_apply.author(),
-        &to_apply.committer(),
-        &to_apply.message().unwrap(),
-        // and timestamps? part of those ^^ !
-        &tree,
-        &[&base_commit],
-    ).unwrap();
+                      let new_oid = repository.commit(
+                          Some("HEAD"),
+                          // copy over:
+                          &to_apply.author(),
+                          &to_apply.committer(),
+                          &to_apply.message().unwrap(),
+                          // and timestamps? part of those ^^ !
+                          &tree,
+                          &[&base_commit],
+                      ).unwrap();
 
-    repository.cleanup_state().unwrap();
-    base_commit = repository.find_commit(new_oid).unwrap();
+                      repository.cleanup_state().unwrap();
+                      let new_commit = repository.find_commit(new_oid).unwrap();
 
-    }
+                      if false {
+                          info!("SLEEP");
+                          // sleep(Duration::from_secs(2));
+                      }
 
-    return Ok(base_commit);
+                      // return:
+                      new_commit});
+
+    return Ok(final_commit);
 }
 
 // either exit or rewrite the segment ....its reference should update oid.
