@@ -202,15 +202,28 @@ fn remerge_sum<'repo>(
 ) -> RebaseResult {
     let summands = sum.summands(repository);
 
-    let mut graphed_summands : Vec<&GitHierarchy<'_>> = summands.iter().map(
-        |s| {
-            let gh = object_map.get(s.node_identity()).unwrap();
-            debug!("convert {:?} to {:?}", s.node_identity(), gh.node_identity());
-            gh
-        }
-        // here we might use object_map
-        // vec<GitHierarchy> not Name but real.
-    ).collect();
+/* assumption:
+    sum has its summands   base/1 ... base/N
+    these might resolve to References. -- how is that different from Branch?
+
+    During the rebasing we change ... Branches (References), and update them in the `object_map'
+    so we .... prefer to look up there.
+*/
+
+    // find the representation which we already have and keep updating.
+    let graphed_summands: Vec<&GitHierarchy<'_>> = summands
+        .iter()
+        .map(
+            |s| {
+                let gh = object_map.get(s.node_identity()).unwrap();
+                debug!(
+                    "convert {:?} to {:?}",
+                    s.node_identity(),
+                    gh.node_identity()
+                );
+                gh
+            })
+        .collect();
 
     // convert to the nodes?
 
@@ -232,16 +245,15 @@ fn remerge_sum<'repo>(
         info!("so the sum is not up-to-date!");
 
         let first = graphed_summands.get(0).unwrap();
-        // &graphed_summands[0];
-        let others = graphed_summands.iter().skip(1);
 
-        #[allow(unused)]
-        let message = get_merge_commit_message(sum.name(),
-                                               first.node_identity(),
-                                               // : &GitHierarchy
-                                               others.map(|x | x.node_identity()));
+        let message = get_merge_commit_message(
+            sum.name(),
+            first.node_identity(), // : &GitHierarchy
+            graphed_summands.iter()
+                .skip(1).map(|x| x.node_identity()),
+        );
+
         // proceed:
-        #[allow(unused)]
         let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
 
         // use  git_run or?
