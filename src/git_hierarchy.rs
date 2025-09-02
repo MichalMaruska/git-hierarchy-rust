@@ -12,7 +12,7 @@ use crate::graph::discover::NodeExpander;
 
 use crate::utils::{concatenate, extract_name};
 
-use git2::{Commit, Oid, Reference, Repository};
+use git2::{Commit, Oid, Reference, Repository, Revwalk, Sort, Error};
 
 // low level sum & segment
 const SEGMENT_BASE_PATTERN: &str = "refs/base/";
@@ -134,6 +134,21 @@ impl<'repo> Segment<'repo> {
             .unwrap();
         debug!("segment|base points at {:?}", reference.name().unwrap());
         return reference;
+    }
+
+
+    pub fn iter(&self, repository: &'repo Repository) -> Result<Revwalk<'_>, Error> {
+
+        let mut walk = repository.revwalk()?;
+        walk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?;
+        // target_peel fails!
+        let oid = self.reference.borrow().target().unwrap();
+        walk.push(oid)?;
+        //_peel
+        let oid = self._start.target().unwrap();
+        walk.hide(oid)?;
+
+        return Ok(walk);
     }
 }
 
