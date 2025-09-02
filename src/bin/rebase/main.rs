@@ -4,11 +4,14 @@
 // - graph, toposort
 
 use clap::Parser;
+#[allow(unused_imports)]
 use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Repository,
            MergeOptions, CherrypickOptions,
            build::CheckoutBuilder,
            Oid,
            RepositoryState,
+           // merge:
+           AnnotatedCommit,
 };
 
 #[allow(unused)]
@@ -492,67 +495,126 @@ fn remerge_sum<'repo>(
                 .skip(1).map(|x| x.node_identity()),
         );
 
-        // proceed:
-        let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
+        if graphed_summands.len() > 2 {
+            let temp_head = checkout_new_head_at(repository, Some("temp-sum"), &first.commit())
+                .unwrap();
 
-        // use  git_run or?
-        let mut cmdline = vec![
-            "merge",
-            "-m",
-            &message, // why is this not automatic?
-            "--rerere-autoupdate",
-            "--strategy",
-            "octopus",
-            "--strategy",
-            "recursive",
-            "--strategy-option",
-            "patience",
-            "--strategy-option",
-            "ignore-space-change",
-        ];
-        cmdline.extend(graphed_summands.iter().skip(1).map(|s| s.node_identity()));
+            // use  git_run or?
+            let mut cmdline = vec![
+                "merge",
+                "-m",
+                &message, // why is this not automatic?
+                "--rerere-autoupdate",
+                "--strategy",
+                "octopus",
+                "--strategy",
+                "recursive",
+                "--strategy-option",
+                "patience",
+                "--strategy-option",
+                "ignore-space-change",
+            ];
+            cmdline.extend(graphed_summands.iter().map(|s| s.node_identity()));
 
-        git_run(repository, &cmdline);
+            git_run(repository, &cmdline);
 
-        /*
-            piecewise
 
-            otherNames := lo.Map(others,
-            func (ref *plumbing.Reference, _ int) string {
-            return ref.Name().String()})
+            // "commit": move the SUM head with reflog message:
+            force_head_to(
+                repository,
+                sum.name(),
+                // have to sync
+                repository
+                    .find_branch("temp-sum", BranchType::Local)
+                    .unwrap()
+                    .get(),
+            );
+            // git_run("branch", "--force", sum.Name(), tempHead)
+            debug!("delete: {:?}", temp_head.name());
+            if !git_run(
+                repository,
+                &["branch", "-D", temp_head.name().unwrap().unwrap()],
+            )
+                .success()
+            {
+                panic!("branch -D failed");
+            }
 
-            // otherNames...  cannot use otherNames (variable of type []string) as []any value in argument to
-            fmt.Println("summands are:", first, otherNames)
+        } else {
+            // libgit2
 
-            if piecewise {
-            // reset & retry
-            // piecewise:
-            for _, next := range others {
-            gitRun("merge", "-m",
-            "Sum: " + next.Name().String() + " into " + sum.Name(),
-            "--rerere-autoupdate", next.Name().String())
-        */
+            assert!(checkout_new_head_at(repository, None, &first.commit()).is_none());
 
-        // finish
-        force_head_to(
-            repository,
-            sum.name(),
-            // have to sync
-            repository
-                .find_branch("temp-sum", BranchType::Local)
-                .unwrap()
-                .get(),
-        );
-        // git_run("branch", "--force", sum.Name(), tempHead)
+            // Options:
+            let mut merge_opts = MergeOptions::new();
+            merge_opts.fail_on_conflict(true)
+                .standard_style(true)
+                .ignore_whitespace(true)
+                .patience(true)
+                .minimal(true)
+                ;
 
-        debug!("delete: {:?}", temp_head.name());
-        if !git_run(
-            repository,
-            &["branch", "-D", temp_head.name().unwrap().unwrap()],
-        )
-        .success()
-        {
-            panic!("branch -D failed");
+            let mut checkout_opts = CheckoutBuilder::new();
+            checkout_opts.safe();
+
+            // one more conversion:
+            // the owning
+            let annotated_commits : Vec<AnnotatedCommit<'_>> =
+                graphed_summands.iter().skip(1).map(
+                    |gh| {
+                        let oid = gh.commit().id();
+                        repository.find_annotated_commit(oid).unwrap()
+                    }).collect();
+            // the references vec:
+            let annotated_commits_refs = annotated_commits.iter().collect::<Vec<_>>();
+
+            debug!("Calling merge()");
+            repository.merge(
+                &annotated_commits_refs,
+                Some(&mut merge_opts),
+                Some(&mut checkout_opts)
+            ).expect("Merge should succeed");
+
+
+            // make if a function:
+            // oid = save_index_with( message, signature);
+            let mut index = repository.index().unwrap();
+            if index.has_conflicts() {
+                info!("SORRY conflicts detected");
+                exit(1);
+            }
+            let id = index.write_tree().unwrap();
+            let tree = repository.find_tree(id).unwrap();
+
+            let sig = repository.signature().unwrap();
+
+
+            // Create the commit:
+            // another one: Reference -> Commit -> Oid >>> lookup >>> AnnotatedCommit->Oid
+            let commits : Vec<Commit<'_>> = graphed_summands.iter()
+                .map(|gh| gh.commit())
+                .collect();
+            // references
+            let commits_refs = commits.iter().collect::<Vec<_>>();
+
+            debug!("Calling merge()");
+
+            let new_oid = repository.commit(
+                Some("HEAD"),
+                &sig, // author(),
+                &sig, // committer(),
+                &message,
+                &tree,
+                // this is however already stored in the directory:
+                &commits_refs,
+                // Error: "failed to create commit: current tip is not the first parent"
+            ).unwrap();
+
+            repository.cleanup_state().expect("cleaning up should succeed");
+
+            // this both on the Repo/storer both here in our Data ?
+            sum.reference.borrow_mut().set_target(new_oid, "re-merge")
+                .expect("should update the symbolic reference -- sum");
         }
     }
 
