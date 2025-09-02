@@ -226,6 +226,10 @@ fn remerge_sum<'repo>(
         .collect();
 
     // convert to the nodes?
+    debug!("The current parent commits are: {:?}", sum.parent_commits());
+    for c in sum.parent_commits() {
+        debug!("  {}", c);
+    }
 
     let v = find_non_matching_elements(
         // iter2 - hash(iter1)
