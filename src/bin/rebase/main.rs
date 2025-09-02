@@ -69,6 +69,7 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
         return rebase_empty_segment(segment, repository);
     }
 
+    info!("rebase_segment: {}", segment.name());
     debug!("rebasing by Cherry-picking {}!", segment.name());
     // can I raii ? so drop() would remove the file?
     create_marker_file(repository, segment.name()).unwrap();
