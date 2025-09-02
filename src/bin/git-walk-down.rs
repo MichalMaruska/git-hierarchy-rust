@@ -121,21 +121,9 @@ fn main() {
         Err(e) => panic!("failed to open: {}", e),
     };
 
-    // load one Segment:
-    let root = cli.root_reference.unwrap();
+    let root = cli
+        .root_reference
+        .unwrap_or_else(|| repo.head().unwrap().name().unwrap().to_owned());
 
-    let (object_map, // String -> GitHierarchy
-         hash_to_graph,  // stable graph:  String -> index ?
-         graph,          // index -> String?
-         discovery_order) = find_hierarchy(&repo, root);
-
-
-    // convert the gh objects?
-    for v in discovery_order {
-        println!("{:?} {:?} {:?}", v,
-                 object_map.get(&v).unwrap().node_identity(),
-                 graph.node_weight(
-                     hash_to_graph.get(&v).unwrap().clone()).unwrap()
-        );
-    }
+    walk_down(&repo, &root, process_node);
 }
