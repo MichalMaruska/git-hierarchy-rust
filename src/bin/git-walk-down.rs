@@ -76,6 +76,54 @@ fn process_node<'repo>(
     }
 }
 
+fn rename_nodes<'repo>(
+    repository: &'repo Repository,
+    node: &GitHierarchy<'repo>,
+    _object_map: &HashMap<String, GitHierarchy<'repo>>,
+    remapped: &mut HashMap<String, String>,
+) {
+    println!(
+        "{:?}",
+        // object_map.get(&v).unwrap()
+        node.node_identity(),
+        // object_map
+        // graph.node_weight(hash_to_graph.get(node).unwrap().clone()).unwrap()
+    );
+
+    match node {
+        GitHierarchy::Name(_n) => {
+            panic!();
+        }
+        GitHierarchy::Reference(r) => {
+            println!("a ref");
+        }
+        GitHierarchy::Segment(segment) => {
+            let base = segment.base(repository);
+            // let start = &segment._start;
+            // start == base.peel_to_commit().unwrap())
+
+            let base_name = base.name().unwrap();
+            debug!("should rename base {}", base_name);
+            if remapped.get(base_name).is_some() {
+                println!("Would change the base");
+            }
+        }
+        GitHierarchy::Sum(sum) => {
+            let summands = sum.summands(repository);
+
+            println!("a sum of: ");
+            for s in &summands {
+                let name = s.node_identity();
+                println!("{}", name);
+
+                if remapped.get(name).is_some() {
+                    println!("Would change the summand {}", name);
+                }
+            }
+        }
+    }
+}
+
 fn walk_down<F>(repository: &Repository, root: &str, mut process: F)
 where
     F: for<'repo, 'a> FnMut(
@@ -109,12 +157,26 @@ struct Cli {
 
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+    #[arg(long, short = 'r', num_args(2))]
+    rename: Vec<String>,
 }
 
 fn main() {
     let cli = Cli::parse();
 
     init_tracing(cli.verbose);
+
+    if !cli.rename.is_empty() {
+        if cli.rename.len() != 2 {
+            panic!("--rename takes 2 parameters");
+        }
+        // also, in this case I don't start *implicitly* by HEAD.
+        if cli.root_reference.is_none() {
+            panic!("when --rename is used, the top must be stated")
+        }
+
+        println!("will rename from {} to {}", cli.rename[0], cli.rename[1]);
+    }
 
     let repo = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
         Ok(repo) => repo,
