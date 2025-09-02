@@ -230,14 +230,19 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
 fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let path = marker_filename(repository);
 
-    if fs::exists(&path).unwrap() {
-        let name: String = fs::read_to_string(path).unwrap();
-        debug!("continue on {}", name);
+    if ! fs::exists(&path).unwrap() {
+        panic!("not segment is being rebased.");
+    }
+
+    let segment_name: String = fs::read_to_string(path).unwrap();
+    debug!("continue on {}", segment_name);
+
         if !git_run(repository, &["cherry-pick", "--continue"]).success() {
             info!("Good?")
             // panic!("cherry-pick failed");
         }
-        if let GitHierarchy::Segment(segment) = load(repository, &name).unwrap() {
+
+        if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
             let tmp_head: Branch<'_> = repository
                 .find_branch(TEMP_HEAD_NAME, BranchType::Local)
                 .unwrap();
