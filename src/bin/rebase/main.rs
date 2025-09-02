@@ -55,8 +55,6 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 
 // either exit or rewrite the segment ....its reference should update oid.
 fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) -> RebaseResult {
-    info!("should rebase {}", segment.name());
-
     if segment.uptodate(repository) {
         info!("nothing to do -- base and start equal");
         return RebaseResult::Nothing;
