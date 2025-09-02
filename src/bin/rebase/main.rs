@@ -7,8 +7,10 @@ use clap::Parser;
 use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Repository,
            MergeOptions, CherrypickOptions,
            build::CheckoutBuilder,
+           Oid,
 };
 
+#[allow(unused)]
 use tracing::{debug, info, warn};
 
 use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref};
@@ -60,11 +62,15 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
     fs::write(path, content)
 }
 
-fn cherry_pick_commits<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
-                              -> Result<Commit<'repo>, Error>  {
-    // checkout the base:
-    let iter = segment.iter(repository).unwrap();
-    let mut base_commit = segment.base(repository).peel_to_commit().unwrap();
+
+// on top of HEAD
+fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
+                                 iter: T,
+                                 //
+                                 mut base_commit: Commit<'repo>)
+                                 -> Result<Commit<'repo>, Error>
+    where T: Iterator<Item = Result<Oid, Error> >
+{
     // todo: use fold
     //     iter.fold(base_commit, |commit, to_apply| sum + i);
     for oid_to_apply in iter {
@@ -209,7 +215,10 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
             panic!("cherry-pick failed");
         }
     } else {
-        let commit = cherry_pick_commits(repository, segment).unwrap();
+        let commit = cherry_pick_commits(repository,
+                                         segment.iter(repository).unwrap(),
+                                         segment.base(repository).peel_to_commit().unwrap()
+                                         ).unwrap();
         // move
         segment.reset(repository, commit.id());
 
