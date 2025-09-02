@@ -231,10 +231,9 @@ fn remerge_sum<'repo>(
     if ! v.is_empty() {
         info!("so the sum is not up-to-date!");
 
-        let first = graphed_summands.remove(0);
+        let first = graphed_summands.get(0).unwrap();
         // &graphed_summands[0];
-        let others = graphed_summands.iter(); // .skip(1)
-        // let v = vec!();
+        let others = graphed_summands.iter().skip(1);
 
         #[allow(unused)]
         let message = get_merge_commit_message(sum.name(),
