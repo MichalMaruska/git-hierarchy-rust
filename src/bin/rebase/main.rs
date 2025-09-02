@@ -269,7 +269,7 @@ fn remerge_sum<'repo>(
                                "--strategy-option", "patience",
                                "--strategy-option", "ignore-space-change",
         ];
-        cmdline.extend(graphed_summands.iter().map(|s| s.node_identity()));
+        cmdline.extend(graphed_summands.iter().skip(1).map(|s| s.node_identity()));
 
         git_run(repository, &cmdline);
 
