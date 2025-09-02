@@ -175,9 +175,9 @@ fn rebase_empty_segment<'repo>(
 }
 
 fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {
-    debug!("relocating {:?} to {:?}", name, new_head.name().unwrap());
     let oid = new_head.peel_to_commit().unwrap();
     // create it:
+    debug!("relocating {:?} to {:?}", name, oid);
     repository.branch(name, &oid, true).unwrap();
     // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
 
