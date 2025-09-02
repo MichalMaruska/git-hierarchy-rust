@@ -5,7 +5,7 @@
 // - replaceInHierarchy ...the base from->to, mapping
 
 use clap::Parser;
-use git2::{Repository,};
+use git2::Repository;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
