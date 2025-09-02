@@ -4,21 +4,23 @@
 // - graph, toposort
 
 use clap::Parser;
-use git2::{Repository,Reference,Error,Branch,BranchType,ReferenceFormat,Remote};
+use git2::{Branch, BranchType, Error, Reference, ReferenceFormat, Repository};
 
-use tracing::{warn,info,debug};
+use tracing::{debug, info, warn};
 
-use std::collections::{HashMap};
-use std::iter::Iterator;
-use ::git_hierarchy::base::{get_repository,set_repository,unset_repository,git_same_ref,checkout_new_head_at};
-use ::git_hierarchy::utils::{extract_name,divide_str,concatenate,find_non_matching_elements,init_tracing};
+use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref};
 use ::git_hierarchy::execute::git_run;
+use ::git_hierarchy::utils::{
+    concatenate, divide_str, extract_name, find_non_matching_elements, init_tracing,
+};
+use std::collections::HashMap;
+use std::iter::Iterator;
 
 use crate::graph::discover_pet::find_hierarchy;
 
 // I need both:
 #[allow(unused)]
-use ::git_hierarchy::git_hierarchy::{GitHierarchy,Segment,Sum,load};
+use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
 
 use std::fs;
 use std::io;
@@ -33,15 +35,14 @@ use std::path::PathBuf;
 use ::git_hierarchy::graph;
 use graph::discover::NodeExpander;
 
-
 enum RebaseResult {
     Nothing,
     Done,
     // Failed,
 }
 
-const TEMP_HEAD_NAME : &str = "tempSegment";
-const MARKER_FILENAME : &str = ".segment-cherry-pick";
+const TEMP_HEAD_NAME: &str = "tempSegment";
+const MARKER_FILENAME: &str = ".segment-cherry-pick";
 
 fn marker_filename(repository: &Repository) -> PathBuf {
     repository.commondir().join(MARKER_FILENAME)
@@ -65,7 +66,7 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     let new_start = segment.base(repository);
 
     // todo: segment_empty()
-    if segment.empty(repository)  {
+    if segment.empty(repository) {
         return rebase_empty_segment(segment, repository);
     }
 
@@ -79,18 +80,29 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     // must change to the directory!
     let temp_head = TEMP_HEAD_NAME;
     Branch::name_is_valid(temp_head).unwrap();
-    let temp_head = checkout_new_head_at(repository, temp_head,
-                            &new_start.peel_to_commit().unwrap());
+    let temp_head =
+        checkout_new_head_at(repository, temp_head, &new_start.peel_to_commit().unwrap());
 
-    if !git_run(repository, &["cherry-pick", segment.git_revisions().as_str() ]).success() {
+    if !git_run(
+        repository,
+        &["cherry-pick", segment.git_revisions().as_str()],
+    )
+    .success()
+    {
         // return RebaseResult::Failed;
         panic!("cherry-pick failed");
     }
 
     // I have to re-find it?
-    rebase_segment_finish(repository, segment,
-                                       // temp_head.get()
-                                       repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
+    rebase_segment_finish(
+        repository,
+        segment,
+        // temp_head.get()
+        repository
+            .find_branch(&TEMP_HEAD_NAME, BranchType::Local)
+            .unwrap()
+            .get(),
+    );
     cleanup_segment_rebase(repository, segment, temp_head);
     return RebaseResult::Done;
 }
@@ -99,19 +111,26 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let path = marker_filename(repository);
 
     if fs::exists(&path).unwrap() {
-        let name :String = fs::read_to_string(path).unwrap();
+        let name: String = fs::read_to_string(path).unwrap();
         debug!("continue on {}", name);
         if !git_run(repository, &["cherry-pick", "--continue"]).success() {
             info!("Good?")
             // panic!("cherry-pick failed");
         }
         if let GitHierarchy::Segment(segment) = load(repository, &name).unwrap() {
-
-            let tmp_head : Branch<'_> = repository.find_branch(TEMP_HEAD_NAME, BranchType::Local).unwrap();
+            let tmp_head: Branch<'_> = repository
+                .find_branch(TEMP_HEAD_NAME, BranchType::Local)
+                .unwrap();
             if tmp_head.is_head() {
                 //name: &str, branch_type: BranchType) -> Result<Branch<'_>, Error> {head();
-                rebase_segment_finish(repository, &segment,
-                                                   repository.find_branch(&TEMP_HEAD_NAME, BranchType::Local).unwrap().get());
+                rebase_segment_finish(
+                    repository,
+                    &segment,
+                    repository
+                        .find_branch(&TEMP_HEAD_NAME, BranchType::Local)
+                        .unwrap()
+                        .get(),
+                );
                 cleanup_segment_rebase(repository, &segment, tmp_head);
                 return RebaseResult::Done;
             } else {
@@ -127,9 +146,14 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 }
 
 // bad name:
-fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_head: Branch<'_> ) {
+fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_head: Branch<'_>) {
     debug!("delete: {:?}", temp_head.name());
-    if !git_run(repository, &["branch", "-D", temp_head.name().unwrap().unwrap() ]).success() {
+    if !git_run(
+        repository,
+        &["branch", "-D", temp_head.name().unwrap().unwrap()],
+    )
+    .success()
+    {
         panic!("branch -D failed");
     }
     // temp_head.delete().expect("failed to delete a branch");
@@ -139,7 +163,10 @@ fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, temp_
     fs::remove_file(path).unwrap();
 }
 
-fn rebase_empty_segment<'repo>(segment: &Segment<'repo>, repository: &'repo Repository) -> RebaseResult {
+fn rebase_empty_segment<'repo>(
+    segment: &Segment<'repo>,
+    repository: &'repo Repository,
+) -> RebaseResult {
     debug!("rebase empty segment: {}", segment.name());
 
     segment.reset(repository,
@@ -155,18 +182,21 @@ fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) 
     // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
 
     // checkout, since then I drop ...:
-    let full_name = concatenate("refs/heads/",  name);
+    let full_name = concatenate("refs/heads/", name);
     repository.set_head(&full_name).expect("failed to checkout");
     // git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
 }
 
-fn rebase_segment_finish<'repo>(repository: &'repo Repository, segment: &Segment<'repo>, new_head: &Reference<'_>) {
+fn rebase_segment_finish<'repo>(
+    repository: &'repo Repository,
+    segment: &Segment<'repo>,
+    new_head: &Reference<'_>,
+) {
     // bug: segment.reset(repository);  // bug: does not reload the head of the segment!
 
     // reflog etc.
     force_head_to(repository, segment.name(), new_head);
 }
-
 
 /// Compose commit message for the Sum/Merge of .... components given by the
 /// first/others.
@@ -180,7 +210,7 @@ where
 {
     let mut message = format!("Sum: {sum_name}\n\n{}", first);
 
-    const NAMES_PER_LINE : usize = 3;
+    const NAMES_PER_LINE: usize = 3;
     for (i, name) in others.enumerate() {
         message.push_str(" + ");
         message.push_str(name);
@@ -246,7 +276,7 @@ fn remerge_sum<'repo>(
         }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
     );
 
-    if ! v.is_empty() {
+    if !v.is_empty() {
         info!("so the sum is not up-to-date!");
 
         let first = graphed_summands.get(0).unwrap();
@@ -262,46 +292,62 @@ fn remerge_sum<'repo>(
         let temp_head = checkout_new_head_at(repository,"temp-sum", &first.commit());
 
         // use  git_run or?
-        let mut cmdline = vec!["merge",
-                               "-m", &message, // why is this not automatic?
-                               "--rerere-autoupdate",
-                               "--strategy", "octopus",
-                               "--strategy", "recursive",
-                               "--strategy-option", "patience",
-                               "--strategy-option", "ignore-space-change",
+        let mut cmdline = vec![
+            "merge",
+            "-m",
+            &message, // why is this not automatic?
+            "--rerere-autoupdate",
+            "--strategy",
+            "octopus",
+            "--strategy",
+            "recursive",
+            "--strategy-option",
+            "patience",
+            "--strategy-option",
+            "ignore-space-change",
         ];
         cmdline.extend(graphed_summands.iter().skip(1).map(|s| s.node_identity()));
 
         git_run(repository, &cmdline);
 
-/*
-        piecewise
+        /*
+            piecewise
 
-        otherNames := lo.Map(others,
-        func (ref *plumbing.Reference, _ int) string {
-        return ref.Name().String()})
+            otherNames := lo.Map(others,
+            func (ref *plumbing.Reference, _ int) string {
+            return ref.Name().String()})
 
-        // otherNames...  cannot use otherNames (variable of type []string) as []any value in argument to
-        fmt.Println("summands are:", first, otherNames)
+            // otherNames...  cannot use otherNames (variable of type []string) as []any value in argument to
+            fmt.Println("summands are:", first, otherNames)
 
-        if piecewise {
-        // reset & retry
-        // piecewise:
-        for _, next := range others {
-        gitRun("merge", "-m",
-        "Sum: " + next.Name().String() + " into " + sum.Name(),
-        "--rerere-autoupdate", next.Name().String())
-    */
-
+            if piecewise {
+            // reset & retry
+            // piecewise:
+            for _, next := range others {
+            gitRun("merge", "-m",
+            "Sum: " + next.Name().String() + " into " + sum.Name(),
+            "--rerere-autoupdate", next.Name().String())
+        */
 
         // finish
-        force_head_to(repository, sum.name(),
-                      // have to sync
-                      repository.find_branch("temp-sum", BranchType::Local).unwrap().get());
+        force_head_to(
+            repository,
+            sum.name(),
+            // have to sync
+            repository
+                .find_branch("temp-sum", BranchType::Local)
+                .unwrap()
+                .get(),
+        );
         // git_run("branch", "--force", sum.Name(), tempHead)
 
         debug!("delete: {:?}", temp_head.name());
-        if !git_run(repository, &["branch", "-D", temp_head.name().unwrap().unwrap() ]).success() {
+        if !git_run(
+            repository,
+            &["branch", "-D", temp_head.name().unwrap().unwrap()],
+        )
+        .success()
+        {
             panic!("branch -D failed");
         }
     }
@@ -382,18 +428,22 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
     Ok(())
 }
 
-
-fn rebase_node<'repo>(repo: &'repo Repository,
-                      node: &GitHierarchy<'repo>,
-                      fetch: bool,
-                      object_map: &HashMap<String, GitHierarchy<'repo>>) {
+fn rebase_node<'repo>(
+    repo: &'repo Repository,
+    node: &GitHierarchy<'repo>,
+    fetch: bool,
+    object_map: &HashMap<String, GitHierarchy<'repo>>,
+) {
     match node {
-        GitHierarchy::Name(_n) => {panic!();}
+        GitHierarchy::Name(_n) => {
+            panic!();
+        }
         GitHierarchy::Reference(r) => {
             if fetch {
                 fetch_upstream_of(repo, r).expect("fetch failed");
-            }}
-        GitHierarchy::Segment(segment)=> {
+            }
+        }
+        GitHierarchy::Segment(segment) => {
             rebase_segment(repo, segment);
         }
         GitHierarchy::Sum(sum) => {
@@ -402,20 +452,23 @@ fn rebase_node<'repo>(repo: &'repo Repository,
     }
 }
 
-fn start_rebase(repository: &Repository,
-                root: String,
-                fetch: bool) {
+fn start_rebase(repository: &Repository, root: String, fetch: bool) {
     // summand -> object_map ->
-    let (object_map, // String -> GitHierarchy
-         hash_to_graph,  // stable graph:  String -> index ?
-         graph,          // index -> String?
-         discovery_order) = find_hierarchy(repository, root);
+    let (
+        object_map,    // String -> GitHierarchy
+        hash_to_graph, // stable graph:  String -> index ?
+        graph,         // index -> String?
+        discovery_order,
+    ) = find_hierarchy(repository, root);
 
     for v in discovery_order {
-        println!("{:?} {:?} {:?}", v,
-                 object_map.get(&v).unwrap().node_identity(),
-                 graph.node_weight(
-                     hash_to_graph.get(&v).unwrap().clone()).unwrap()
+        println!(
+            "{:?} {:?} {:?}",
+            v,
+            object_map.get(&v).unwrap().node_identity(),
+            graph
+                .node_weight(hash_to_graph.get(&v).unwrap().clone())
+                .unwrap()
         );
         let vertex = object_map.get(&v).unwrap();
         rebase_node(repository, vertex, fetch, &object_map);
@@ -425,7 +478,7 @@ fn start_rebase(repository: &Repository,
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long, short='g')]
+    #[arg(long, short = 'g')]
     directory: Option<PathBuf>,
     #[arg(short, long)]
     fetch: bool,
@@ -433,14 +486,13 @@ struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
-    #[arg(short, long="continue")]
+    #[arg(short, long = "continue")]
     cont: bool,
     root_reference: Option<String>,
 }
 
 ///
 fn main() {
-
     let cli = Cli::parse();
     // cli can override the Env variable.
     init_tracing(cli.verbose);
