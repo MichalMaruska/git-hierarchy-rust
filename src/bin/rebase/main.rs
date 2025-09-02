@@ -192,8 +192,11 @@ fn get_merge_commit_message<'a,'b,'c,Iter>(sum_name: &'b str, first: &'c str, ot
 /// Given @sum, check if it's up-to-date.
 ///
 /// If not: create a new git merge commit.
-fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<String, GitHierarchy<'_>>) -> RebaseResult {
-
+fn remerge_sum<'repo>(
+    repository: &'repo Repository,
+    sum: &Sum<'repo>,
+    object_map: &HashMap<String, GitHierarchy<'repo>>, // this lifetime
+) -> RebaseResult {
     let summands = sum.summands(repository);
 
     let mut graphed_summands : Vec<&GitHierarchy<'_>> = summands.iter().map(
@@ -206,17 +209,15 @@ fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<Stri
         // vec<GitHierarchy> not Name but real.
     ).collect();
 
-    // Vec<GitHierarchy<'repo>> is useless.
     // convert to the nodes?
 
     let v = find_non_matching_elements(
         // iter2 - hash(iter1)
-        graphed_summands.iter(), // these are <&GitHierarchy>
+        graphed_summands.iter(), // these are &GitHierarchy
 
         sum.parent_commits().into_iter(), // Vec<Oid>
         // we get reference.
         // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
-        //
         |gh| {
             debug!("mapping {:?} to {:?}", gh.node_identity(),
                    gh.commit().id());
@@ -250,9 +251,7 @@ fn remerge_sum(repository: &Repository, sum: &Sum<'_>, object_map: &HashMap<Stri
                                "--strategy-option", "patience",
                                "--strategy-option", "ignore-space-change",
         ];
-        for s in graphed_summands {
-            cmdline.push(s.node_identity());
-        }
+        cmdline.extend(graphed_summands.iter().map(|s| s.node_identity()));
 
         git_run(repository, &cmdline);
 
