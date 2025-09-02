@@ -87,81 +87,60 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
         let tree;
 
-        if false { // BROKEN!
-            // use `cherrypick_commit' -- low level, manual index handling.
+        // use `cherrypick'
 
-            // let mut index = repository.index().unwrap();
-            let mut index =
-                repository.cherrypick_commit(
-                    &to_apply,
-                    &base_commit,
-                    0, // what?
-                    Some(&options)).expect("cherry-pick should succeed. Do it manually otherwise!");
+        debug!("cherry-pick 1 commit: {:?}", to_apply);
 
-            /*
-            git_index_write_tree_to
-            write_tree_to
-            git_repository_set_index.
-             */
-            let id = index.write_tree().unwrap();
-            // "Failed to write tree. the index file is not backed up by an existing repository"
-            tree = repository.find_tree(id).unwrap();
-            // let sig = repository.signature().unwrap();
+        let mut checkout_opts = CheckoutBuilder::new();
+        checkout_opts.safe();
 
-        } else {
-            // use `cherrypick'
+        let mut cherrypick_opts = CherrypickOptions::new();
+        cherrypick_opts.checkout_builder(checkout_opts);
 
-            debug!("cherry-pick 1 commit: {:?}", to_apply);
+        let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
 
-            let mut checkout_opts = CheckoutBuilder::new();
-            checkout_opts.safe();
-
-            let mut cherrypick_opts = CherrypickOptions::new();
-            cherrypick_opts.checkout_builder(checkout_opts);
-
-            let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
-
-            if result.is_ok() {
-                // todo: see if conflicts ....
-                let mut index = repository.index().unwrap();
-                if index.has_conflicts() {
-                    eprintln!("SORRY conflicts detected");
-                    // so we have .git/CHERRY_PICK_HEAD ?
-                    exit(1);
-                }
-
-                if index.is_empty() {
-                    eprintln!("SORRY nothing staged -- skip?");
-                    // so we have .git/CHERRY_PICK_HEAD ?
-                    exit(1);
-                }
-
-                let id = index.write_tree().unwrap();
-                //  "cannot create a tree from a not fully merged index."
-                tree = repository.find_tree(id).unwrap();
-            } else {
-                debug!("cherrypick failed {:?}", result.err());
-                let index = repository.index().unwrap();
-                if index.has_conflicts() {
-                    eprintln!("SORRY conflicts detected");
-                }
-                panic!();
+        if result.is_ok() {
+            // todo: see if conflicts ....
+            let mut index = repository.index().unwrap();
+            if index.has_conflicts() {
+                eprintln!("SORRY conflicts detected");
+                // so we have .git/CHERRY_PICK_HEAD ?
+                exit(1);
             }
+
+            if index.is_empty() {
+                eprintln!("SORRY nothing staged, empty -- skip?");
+                // so we have .git/CHERRY_PICK_HEAD ?
+                exit(1);
+            }
+
+            let id = index.write_tree().unwrap();
+            //  "cannot create a tree from a not fully merged index."
+            tree = repository.find_tree(id).unwrap();
+        } else {
+            eprintln!("cherrypick failed {:?}", result.err());
+            let index = repository.index().unwrap();
+            if index.has_conflicts() {
+                eprintln!("SORRY conflicts detected");
+            }
+            panic!();
         }
+    }
 
-        let new_oid = repository.commit(
-            Some("HEAD"),
-            // copy over:
-            &to_apply.author(),
-            &to_apply.committer(),
-            &to_apply.message().unwrap(),
-            // and timestamps? part of those ^^ !
-            &tree,
-            &[&base_commit],
-        ).unwrap();
+    let new_oid = repository.commit(
+        Some("HEAD"),
+        // copy over:
+        &to_apply.author(),
+        &to_apply.committer(),
+        &to_apply.message().unwrap(),
+        // and timestamps? part of those ^^ !
+        &tree,
+        &[&base_commit],
+    ).unwrap();
 
-        repository.cleanup_state().unwrap();
-        base_commit = repository.find_commit(new_oid).unwrap();
+    repository.cleanup_state().unwrap();
+    base_commit = repository.find_commit(new_oid).unwrap();
+
     }
 
     return Ok(base_commit);
