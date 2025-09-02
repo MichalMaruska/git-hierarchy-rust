@@ -21,3 +21,7 @@ stderrlog = "0.6.0"
 tracing = { version = "0.1.41" }
 
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+
+petgraph = "0.8.2"
+# discover-graph = {path = "../discover-graph/"}
+discover-graph = {path = "submodules/discover-graph/"}
