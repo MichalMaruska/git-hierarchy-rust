@@ -12,6 +12,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
            RepositoryState,
            // merge:
            AnnotatedCommit,
+           Sort,
 };
 
 #[allow(unused)]
@@ -716,6 +717,28 @@ fn rebase_node<'repo>(
             remerge_sum(repo, sum, object_map);
         }
     }
+}
+
+
+// ancestor <---is parent-- ........ descendant
+fn is_linear_ancestor<'repo>(repository: &'repo Repository, ancestor: Oid, descendant: Oid) -> bool
+{
+    let mut walk = repository.revwalk().unwrap();
+    walk.push(descendant).expect("should set upper bound for Walk");
+    // segment.reference.borrow().target().unwrap()
+    walk.hide(ancestor).expect("should set the lower bound for Walk");
+    walk.set_sorting(Sort::TOPOLOGICAL).expect("should set the topo ordering of the Walk");
+
+    if walk.next().is_none() {
+        return false;
+    }
+
+    for oid in walk {
+        if repository.find_commit(oid.unwrap()).unwrap().parent_count() > 1 {
+            panic!("a merge found");
+        }
+    }
+    return true;
 }
 
 fn check_node<'repo>(
