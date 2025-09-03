@@ -558,8 +558,10 @@ fn remerge_sum<'repo>(
             let mut checkout_opts = CheckoutBuilder::new();
             checkout_opts.safe();
 
+
             // one more conversion:
-            // the owning
+            // we have Vec<GitHierarchy> ->  Vec<Commit> need..... Vec<AnnotatedCommit>
+            //
             let annotated_commits : Vec<AnnotatedCommit<'_>> =
                 graphed_summands.iter().skip(1).map(
                     |gh| {
@@ -575,7 +577,6 @@ fn remerge_sum<'repo>(
                 Some(&mut merge_opts),
                 Some(&mut checkout_opts)
             ).expect("Merge should succeed");
-
 
             // make if a function:
             // oid = save_index_with( message, signature);
