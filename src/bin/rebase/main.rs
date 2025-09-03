@@ -176,7 +176,9 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     let temp_head = TEMP_HEAD_NAME;
     Branch::name_is_valid(temp_head).unwrap();
     let mut temp_head =
-        checkout_new_head_at(repository, temp_head, &new_start.peel_to_commit().unwrap());
+        checkout_new_head_at(repository, Some(temp_head),
+                             &new_start.peel_to_commit().unwrap())
+        .unwrap();
 
     let sha = new_start.peel_to_commit().unwrap().id();
     debug!("set-head: {:?}", &sha);
