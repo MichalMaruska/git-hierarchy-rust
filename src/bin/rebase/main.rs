@@ -15,7 +15,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
            Sort,
 };
 
-#[allow(unused)]
+#[allow(unused_imports)]
 use tracing::{debug, info, warn};
 
 use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref};
@@ -484,7 +484,9 @@ fn remerge_sum<'repo>(
         }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
     );
 
-    if !v.is_empty() {
+    if v.is_empty() {
+        debug!("sum is update: summands & parent commits align");
+    } else {
         info!("so the sum is not up-to-date!");
 
         let first = graphed_summands.get(0).unwrap();
