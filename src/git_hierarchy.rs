@@ -79,7 +79,7 @@ impl<'repo> Segment<'repo> {
         self.name.as_ref()
     }
 
-    pub fn uptodate(&self, repository: &Repository) -> bool {
+    pub fn uptodate(&self, _repository: &Repository) -> bool {
         // debug!("looking at segment: {:?} {:?}", self.base.name().unwrap(), self._start.name().unwrap());
         self.base
             .borrow().peel_to_commit().unwrap().id() == self._start.target().unwrap()
