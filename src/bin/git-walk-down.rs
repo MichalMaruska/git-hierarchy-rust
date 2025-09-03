@@ -187,5 +187,15 @@ fn main() {
         .root_reference
         .unwrap_or_else(|| repo.head().unwrap().name().unwrap().to_owned());
 
-    walk_down(&repo, &root, process_node);
+    if !cli.rename.is_empty() {
+        info!("Renaming");
+        let mut remapped = HashMap::new();
+        remapped.insert(cli.rename[0].clone(), cli.rename[1].clone());
+        // move object_map ?
+        walk_down(&repo, &root, |repository, node, object_map| {
+            rename_nodes(repository, node, object_map, &mut remapped)
+        });
+    } else {
+        walk_down(&repo, &root, process_node);
+    }
 }
