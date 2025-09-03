@@ -741,6 +741,56 @@ fn is_linear_ancestor<'repo>(repository: &'repo Repository, ancestor: Oid, desce
     return true;
 }
 
+
+fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
+{
+    // no merge commits
+    if ! is_linear_ancestor(repository,
+                            segment._start.target().unwrap(),
+                            segment.reference.borrow().target().unwrap()) {
+        panic!("segment in mess");
+    }
+
+    // no segments inside. lenght limited....
+
+    // git_revisions()
+    // walk.push_ref(segment.reference.borrow());
+    // walk.hide(segment._start.target().unwrap());
+    // walk.hide_ref(ref);
+
+    // push_range
+    // descendant of start.
+
+    // start.is_ancestor(reference);
+}
+
+fn check_sum<'repo>(
+    _repository: &'repo Repository,
+    sum: &Sum<'repo>,
+    _object_map: &HashMap<String, GitHierarchy<'repo>>, // this lifetime
+) {
+    // merge commit?
+    let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
+    // terrible:
+    // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
+    if !(count > 1) {
+        panic!("not a merge: {}, only {} parent commits", sum.name(), count);
+    };
+
+    // each of the summands has relationship to a parent commit.
+    // divide
+    /*
+    (mapped, rest_summands, left_overs_parent_commits) = distribute(sum);
+    // either it went ahead ....or? what if it's rebased?
+    for bad in rest_summands {
+        // try to find in over
+        find_ancestor()
+    }
+
+    */
+}
+
+
 fn check_node<'repo>(
     repo: &'repo Repository,
     node: &GitHierarchy<'repo>,
@@ -754,8 +804,10 @@ fn check_node<'repo>(
             // no
         }
         GitHierarchy::Segment(segment) => {
+            check_segment(repo, segment);
         }
         GitHierarchy::Sum(sum) => {
+            check_sum(repo, sum, object_map);
         }
     }
 }
