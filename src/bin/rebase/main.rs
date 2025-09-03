@@ -89,7 +89,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
                       // use `cherrypick'
 
-                      debug!("cherry-pick 1 commit: {:?}", to_apply);
+                      info!("cherry-pick commit: {:?}", to_apply);
 
                       let mut checkout_opts = CheckoutBuilder::new();
                       checkout_opts.safe();
