@@ -125,7 +125,8 @@ fn rename_nodes<'repo>(
 
             if let Some(replacement) = remapped.get(base_name) {
                 debug!("exchange base {}", base_name);
-                segment.base.borrow_mut().symbolic_set_target(replacement, "replacement");
+                segment.base.borrow_mut().symbolic_set_target(replacement, "replacement")
+                    .expect("should be possible to change Base symbolic reference");
             }
         }
         GitHierarchy::Sum(sum) => {
