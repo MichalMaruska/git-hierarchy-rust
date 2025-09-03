@@ -813,7 +813,7 @@ fn check_node<'repo>(
 }
 
 
-fn start_rebase(repository: &Repository, root: String, fetch: bool) {
+fn start_rebase(repository: &Repository, root: String, fetch: bool, ignore: &Vec<String> ) {
     // summand -> object_map ->
     let (
         object_map,    // String -> GitHierarchy
@@ -823,14 +823,19 @@ fn start_rebase(repository: &Repository, root: String, fetch: bool) {
     ) = find_hierarchy(repository, root);
 
     for v in &discovery_order {
+        let name = object_map.get(v).unwrap().node_identity();
         println!(
             "{:?} {:?} {:?}",
             v,
-            object_map.get(v).unwrap().node_identity(),
+            name,
             graph
                 .node_weight(hash_to_graph.get(v).unwrap().clone())
                 .unwrap()
         );
+        if ignore.iter().find(|x| x == &name).is_some() {
+            eprintln!("found to be ignored {name}");
+            continue;
+        }
         let vertex = object_map.get(v).unwrap();
         check_node(repository, vertex, &object_map);
     }
@@ -863,6 +868,9 @@ struct Cli {
     #[arg(short, long = "continue")]
     cont: bool,
     root_reference: Option<String>,
+
+    #[arg(short, long = "ignore")]
+    ignore: Vec<String>
 }
 
 ///
@@ -890,5 +898,6 @@ fn main() {
         rebase_segment_continue(&repo);
     }
 
-    start_rebase(&repo, root.node_identity().to_owned(), cli.fetch);
+    start_rebase(&repo, root.node_identity().to_owned(), cli.fetch,
+                 &cli.ignore);
 }
