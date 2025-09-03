@@ -718,6 +718,26 @@ fn rebase_node<'repo>(
     }
 }
 
+fn check_node<'repo>(
+    repo: &'repo Repository,
+    node: &GitHierarchy<'repo>,
+    object_map: &HashMap<String, GitHierarchy<'repo>>,
+) {
+    match node {
+        GitHierarchy::Name(_n) => {
+            panic!();
+        }
+        GitHierarchy::Reference(_r) => {
+            // no
+        }
+        GitHierarchy::Segment(segment) => {
+        }
+        GitHierarchy::Sum(sum) => {
+        }
+    }
+}
+
+
 fn start_rebase(repository: &Repository, root: String, fetch: bool) {
     // summand -> object_map ->
     let (
@@ -726,6 +746,19 @@ fn start_rebase(repository: &Repository, root: String, fetch: bool) {
         graph,         // index -> String?
         discovery_order,
     ) = find_hierarchy(repository, root);
+
+    for v in &discovery_order {
+        println!(
+            "{:?} {:?} {:?}",
+            v,
+            object_map.get(v).unwrap().node_identity(),
+            graph
+                .node_weight(hash_to_graph.get(v).unwrap().clone())
+                .unwrap()
+        );
+        let vertex = object_map.get(v).unwrap();
+        check_node(repository, vertex, &object_map);
+    }
 
     for v in discovery_order {
         println!(
