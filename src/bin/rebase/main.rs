@@ -8,6 +8,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
            MergeOptions, CherrypickOptions,
            build::CheckoutBuilder,
            Oid,
+           RepositoryState,
 };
 
 #[allow(unused)]
@@ -237,6 +238,7 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let segment_name: String = fs::read_to_string(path).unwrap();
     debug!("continue on {}", segment_name);
 
+    if false {
         if !git_run(repository, &["cherry-pick", "--continue"]).success() {
             info!("Good?")
             // panic!("cherry-pick failed");
@@ -263,10 +265,79 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
                 panic!();
             }
         } else {
-            panic!();
+            RebaseResult::Nothing
         }
+
     } else {
-        RebaseResult::Nothing
+        // native:
+        // could be SKIP
+        if repository.state() != RepositoryState::CherryPick {
+            panic!("unexpected repository state");
+        }
+        // read the CHERRY_PICK_HEAD
+        let commit_id  = Oid::from_str(
+            &fs::read_to_string(repository.commondir().join("CHERRY_PICK_HEAD")).unwrap().trim()).unwrap();
+
+        debug!("should resume rebasing segment {} from {:?}", segment_name, commit_id);
+
+        if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
+            let iter = segment.iter(repository).unwrap();
+
+            let over = iter.skip_while(|x| x.as_ref().unwrap() != &commit_id );
+
+            let mut peek = over.peekable();
+            // let found = iter.find
+
+            if peek.peek().is_none() {
+                println!("Empty!");
+                panic!("not found or last");
+            } else {
+                // todo: check the index
+                // no unstaged changes?
+                let to_apply = repository.find_commit(commit_id).unwrap();
+
+
+                let mut index = repository.index().unwrap();
+                if index.has_conflicts() {
+                    eprintln!("SORRY conflicts detected");
+                    // so we have .git/CHERRY_PICK_HEAD ?
+                    exit(1);
+                }
+
+                let id = index.write_tree().unwrap();
+                //  "cannot create a tree from a not fully merged index."
+                let tree = repository.find_tree(id).unwrap();
+                let new_oid = repository.commit(
+                    Some("HEAD"),
+                    // copy over:
+                    &to_apply.author(),
+                    &to_apply.committer(),
+                    &to_apply.message().unwrap(),
+                    // and timestamps? part of those ^^ !
+                    &tree,
+                    &[&repository.head().unwrap().peel_to_commit().unwrap()],
+                ).unwrap();
+
+                repository.cleanup_state().unwrap();
+                // panic!("not supported currently");
+                // commit
+                // find where to resume
+
+                let commit = cherry_pick_commits(repository,
+                                                 peek,
+                                                 repository.find_commit(new_oid).unwrap()).unwrap();
+                segment.reset(repository, commit.id());
+            }
+
+            //
+            let tmp_head: Branch<'_> = repository
+                .find_branch(TEMP_HEAD_NAME, BranchType::Local)
+                .unwrap();
+            cleanup_segment_rebase(repository, &segment, tmp_head);
+            return RebaseResult::Done;
+        } else {
+            panic!("segment not found");
+        }
     }
 }
 
