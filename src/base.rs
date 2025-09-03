@@ -85,18 +85,10 @@ pub const GIT_HEADS_PATTERN: &str = "refs/heads/";
 /// git_run(repository, &["checkout", "--no-track", "-B", temp_head, new_start.name().unwrap()]);
 pub fn checkout_new_head_at<'repo>(
     repository: &'repo Repository,
-    name: &'_ str,
+    name: Option<&'_ str>,
     target: &Commit<'_>,
-) -> Branch<'repo> {
+) -> Option<Branch<'repo>> {
     // reflog?
-    info!("create temp branch {:?}", name);
-
-    // target = target.peel_to_commit().unwrap()
-    let new_branch = repository.branch(name, target, false).unwrap();
-
-    let full_name = new_branch.name().unwrap().unwrap();
-    let full_name = concatenate(GIT_HEADS_PATTERN, full_name);
-    info!("checkout {:?} to {:?}", full_name, target);
 
     // https://libgit2.org/docs/reference/main/checkout/git_checkout_head.html
     // error: temporary value is freed at the end of this statement
@@ -110,8 +102,22 @@ pub fn checkout_new_head_at<'repo>(
         .checkout_tree(tree.as_object(), Some(&mut checkout_opts))
         .expect("failed to checkout the newly created branch");
 
-    repository
-        .set_head(&full_name)
-        .expect("failed to create a branch on given commit");
-    return new_branch;
+    if name.is_some() {
+        info!("create temp branch {:?}", name);
+
+        // target = target.peel_to_commit().unwrap()
+        let new_branch = repository.branch(name.unwrap(), target, false).unwrap();
+
+        let full_name = new_branch.name().unwrap().unwrap();
+        let full_name = concatenate(GIT_HEADS_PATTERN, full_name);
+        info!("checkout {:?} to {:?}", full_name, target);
+
+        repository
+            .set_head(&full_name)
+            .expect("failed to create a branch on given commit");
+        return Some(new_branch);
+    } else {
+        repository.set_head_detached(target.id()).unwrap();
+        return None;
+    }
 }
