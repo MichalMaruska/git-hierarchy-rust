@@ -10,7 +10,7 @@ use git2::{Repository,Reference};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use ::git_hierarchy::utils::init_tracing;
+use ::git_hierarchy::utils::{init_tracing,concatenate};
 /*
  note: ambiguous because of a conflict between a name from a glob
        import and an outer scope during import or macro resolution
@@ -145,7 +145,6 @@ fn rename_nodes<'repo>(
     }
 }
 
-
 fn register_for_replacement<'repo>(
     remapped: &mut HashMap<String, String>,
     from: &Reference<'repo>,
@@ -157,6 +156,89 @@ fn register_for_replacement<'repo>(
     info!("will replace {} with {}", &name, &target);
     remapped.insert(name, target).and_then(|_ : String| -> Option<String> {panic!("double")});
     debug!("hash: {remapped:?}");
+}
+
+
+fn clone_node<'repo>(
+    repository: &'repo Repository,
+    node: &GitHierarchy<'repo>,
+    _object_map: &HashMap<String, GitHierarchy<'repo>>,
+    remapped: &mut HashMap<String, String>,
+    suffix: &str,
+) {
+    debug!("clone {:?}", node.node_identity(),);
+
+    // so I create, and put into remapped!
+    match node {
+        GitHierarchy::Name(_n) => {
+            panic!();
+        }
+        GitHierarchy::Reference(r) => {
+            println!("a ref {}", r.name().unwrap());
+        }
+        GitHierarchy::Segment(segment) => {
+            // if segment itself in replace ... ignore it.
+            let new_name = concatenate(segment.name(), suffix);
+
+            // get the base:
+            // ReferenceType::Symbolic
+            let mut base = segment.base(repository);
+            let base_name = base.name().unwrap();
+
+            debug!("searching for replace of base {} in {:?}", base_name, remapped);
+            if let Some(replacement) = remapped.get(base_name) {
+                debug!("found! {replacement}");
+                base = repository.find_reference(&replacement).unwrap();
+            }
+            let new_segment = Segment::create(repository,
+                                              &new_name,
+                                              &base, //  fixme!
+                                              &segment._start,
+                                              &*segment.reference.borrow()).unwrap();
+
+            // fixme: I need full ref name:
+            register_for_replacement(remapped,
+                                     &*segment.reference.borrow(),
+                                     &*new_segment.reference.borrow());
+        }
+        GitHierarchy::Sum(sum) => {
+            let new_name = concatenate(sum.name(), suffix);
+
+            let summands = sum.summands(repository);
+            // we need references, so the References are not moved/consumed
+
+
+            println!("a sum of: ");
+            // extract the names? full ref names
+            // let summand_names =
+            let rewritten_summands : Vec<_> =
+                summands.into_iter().map(
+                    |s|
+                    {
+                        let name = s.name().unwrap();
+                        println!("{}", name);
+
+                        if let Some(replacement) = remapped.get(name) {
+                            debug!("found! {replacement}");
+                            // println!("Would change the summand {}", name);
+                            repository.find_reference(&replacement).unwrap()
+                        } else {
+                            s
+                        }
+                    }).collect();
+
+            let summands_refs : Vec<_> = rewritten_summands.iter().collect();
+
+            let new_sum = Sum::create(repository,
+                                      &new_name,
+                                      summands_refs.into_iter(),
+                                      Some(sum.reference.borrow().peel_to_commit().unwrap())).unwrap();
+            register_for_replacement(remapped,
+                                     &*sum.reference.borrow(),
+                                     &*new_sum.reference.borrow()
+            );
+        }
+    }
 }
 
 
@@ -195,6 +277,10 @@ struct Cli {
     verbose: u8,
     #[arg(long, short = 'r', num_args(2))]
     rename: Vec<String>,
+
+    // prefix or suffix?
+    #[arg(long, short = 'c')]
+    clone: Option<String>,
 }
 
 fn main() {
@@ -232,6 +318,17 @@ fn main() {
             head.to_owned()
         });
 
+    // clone.
+    if cli.clone.is_some() {
+        let mut remapped = HashMap::new();
+        let suffix = cli.clone.unwrap();
+        walk_down(&repository, &root,
+                  |repository, node, object_map| {
+                      clone_node(repository, node, object_map, &mut remapped,
+                                 &suffix)
+                  });
+    }
+    // and possibly *then* rename?
     if !cli.rename.is_empty() {
         info!("Renaming");
         // resolve them...
