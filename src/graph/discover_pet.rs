@@ -3,8 +3,6 @@ use discover_graph::{GraphDiscoverer, GraphProvider};
 
 // GitHierarchy implements this, but we have to import explicitly.
 // ^^^^^^^^^^^^^ method not found in `GitHierarchy<'_>`
-use crate::graph::discover::NodeExpander;
-
 use git2::Repository;
 
 use std::collections::HashMap;
@@ -58,7 +56,7 @@ impl<'repo> GitHierarchyProvider<'repo> {
             GitHierarchy::Sum(ref s) => {
                 // copy
                 for summand in s.summands(&repository) {
-                    ch.push(summand.node_identity().to_owned());
+                    ch.push(summand.name().unwrap().to_owned());
                 }
             }
             GitHierarchy::Reference(ref _r) => {
