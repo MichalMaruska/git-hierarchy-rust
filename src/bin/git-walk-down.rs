@@ -310,13 +310,13 @@ fn main() {
             // let head = repo.head().unwrap().name().unwrap();
             //                       ^^^
             // creates a temporary value which is freed while still in use
-
             // what? that is no more temporary?
             // let head = repo.head().unwrap();
             // let head = head.name().unwrap().to_owned();
-            info!("Start from the HEAD = {}", &head);
             head.to_owned()
         });
+
+    info!("Start from the HEAD = {}", &root);
 
     // clone.
     if cli.clone.is_some() {
