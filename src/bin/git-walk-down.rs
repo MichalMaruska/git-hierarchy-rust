@@ -210,8 +210,6 @@ fn main() {
         if cli.root_reference.is_none() {
             panic!("when --rename is used, the top must be stated")
         }
-
-        println!("will rename from {} to {}", cli.rename[0], cli.rename[1]);
     }
 
     let repository = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
@@ -236,8 +234,12 @@ fn main() {
 
     if !cli.rename.is_empty() {
         info!("Renaming");
+        // resolve them...
         let mut remapped = HashMap::new();
-        remapped.insert(cli.rename[0].clone(), cli.rename[1].clone());
+
+        let from = repository.resolve_reference_from_short_name(&cli.rename[0]).unwrap();
+        let target = repository.resolve_reference_from_short_name(&cli.rename[1]).unwrap();
+        register_for_replacement(&mut remapped, &from, &target);
         // move object_map ?
         walk_down(&repository, &root, |repository, node, object_map| {
             rename_nodes(repository, node, object_map, &mut remapped)
