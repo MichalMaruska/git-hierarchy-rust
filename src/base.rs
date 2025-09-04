@@ -117,6 +117,7 @@ pub fn checkout_new_head_at<'repo>(
             .expect("failed to create a branch on given commit");
         return Some(new_branch);
     } else {
+        info!("detached checkout {:?}", target.id());
         repository.set_head_detached(target.id()).unwrap();
         return None;
     }
