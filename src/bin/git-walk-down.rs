@@ -5,7 +5,7 @@
 // - replaceInHierarchy ...the base from->to, mapping
 
 use clap::Parser;
-use git2::Repository;
+use git2::{Repository,Reference};
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -144,6 +144,21 @@ fn rename_nodes<'repo>(
         }
     }
 }
+
+
+fn register_for_replacement<'repo>(
+    remapped: &mut HashMap<String, String>,
+    from: &Reference<'repo>,
+    target: &Reference<'repo>,
+)
+{
+    let name = from.name().unwrap().to_owned();
+    let target = target.name().unwrap().to_owned();
+    info!("will replace {} with {}", &name, &target);
+    remapped.insert(name, target).and_then(|_ : String| -> Option<String> {panic!("double")});
+    debug!("hash: {remapped:?}");
+}
+
 
 fn walk_down<F>(repository: &Repository, root: &str, mut process: F)
 where

@@ -70,7 +70,7 @@ impl<'repo> Segment<'repo> {
                   start: &'_ Reference<'_>,
                   head: &'_ Reference<'_>)
                          -> Result<Segment<'repo>, Error> {
-        info!("create segment: {}", name);
+        info!("create segment: {} base {}", name, base.name().unwrap());
         let h = repository.branch(name, &head.peel_to_commit().unwrap(), false)?; // .expect("should be a new reference");
         let s = repository.reference(&concatenate(SEGMENT_START_PATTERN, name),
                                      start.target().unwrap(),
@@ -103,7 +103,9 @@ impl<'repo> Segment<'repo> {
     }
 
     pub fn uptodate(&self, _repository: &Repository) -> bool {
-        // debug!("looking at segment: {:?} {:?}", self.base.name().unwrap(), self._start.name().unwrap());
+        debug!("looking at segment: {:?} {:?} {:?}", self.name,
+               self._start.target().unwrap(),
+               self.base.borrow().peel_to_commit().unwrap().id());
         self.base
             .borrow().peel_to_commit().unwrap().id() == self._start.target().unwrap()
     }
@@ -187,7 +189,6 @@ pub struct Sum<'repo> {
 
 impl<'repo> Sum<'repo> {
 
-
     pub fn new(
         reference: Reference<'repo>,
         summands: Vec<Reference<'repo>>
@@ -268,10 +269,10 @@ impl<'repo> Sum<'repo> {
 
     /*
     pub fn rewrite_summands(&self, value: Vec<&GitHierarchy<'repo>>) {
-        // fixme: replace_with
-        self.resolved.replace(Some(value));
-    }
-    */
+    // fixme: replace_with
+    self.resolved.replace(Some(value));
+}
+     */
 
     pub fn name(&self) -> &str {
         // fixme: same as ....
@@ -322,6 +323,7 @@ pub fn load<'repo>(
 
     if let Ok(base) = repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
+            debug!("searching for {:?} {:?}", start_name(name), start.target());
             info!("segment found {}", name);
             return Ok(GitHierarchy::Segment(Segment::new(reference, base, start)));
         } else {
