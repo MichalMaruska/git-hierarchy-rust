@@ -86,7 +86,7 @@ fn process_node<'repo>(
 
             println!("a sum of: ");
             for s in &summands {
-                println!("  {}", s.node_identity());
+                println!("  {}", s.name().unwrap());
             }
         }
     }
@@ -134,7 +134,7 @@ fn rename_nodes<'repo>(
 
             println!("a sum of: ");
             for s in &summands {
-                let name = s.node_identity();
+                let name = s.name().unwrap();
                 println!("{}", name);
 
                 if remapped.get(name).is_some() {
