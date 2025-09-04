@@ -161,27 +161,30 @@ pub struct Sum<'repo> {
 }
 
 impl<'repo> Sum<'repo> {
-    pub fn summands(&self, repository: &'repo Repository) -> Vec<GitHierarchy<'repo>> {
+    // does this help? or better Vec<Reference>?
+    pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
         debug!("resolving summands for {:?}", self.name());
-        let mut resolved: Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
+        let resolved: Vec<Reference<'repo>>;
+        // = Vec::with_capacity(self.summands.len());
 
-        for summand in &self.summands {
-            let symbolic_base = repository
-                .find_reference(
+        resolved = self.summands.iter().map(
+            |summand| {
+                let symbolic_base = repository.find_reference(
                     summand
                         .symbolic_target()
                         .expect("base should be a symbolic reference"),
-                )
-                .unwrap();
-            resolved.push(GitHierarchy::Name(
-                symbolic_base.name().unwrap().to_string(),
-            ));
-            debug!(
-                "{:?} -> {:?}",
-                summand.name().unwrap(),
-                symbolic_base.name().unwrap()
-            );
-        }
+                ).unwrap();
+
+                debug!("{:?} -> {:?}",
+                       summand.name().unwrap(),
+                       symbolic_base.name().unwrap()
+                );
+
+                // so a complete Ref name.
+                // GitHierarchy::Name(symbolic_base.name().unwrap().to_string())
+                symbolic_base
+            }).collect();
+
         return resolved;
     }
 
