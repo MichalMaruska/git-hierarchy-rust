@@ -62,6 +62,29 @@ pub struct Segment<'repo> {
 const REBASED_REFLOG: &str = "Rebased";
 
 impl<'repo> Segment<'repo> {
+    pub fn create(repository: &'repo Repository,
+                  name: &str,
+                  // why the same?
+                  base: &'_ Reference<'_>,
+                  start: &'_ Reference<'_>,
+                  head: &'_ Reference<'_>)
+                         -> Result<Segment<'repo>, Error> {
+        info!("create segment: {} base {}", name, base.name().unwrap());
+        let h = repository.branch(name, &head.peel_to_commit().unwrap(), false)?;
+        // .expect("should be a new reference");
+        let s = repository.reference(&concatenate(SEGMENT_START_PATTERN, name),
+                                     start.target().unwrap(),
+                                     false,
+                                     "start").expect("should be a new reference");
+        let b = repository.reference_symbolic(&concatenate(SEGMENT_BASE_PATTERN, name),
+                                              base.name().unwrap(),
+                                              false,
+                                              "new segment").expect("should be a new symbolic reference");
+        // unimplemented!();
+        // I need to own the reference:
+        Ok(Segment::new(h.into_reference(), b, s))
+    }
+
     pub fn new(
         reference: Reference<'repo>,
         base: Reference<'repo>,
@@ -152,6 +175,8 @@ impl<'repo> Segment<'repo> {
         return Ok(walk);
     }
 }
+
+
 
 pub struct Sum<'repo> {
     name: String,
