@@ -79,7 +79,7 @@ impl<'repo>  GitHierarchyProvider<'repo> {
 
 impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
     fn get_neighbors(&mut self, vertex: &String) -> Vec<String> {
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // bug: std::thread::sleep(std::time::Duration::from_millis(10));
         self.fetch_neighbors(vertex)
     }
 
