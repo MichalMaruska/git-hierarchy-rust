@@ -199,7 +199,7 @@ fn main() {
         println!("will rename from {} to {}", cli.rename[0], cli.rename[1]);
     }
 
-    let repo = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
+    let repository = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
@@ -207,7 +207,7 @@ fn main() {
     let root = cli
         .root_reference
         .unwrap_or_else(|| {
-            let head = repo.head().unwrap().name().unwrap().to_owned();
+            let head = repository.head().unwrap().name().unwrap().to_owned();
             // let head = repo.head().unwrap().name().unwrap();
             //                       ^^^
             // creates a temporary value which is freed while still in use
@@ -224,10 +224,10 @@ fn main() {
         let mut remapped = HashMap::new();
         remapped.insert(cli.rename[0].clone(), cli.rename[1].clone());
         // move object_map ?
-        walk_down(&repo, &root, |repository, node, object_map| {
+        walk_down(&repository, &root, |repository, node, object_map| {
             rename_nodes(repository, node, object_map, &mut remapped)
         });
     } else {
-        walk_down(&repo, &root, process_node);
+        walk_down(&repository, &root, process_node);
     }
 }
