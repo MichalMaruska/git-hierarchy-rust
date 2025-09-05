@@ -454,10 +454,10 @@ fn remerge_sum<'repo>(
         .iter()
         .map(
             |s| {
-                let gh = object_map.get(s.node_identity()).unwrap();
+                let gh = object_map.get(s.name().unwrap()).unwrap();
                 debug!(
                     "convert {:?} to {:?}",
-                    s.node_identity(),
+                    s.name().unwrap(),
                     gh.node_identity()
                 );
                 gh
