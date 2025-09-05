@@ -161,40 +161,31 @@ pub struct Sum<'repo> {
 }
 
 impl<'repo> Sum<'repo> {
-    pub fn summands(&self, repository: &'repo Repository) -> Vec<GitHierarchy<'repo>> {
-        debug!("resolving summands for {:?}", self.name());
-        let mut resolved: Vec<GitHierarchy<'repo>> = Vec::with_capacity(self.summands.len());
 
-        for summand in &self.summands {
-            let symbolic_base = repository
-                .find_reference(
-                    summand
-                        .symbolic_target()
-                        .expect("base should be a symbolic reference"),
-                )
-                .unwrap();
-            resolved.push(GitHierarchy::Name(
-                symbolic_base.name().unwrap().to_string(),
-            ));
-            debug!(
-                "{:?} -> {:?}",
-                summand.name().unwrap(),
-                symbolic_base.name().unwrap()
-            );
-        }
+    pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
+        debug!("resolving summands for {:?}", self.name());
+        let resolved: Vec<Reference<'repo>>;
+        // = Vec::with_capacity(self.summands.len());
+
+        resolved = self.summands.iter().map(
+            |summand| {
+                let symbolic_base = repository.find_reference(
+                    summand.symbolic_target().expect("base should be a symbolic reference"),
+                ).unwrap();
+
+                debug!("{:?} -> {:?}", summand.name().unwrap(),
+                       symbolic_base.name().unwrap());
+
+                symbolic_base
+            }).collect();
+
         return resolved;
     }
 
-    /*
-    pub fn rewrite_summands(&self, value: Vec<&GitHierarchy<'repo>>) {
-        // fixme: replace_with
-        self.resolved.replace(Some(value));
-    }
-    */
-
     pub fn name(&self) -> &str {
         // fixme: same as ....
-        return &self.name; // branch_name(&self.reference.borrow());
+        // branch_name(&self.reference.borrow());
+        return &self.name;
     }
 
     pub fn parent_commits(&self) -> Vec<Oid> {
