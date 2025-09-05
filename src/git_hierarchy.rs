@@ -162,6 +162,19 @@ pub struct Sum<'repo> {
 
 impl<'repo> Sum<'repo> {
 
+    pub fn new(
+        reference: Reference<'repo>,
+        summands: Vec<Reference<'repo>>
+        // base: Reference<'repo>,
+        // start: Reference<'repo>,
+    ) -> Sum<'repo> {
+        Sum::<'repo> {
+            name: branch_name(&reference).to_owned(),
+            reference: RefCell::new(reference),
+            summands: summands,
+        }
+    }
+
     pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
         debug!("resolving summands for {:?}", self.name());
         let resolved: Vec<Reference<'repo>>;
@@ -242,13 +255,8 @@ pub fn load<'repo>(
     let summands = sum_summands(&repository, name);
     if !summands.is_empty() {
         info!("a sum detected {}", name);
-        return Ok(GitHierarchy::Sum(Sum {
-            name: branch_name(&reference).to_owned(),
-            reference: RefCell::new(reference),
-            summands: summands,
-            // resolved: RefCell::new(None),
-        }));
-    }
+        return Ok(GitHierarchy::Sum(Sum::new(reference, summands)))
+    };
 
     info!("plain reference {}", name);
     return Ok(GitHierarchy::Reference(reference));
