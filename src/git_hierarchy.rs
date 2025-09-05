@@ -18,6 +18,7 @@ use git2::{Commit, Oid, Reference, Repository, Revwalk, Sort, Error};
 const SEGMENT_BASE_PATTERN: &str = "refs/base/";
 const SEGMENT_START_PATTERN: &str = "refs/start/";
 const SUM_SUMMAND_PATTERN: &str = "refs/sums/";
+const SEPARATOR : &str = "/";
 
 fn base_name(name: &str) -> String {
     concatenate(SEGMENT_BASE_PATTERN, name)
@@ -199,6 +200,42 @@ impl<'repo> Sum<'repo> {
             summands: summands,
         }
     }
+
+    pub fn create<'a>(
+        repository: &'repo Repository,
+        name: &str,
+        components: impl Iterator<Item = &'a Reference<'repo>>,
+        // I need mut to take ownership if items.
+        hint: Option<Commit<'repo>>) -> Result<Sum<'repo>, Error>
+        where 'repo : 'a
+    {
+        info!("create sum: {}", name);
+        // let zipper: Vec<_> = (0..).zip("foo".chars()).collect();
+
+        // create  sum/1 ... sum/N symbolic references.
+        let summands : Vec<Reference<'repo>> = components.enumerate().map(
+            |(n, s)|
+            {
+                repository.reference_symbolic(&(SUM_SUMMAND_PATTERN.to_string()
+                                                + SEPARATOR
+                                                + name
+                                                + SEPARATOR
+                                                + &n.to_string()),
+                                              s.name().expect("should have name"),
+                                              false,
+                                              "start").expect("should be a new symbolic reference")
+            }
+        ).collect();
+
+        // create branch
+        let h = repository.branch(name,
+                                  // either at hinted
+                                  &hint.unwrap_or(summands[0].peel_to_commit().unwrap()),
+                                  // &head.peel_to_commit().unwrap()
+                                  false)?; // .expect("should be a new reference");
+        return Ok(Self::new(h.into_reference(), summands));
+    }
+
 
     pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
         debug!("resolving summands for {:?}", self.name());
