@@ -123,8 +123,6 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
                       let to_apply = repository.find_commit(oid_to_apply.unwrap()).unwrap();
 
-                      let tree;
-
                       // use `cherrypick'
 
                       info!("cherry-pick commit: {:?}", to_apply);
