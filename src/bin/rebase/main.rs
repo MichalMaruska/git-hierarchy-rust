@@ -239,6 +239,37 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     return RebaseResult::Done;
 }
 
+fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseResult {
+    if !git_run(repository, &["cherry-pick", "--continue"]).success() {
+        info!("Good?")
+        // panic!("cherry-pick failed");
+    }
+
+    if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
+        let tmp_head: Branch<'_> = repository
+            .find_branch(TEMP_HEAD_NAME, BranchType::Local)
+            .unwrap();
+        if tmp_head.is_head() {
+            //name: &str, branch_type: BranchType) -> Result<Branch<'_>, Error> {head();
+            rebase_segment_finish(
+                repository,
+                &segment,
+                repository
+                    .find_branch(&TEMP_HEAD_NAME, BranchType::Local)
+                    .unwrap()
+                    .get(),
+            );
+            cleanup_segment_rebase(repository, &segment, tmp_head);
+            return RebaseResult::Done;
+        } else {
+            // mismatch
+            panic!();
+        }
+    } else {
+        RebaseResult::Nothing
+    }
+}
+
 fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let path = marker_filename(repository);
 
@@ -250,35 +281,7 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     debug!("continue on {}", segment_name);
 
     if false {
-        if !git_run(repository, &["cherry-pick", "--continue"]).success() {
-            info!("Good?")
-            // panic!("cherry-pick failed");
-        }
-
-        if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
-            let tmp_head: Branch<'_> = repository
-                .find_branch(TEMP_HEAD_NAME, BranchType::Local)
-                .unwrap();
-            if tmp_head.is_head() {
-                //name: &str, branch_type: BranchType) -> Result<Branch<'_>, Error> {head();
-                rebase_segment_finish(
-                    repository,
-                    &segment,
-                    repository
-                        .find_branch(&TEMP_HEAD_NAME, BranchType::Local)
-                        .unwrap()
-                        .get(),
-                );
-                cleanup_segment_rebase(repository, &segment, tmp_head);
-                return RebaseResult::Done;
-            } else {
-                // mismatch
-                panic!();
-            }
-        } else {
-            RebaseResult::Nothing
-        }
-
+        return rebase_continue_git1(repository, segment_name);
     } else {
         // native:
         // could be SKIP
