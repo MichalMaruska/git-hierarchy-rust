@@ -275,7 +275,8 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
         panic!("not segment is being rebased.");
     }
 
-    let segment_name: String = fs::read_to_string(path).unwrap();
+    let content: String = fs::read_to_string(path).unwrap();
+    let segment_name = content.trim();
     debug!("continue on {}", segment_name);
 
     if false {
