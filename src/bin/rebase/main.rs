@@ -68,6 +68,40 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 }
 
 
+fn commit_cherry_picked<'repo>(repository: &'repo Repository,
+                                  to_apply: &Commit<'repo>,
+                                  parent_commit: &Commit<'repo>) -> Oid {
+
+    let mut index = repository.index().unwrap();
+    if index.has_conflicts() {
+        eprintln!("SORRY conflicts detected");
+        // so we have .git/CHERRY_PICK_HEAD ?
+        exit(1);
+    }
+    if index.is_empty() {
+        eprintln!("SORRY nothing staged, empty -- skip?");
+        // so we have .git/CHERRY_PICK_HEAD ?
+        exit(1);
+    }
+
+    let id = index.write_tree().unwrap();
+    //  "cannot create a tree from a not fully merged index."
+    let tree = repository.find_tree(id).unwrap();
+    let new_oid = repository.commit(
+        Some("HEAD"),
+        // copy over:
+        &to_apply.author(),
+        &to_apply.committer(),
+        &to_apply.message().unwrap(),
+        // and timestamps? part of those ^^ !
+        &tree,
+        &[parent_commit],
+    ).unwrap();
+
+    repository.cleanup_state().unwrap();
+    return new_oid;
+}
+
 // on top of HEAD
 fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                                  iter: T,
@@ -103,25 +137,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
                       let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
 
-                      if result.is_ok() {
-                          // todo: see if conflicts ....
-                          let mut index = repository.index().unwrap();
-                          if index.has_conflicts() {
-                              eprintln!("SORRY conflicts detected");
-                              // so we have .git/CHERRY_PICK_HEAD ?
-                              exit(1);
-                          }
-
-                          if index.is_empty() {
-                              eprintln!("SORRY nothing staged, empty -- skip?");
-                              // so we have .git/CHERRY_PICK_HEAD ?
-                              exit(1);
-                          }
-
-                          let id = index.write_tree().unwrap();
-                          //  "cannot create a tree from a not fully merged index."
-                          tree = repository.find_tree(id).unwrap();
-                      } else {
+                      if !(result.is_ok()) {
                           eprintln!("cherrypick failed {:?}", result.err());
                           let index = repository.index().unwrap();
                           if index.has_conflicts() {
@@ -130,18 +146,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                           panic!();
                       }
 
-                      let new_oid = repository.commit(
-                          Some("HEAD"),
-                          // copy over:
-                          &to_apply.author(),
-                          &to_apply.committer(),
-                          &to_apply.message().unwrap(),
-                          // and timestamps? part of those ^^ !
-                          &tree,
-                          &[&base_commit],
-                      ).unwrap();
-
-                      repository.cleanup_state().unwrap();
+                      let new_oid = commit_cherry_picked(repository, &to_apply, &base_commit);
                       let new_commit = repository.find_commit(new_oid).unwrap();
 
                       if false {
