@@ -355,12 +355,8 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     }
 }
 
-// bad name:
-fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, mut temp_head: Branch<'_>) {
-
-    debug!("delete: {:?} {}", temp_head.name().unwrap().unwrap(),
-           temp_head.get().target().unwrap());
-
+// strange this mut. caller makes a copy?
+fn drop_temporary_head(repository: &Repository, mut temp_head: Branch<'_>) {
     if true {
         temp_head.delete().expect("failed to delete a branch");
     } else {
@@ -373,6 +369,18 @@ fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>, mut t
             panic!("branch -D failed");
         }
     }
+
+
+}
+
+// bad name:
+fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>,
+                          temp_head: Branch<'_>) {
+
+    debug!("delete: {:?} {}", temp_head.name().unwrap().unwrap(),
+           temp_head.get().target().unwrap());
+
+    drop_temporary_head(repository, temp_head);
 
     let path = marker_filename(repository);
     debug!("delete: {:?}", path);
