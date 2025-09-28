@@ -79,24 +79,42 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
         exit(1);
     }
     if index.is_empty() {
-        eprintln!("SORRY nothing staged, empty -- skip?");
+        // eprintln
+        warn!("SORRY nothing staged, empty -- skip?");
         // so we have .git/CHERRY_PICK_HEAD ?
         exit(1);
+    } else {
+        info!("not empty, something staged, will commit. {}", index.len());
     }
 
-    let id = index.write_tree().unwrap();
-    //  "cannot create a tree from a not fully merged index."
-    let tree = repository.find_tree(id).unwrap();
-    let new_oid = repository.commit(
-        Some("HEAD"),
-        // copy over:
-        &to_apply.author(),
-        &to_apply.committer(),
-        &to_apply.message().unwrap(),
-        // and timestamps? part of those ^^ !
-        &tree,
-        &[parent_commit],
-    ).unwrap();
+    let tree_oid = index.write_tree().unwrap();
+
+    let new_oid;
+
+    if repository.head().unwrap().peel_to_tree().unwrap().id()
+        == tree_oid {
+            warn!("SORRY nothing staged, empty -- skip?");
+            // bug: and no changes in the worktree!
+            new_oid = repository.head().unwrap().target().unwrap();
+            // silently skipping over?
+            // exit(1);
+        } else {
+            // same tree id ... it was empty!
+
+
+            //  "cannot create a tree from a not fully merged index."
+            let tree = repository.find_tree(tree_oid).unwrap();
+            new_oid = repository.commit(
+                Some("HEAD"),
+                // copy over:
+                &to_apply.author(),
+                &to_apply.committer(),
+                &to_apply.message().unwrap(),
+                // and timestamps? part of those ^^ !
+                &tree,
+                &[parent_commit],
+            ).unwrap();
+        }
 
     repository.cleanup_state().unwrap();
     return new_oid;
