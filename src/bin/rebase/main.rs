@@ -16,7 +16,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
 };
 
 #[allow(unused_imports)]
-use tracing::{debug, info, warn};
+use tracing::{span, Level, debug, info, warn};
 
 use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref};
 use ::git_hierarchy::execute::git_run;
@@ -733,6 +733,8 @@ fn rebase_node<'repo>(
             }
         }
         GitHierarchy::Segment(segment) => {
+            let my_span = span!(Level::INFO, "segment", name = segment.name());
+            let _enter = my_span.enter();
             rebase_segment(repo, segment);
         }
         GitHierarchy::Sum(sum) => {
