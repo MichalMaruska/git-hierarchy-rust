@@ -286,11 +286,47 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseRe
     }
 }
 
+fn continue_segment_cherry_pick<'repo, 'a>(repository: &'repo Repository, segment: &'_ Segment<'repo>,
+                                           commit_id: Oid) {
+
+    let iter = segment.iter(repository).unwrap();
+    // here skip & find:
+    let over = iter.skip_while(|x| x.as_ref().unwrap() != &commit_id );
+    let mut peek = over.peekable();
+
+    if peek.peek().is_none() {
+        println!("Empty!");
+        panic!("not found or last");
+    } else {
+        // todo: check the index
+        // no unstaged changes?
+        let to_apply = repository.find_commit(commit_id).unwrap();
+        let new_oid = commit_cherry_picked(repository,
+                                           &to_apply,
+                                           &repository.head().unwrap().peel_to_commit().unwrap());
+        // panic!("not supported currently");
+        // commit
+        // find where to resume
+
+        // here we continue the whole sub-segment chain:
+        debug!("now continue to pick the rest of the segment '{}'", segment.name());
+        let commit = cherry_pick_commits(repository,
+                                         peek.skip(1),
+                                         repository.find_commit(new_oid).unwrap()).unwrap();
+
+        // might need this if nothing to cherrypick anymore.
+        segment.reset(repository, commit.id());
+
+    }
+}
+// we cherry-pick on detached head. Unlike other tools.
+//
 fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let path = marker_filename(repository);
 
+    // todo: maybe this before calling this function?
     if ! fs::exists(&path).unwrap() {
-        panic!("not segment is being rebased.");
+        panic!("marker file does not exist -- no segment is being rebased.");
     }
 
     let content: String = fs::read_to_string(path).unwrap();
@@ -310,37 +346,9 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
                 let commit_id  = Oid::from_str(
                     &fs::read_to_string(repository.commondir().join("CHERRY_PICK_HEAD")).unwrap().trim()).unwrap();
 
-                debug!("should resume rebasing segment {} from {:?}", segment_name, commit_id);
+                debug!("should continue the cherry-pick {:?}", commit_id);
 
-                let iter = segment.iter(repository).unwrap();
-
-                // here skip & find:
-                let over = iter.skip_while(|x| x.as_ref().unwrap() != &commit_id );
-                let mut peek = over.peekable();
-
-                if peek.peek().is_none() {
-                    println!("Empty!");
-                    panic!("not found or last");
-                } else {
-                    // todo: check the index
-                    // no unstaged changes?
-                    let to_apply = repository.find_commit(commit_id).unwrap();
-                    let new_oid = commit_cherry_picked(repository,
-                                                       &to_apply,
-                                                       &repository.head().unwrap().peel_to_commit().unwrap());
-                    // panic!("not supported currently");
-                    // commit
-                    // find where to resume
-
-                    // here we continue the whole sub-segment chain:
-                    debug!("now continue to pick the rest of the segment '{}'", segment_name);
-                    let commit = cherry_pick_commits(repository,
-                                                     peek.skip(1),
-                                                     repository.find_commit(new_oid).unwrap()).unwrap();
-
-                    // might need this if nothing to cherrypick anymore.
-                    segment.reset(repository, commit.id());
-                }
+                continue_segment_cherry_pick(repository, &segment, commit_id);
             } else if repository.state() == RepositoryState::Clean {
                 // the state
                 segment.reset(repository,
