@@ -21,15 +21,15 @@ name = "git-segment"
 path = "src/bin/git-segment.rs"
 
 [dependencies]
-clap = { version = "4.5.40", features = ["derive"] }
+clap = {version = "4.5.50", features = ["derive"] }
 derive = "1.0.0"
 git2 = "0.20.2"
-log = { version = "0.4.27", features = ["std"] }
+log = { version = "0.4.28", features = ["std"] }
 stderrlog = "0.6.0"
 tracing = { version = "0.1.41" }
 
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
-petgraph = "0.8.2"
+petgraph = "0.8.3"
 # discover-graph = {path = "../discover-graph/"}
 discover-graph = {path = "submodules/discover-graph/"}
