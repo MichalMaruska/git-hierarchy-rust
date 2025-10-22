@@ -16,6 +16,10 @@ path = "src/bin/git-walk-down.rs"
 name = "git-rebase-poset"
 path = "src/bin/rebase/main.rs"
 
+[[bin]]
+name = "git-segment"
+path = "src/bin/git-segment.rs"
+
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
 derive = "1.0.0"
