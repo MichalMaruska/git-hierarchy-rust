@@ -8,7 +8,7 @@ fn main() {
     let reference_name = &args[2];
 
     let repo = Repository::open_from_env().unwrap();
-    let reference = repo.find_reference(reference_name).unwrap();
+    let reference = repo.resolve_reference_from_short_name(reference_name).unwrap();
 
     Segment::create(&repo, name, &reference, &reference, &reference).unwrap();
 }
