@@ -3,6 +3,16 @@ name = "git-hierarchy"
 version = "0.1.0"
 edition = "2024"
 
+authors = ["Michal Maruska <mmaruska@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "A tool to rebase a hierarchy of local development commits"
+readme = "readme.md"
+homepage = "https://github.com/MichalMaruska/git-hierarchy-rust"
+repository = "https://github.com/MichalMaruska/git-hierarchy-rust"
+keywords = ["cli", "git"]
+categories = ["command-line-utilities"]
+
+
 [lib]
 name = "git_hierarchy"
 path = "src/lib.rs"
