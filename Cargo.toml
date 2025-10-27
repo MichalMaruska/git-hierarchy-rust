@@ -32,6 +32,8 @@ path = "src/bin/git-segment.rs"
 
 [dependencies]
 clap = {version = "4.5.50", features = ["derive"] }
+clap-verbosity-flag = {version = "3.0.4", features = ["tracing"] }
+
 derive = "1.0.0"
 git2 = "0.20.2"
 log = { version = "0.4.28", features = ["std"] }
