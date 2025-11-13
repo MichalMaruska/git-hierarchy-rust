@@ -114,13 +114,19 @@ struct DefineArgs {
 
 fn define(repository: &Repository, args: &DefineArgs)
 {
-
     let base = repository.resolve_reference_from_short_name(&args.base).unwrap();
-    let start = repository.resolve_reference_from_short_name(&args.start.unwrap_or(base)).unwrap();
-    let hash = start.target().unwrap();
+    // reference? cannot clone base
+    let start = args.start.as_ref().map_or(repository.resolve_reference_from_short_name(base.name().unwrap()).unwrap(),
+                                           |name|
+                                           repository.resolve_reference_from_short_name(&name).unwrap());
+    let head = repository.resolve_reference_from_short_name(
+        args.head.as_ref().map_or("HEAD",
+                                  |x| &x)).unwrap();
+    Segment::create(&repository, &args.segment_name, &base, &start, &head).unwrap();
 
-    // Segment::create(&repository, name, &reference, &reference, &reference).unwrap();
-    println!("would create {} in {:?}", args.segment_name, repository.path());
+    let hash = start.target().unwrap();
+    // todo: show it
+    println!("create {} in {:?}", args.segment_name, repository.path());
     println!("base = {}, start {} = {}", base.name().unwrap(), start.name().unwrap(), hash.to_string());
 }
 
@@ -193,6 +199,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         define(&repository, &args);
     }
     // else nothing. Or list?
-
+    // return Err(error.into());
     Ok(())
 }
