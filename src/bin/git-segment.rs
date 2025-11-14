@@ -68,6 +68,8 @@ struct ListArgs {
 
     #[arg(long, short='p')]
     diff: bool,
+
+    name: Option<String>,
 }
 
 
