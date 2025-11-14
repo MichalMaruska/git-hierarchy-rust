@@ -3,7 +3,7 @@ use clap::{Parser,Subcommand,CommandFactory,FromArgMatches};
 use git2::Repository;
 
 #[allow(unused_imports)]
-use git_hierarchy::git_hierarchy::Segment;
+use git_hierarchy::git_hierarchy::{Segment,segments};
 
 
 /// Operate on segments or 1 segment
@@ -135,6 +135,15 @@ fn delete(repository: &Repository, args: &DeleteCmd) {
 }
 
 
+fn list_segments(repository: &Repository) {
+    let ref_iterator = segments(&repository);
+
+    for r in ref_iterator {
+        println!("{}", r);
+    }
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let clip =
@@ -179,8 +188,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(command) = clip.command {
         match command {
             Commands::List(_args) => {
-                println!("would list");
-            },
+                list_segments(&repository);
+            }
             Commands::Restart(args) => {
                 println!("would restart from {}", args.commit);
             },
