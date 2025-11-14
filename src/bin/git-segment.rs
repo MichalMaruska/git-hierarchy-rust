@@ -28,9 +28,7 @@ struct Cli {
     // .arg_required_else_help(false);
     command: Option<Commands>,
 
-    #[command(flatten)]
-    #[command(name="define")]
-    define_args: Option<DefineArgs>,
+    define_or_show_args: Option<Vec<String>>,
 }
 
 
@@ -208,8 +206,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 define(&repository, &args).expect("failed to define new segment");
             },
         }
-    } else if let Some(args) = clip.define_args {
-        define(&repository, &args);
+    } else if let Some(args) = clip.define_or_show_args {
+        if args.len() == 1 {
+            describe(&repository, &args[0]);
+        } else {
+            // convert....
+            let def = DefineArgs {
+                checkout : false, // to control this, use the -D/define command.
+                // cannot move out of index of `Vec<std::string::String>`
+                // so? swap? borrow_mut
+                segment_name : args[0].clone(),
+                base: args[1].clone(),
+                start: if args.len() > 2 {Some(args[2].clone())} else {None},
+                head: if args.len() > 3 {Some(args[3].clone())} else {None},
+            };
+            define(&repository, &def).unwrap();
+        }
     }
     // else nothing. Or list?
     // return Err(error.into());
