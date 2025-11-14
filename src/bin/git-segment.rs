@@ -134,6 +134,9 @@ fn delete(repository: &Repository, args: &DeleteCmd) {
     println!("would delete {} in {:?}", args.segment_name, repository.path());
 }
 
+fn describe(repository: &Repository, segment: &str) {
+    println!("Segment {} in {:?}", segment, repository.path());
+}
 
 fn list_segments(repository: &Repository) {
     let ref_iterator = segments(&repository);
