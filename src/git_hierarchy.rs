@@ -86,7 +86,7 @@ impl<'repo> Segment<'repo> {
                   base: &'_ Reference<'_>,
                   start: &'_ Reference<'_>,
                   head: &'_ Reference<'_>)
-                         -> Result<Segment<'repo>, Error> {
+                  -> Result<Segment<'repo>, Error> {
         info!("create segment: {} base {}", name, base.name().unwrap());
         let h = repository.branch(name, &head.peel_to_commit().unwrap(), false)?;
         // .expect("should be a new reference");
