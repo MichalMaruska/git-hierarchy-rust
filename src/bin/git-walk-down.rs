@@ -33,8 +33,8 @@ fn list_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) 
     for c in walk {
         let oid = c.unwrap();
         let commit = repository.find_commit(oid).unwrap();
-        let message = commit.message().unwrap();
-        println!("{:?}: {}", oid, message.lines().next().unwrap());
+        let message = commit.summary().unwrap();
+        println!("{:?}: {}", oid, message);
     }
     println!();
 }
