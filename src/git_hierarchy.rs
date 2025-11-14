@@ -43,6 +43,23 @@ fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Referen
     return v;
 }
 
+// composed
+
+// I want an iterator on strings.
+// dyn Iterator<item = >
+pub fn segments<'repo>(repository: &'repo Repository) -> impl Iterator<Item = String>
+{
+    let iterator = repository.references_glob(&concatenate(SEGMENT_BASE_PATTERN, "*")).unwrap();
+    // so .names() is bad api!
+
+    let segments = iterator
+        .map(move |r| {
+            r.unwrap().name().unwrap().strip_prefix(SEGMENT_BASE_PATTERN).unwrap().to_string()
+        });
+
+    return segments;
+}
+
 fn branch_name<'a, 'repo>(reference: &'a Reference<'repo>) -> &'a str {
     return reference
         .name()
