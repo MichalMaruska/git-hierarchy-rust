@@ -209,7 +209,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         }
     } else if let Some(args) = clip.define_or_show_args {
-        if args.len() == 1 {
+        if args.len() == 0 {
+            unreachable!("cannot be Some, and empty vector");
+            list_segments(&repository);
+        } else if args.len() == 1 {
             describe(&repository, &args[0]);
         } else {
             // convert....
@@ -224,6 +227,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
             define(&repository, &def).unwrap();
         }
+    } else {
+        list_segments(&repository);
     }
     // else nothing. Or list?
     // return Err(error.into());
