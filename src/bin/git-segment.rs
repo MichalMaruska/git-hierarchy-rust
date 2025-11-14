@@ -112,9 +112,9 @@ struct DefineArgs {
     head: Option<String>,
 }
 
-fn define(repository: &Repository, args: &DefineArgs)
+fn define<'repo> (repository: &'repo Repository, args: &DefineArgs) -> Result<Segment<'repo>, git2::Error>
 {
-    let base = repository.resolve_reference_from_short_name(&args.base).unwrap();
+    let base = repository.resolve_reference_from_short_name(&args.base)?;
     // reference? cannot clone base
     let start = args.start.as_ref().map_or(repository.resolve_reference_from_short_name(base.name().unwrap()).unwrap(),
                                            |name|
@@ -122,12 +122,13 @@ fn define(repository: &Repository, args: &DefineArgs)
     let head = repository.resolve_reference_from_short_name(
         args.head.as_ref().map_or("HEAD",
                                   |x| &x)).unwrap();
-    Segment::create(&repository, &args.segment_name, &base, &start, &head).unwrap();
+    let res = Segment::create(&repository, &args.segment_name, &base, &start, &head);
 
     let hash = start.target().unwrap();
     // todo: show it
     println!("create {} in {:?}", args.segment_name, repository.path());
     println!("base = {}, start {} = {}", base.name().unwrap(), start.name().unwrap(), hash.to_string());
+    res
 }
 
 fn delete(repository: &Repository, args: &DeleteCmd) {
@@ -204,7 +205,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 delete(&repository, &args);
             },
             Commands::Define(args) => {
-                define(&repository, &args);
+                define(&repository, &args).expect("failed to define new segment");
             },
         }
     } else if let Some(args) = clip.define_args {
