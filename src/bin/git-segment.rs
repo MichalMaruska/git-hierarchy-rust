@@ -3,7 +3,7 @@ use clap::{Parser,Subcommand,CommandFactory,FromArgMatches};
 use git2::Repository;
 
 #[allow(unused_imports)]
-use git_hierarchy::git_hierarchy::{Segment,segments};
+use git_hierarchy::git_hierarchy::{GitHierarchy,Segment,segments,load};
 
 
 /// Operate on segments or 1 segment
@@ -135,8 +135,20 @@ fn delete(repository: &Repository, args: &DeleteCmd) {
     println!("would delete {} in {:?}", args.segment_name, repository.path());
 }
 
-fn describe(repository: &Repository, segment: &str) {
-    println!("Segment {} in {:?}", segment, repository.path());
+// see list_segment in git-walk-down.rs
+fn describe(repository: &Repository, segment_name: &str) {
+    println!("Segment {} in {:?}", segment_name, repository.path());
+    let gh = git_hierarchy::git_hierarchy::load(repository, segment_name).unwrap();
+    if let GitHierarchy::Segment(segment) = gh {
+        // todo: drop the refs/
+        println!("Base {}", segment.base(repository).name().unwrap());
+        println!("Start {}", segment._start.name().unwrap());
+        for oid in segment.iter(repository).unwrap() {
+            let oid = oid.unwrap();
+            let commit = repository.find_commit(oid).unwrap();
+            println!("{}: {}", oid, commit.summary().unwrap());
+        }
+    }
 }
 
 fn list_segments(repository: &Repository) {
