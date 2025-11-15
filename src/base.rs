@@ -2,7 +2,7 @@
 #![deny(elided_lifetimes_in_paths)]
 
 use crate::utils::concatenate;
-use git2::{Branch, Commit, Reference, Repository, build::CheckoutBuilder};
+use git2::{Branch, Commit, Oid, Reference, Repository, build::CheckoutBuilder};
 use std::cell::OnceCell;
 #[allow(unused)]
 use tracing::{debug, info, warn};
@@ -65,17 +65,16 @@ pub fn git_same_ref(
     reference: &Reference<'_>,
     next: &Reference<'_>,
 ) -> bool {
-    fn sha<'a>(repository: &'a Repository, reference: &Reference<'a>) -> Commit<'a> {
-        let direct = reference.resolve().unwrap();
-        debug!(
-            "git_same_ref: {:?} {:?}",
-            reference.name().unwrap(),
-            direct.target()
-        );
-        repository.find_commit(direct.target().unwrap()).unwrap()
+    fn sha<'a>(repository: &'a Repository, reference: &Reference<'a>) -> Oid {
+        let direct = reference.resolve().unwrap(); // symbolic -> direct
+        let oid = direct.target().unwrap();
+        debug!("git_same_ref: {:?} {:?}",
+               reference.name().unwrap(),
+               oid);
+        oid
     }
 
-    sha(repository, reference).id() == sha(repository, next).id()
+    sha(repository, reference) == sha(repository, next)
 }
 
 pub const GIT_HEADS_PATTERN: &str = "refs/heads/";
