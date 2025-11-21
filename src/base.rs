@@ -65,7 +65,7 @@ pub fn git_same_ref(
     reference: &Reference<'_>,
     next: &Reference<'_>,
 ) -> bool {
-    fn sha<'a>(repository: &'a Repository, reference: &Reference<'a>) -> Oid {
+    fn sha<'a>(_repository: &'a Repository, reference: &Reference<'a>) -> Oid {
         let direct = reference.resolve().unwrap(); // symbolic -> direct
         let oid = direct.target().unwrap();
         debug!("git_same_ref: {:?} {:?}",
