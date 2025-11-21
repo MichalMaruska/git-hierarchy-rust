@@ -30,6 +30,10 @@ path = "src/bin/rebase/main.rs"
 name = "git-segment"
 path = "src/bin/git-segment.rs"
 
+[[bin]]
+name = "git-sum"
+path = "src/bin/git-sum.rs"
+
 [dependencies]
 clap = { path = "/home/michal/git/clap/", features = ["derive"] }
 # , "debug" to have the debug!() macros active
