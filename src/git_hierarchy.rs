@@ -187,6 +187,10 @@ impl<'repo> Segment<'repo> {
         }
     }
 
+    pub fn start(&self) -> Oid {
+        return self._start.target().expect("start reference should resolve to Oid");
+    }
+
     pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
         let reference = repository
             .find_reference(
