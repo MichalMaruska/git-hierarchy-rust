@@ -98,23 +98,28 @@ impl<'repo> Segment<'repo> {
                   name: &str,
                   // why the same?
                   base: &'_ Reference<'_>,
-                  start: &'_ Reference<'_>,
-                  head: &'_ Reference<'_>)
+                  start: Oid,
+                  head: Oid)
                   -> Result<Segment<'repo>, Error> {
         info!("create segment: {} base {}", name, base.name().unwrap());
-        let h = repository.branch(name, &head.peel_to_commit().unwrap(), false)?;
         // .expect("should be a new reference");
         let s = repository.reference(&concatenate(SEGMENT_START_PATTERN, name),
-                                     start.target().unwrap(),
-                                     false,
-                                     "start").expect("should be a new reference");
+                                         start,
+                                         false,
+                                         "start").expect("should be a new reference");
         let b = repository.reference_symbolic(&concatenate(SEGMENT_BASE_PATTERN, name),
                                               base.name().unwrap(),
                                               false,
                                               "new segment").expect("should be a new symbolic reference");
+
+        // Branch::name_is_valid()
+        let branch = repository.reference(&concatenate("refs/heads/", name), // fixme:
+                                          head,
+                                          false, // don't overwrite existing.
+                                          "create").expect("should be a new reference");
         // unimplemented!();
         // I need to own the reference:
-        Ok(Segment::new(h.into_reference(), b, s))
+        Ok(Segment::new(branch, b, s))
     }
 
     pub fn new(
