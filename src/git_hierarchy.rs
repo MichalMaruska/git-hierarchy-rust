@@ -127,6 +127,7 @@ impl<'repo> Segment<'repo> {
         base: Reference<'repo>,
         start: Reference<'repo>,
     ) -> Segment<'repo> {
+
         Segment::<'repo> {
             name: branch_name(&reference).to_owned(),
             reference: RefCell::new(reference),
@@ -288,7 +289,7 @@ impl<'repo> Sum<'repo> {
         return Ok(Self::new(h.into_reference(), summands));
     }
 
-
+    //
     pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
         debug!("resolving summands for {:?}", self.name());
         let resolved: Vec<Reference<'repo>>;
