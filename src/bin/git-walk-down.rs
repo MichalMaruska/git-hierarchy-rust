@@ -193,8 +193,9 @@ fn clone_node<'repo>(
             let new_segment = Segment::create(repository,
                                               &new_name,
                                               &base, //  fixme!
-                                              &segment._start,
-                                              &*segment.reference.borrow()).unwrap();
+                                              segment.start(),
+                                              segment.reference.borrow().target().unwrap())
+                .unwrap();
 
             // fixme: I need full ref name:
             register_for_replacement(remapped,
