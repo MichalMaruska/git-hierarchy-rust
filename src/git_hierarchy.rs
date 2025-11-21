@@ -217,6 +217,16 @@ impl<'repo> Segment<'repo> {
 
         return Ok(walk);
     }
+
+    // todo: -> Result<Reference>
+    pub fn set_base(&self, _repository: &'repo Repository, new_base: &'_ Reference<'_>) {
+        let _old = self.base.replace_with(
+            |x|
+            x.symbolic_set_target(new_base.name().expect("provided reference must have name"),
+                                  "Changing base")
+                    .expect("new base"));
+        debug!("old base pointed at {:?}", _old.name().unwrap());
+    }
 }
 
 
