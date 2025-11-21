@@ -48,7 +48,12 @@ enum Commands {
     Restart(RestartArgs),
     Update(RebaseArgs),
     Delete(DeleteCmd),
+    #[command(name="define", version, about, long_about = None,long_flag("define"),short_flag('D'))]
     Define(DefineArgs),
+    // Command git-hierarchy: command name `define` is duplicated
+    //       define vvvvv
+    #[command(name="create", version, about, long_about = None,long_flag("create"),short_flag('c'))]
+    Create(DefineArgs),
 }
 
 
@@ -101,9 +106,8 @@ struct DeleteCmd {
 #[derive(clap::Args)]
 #[allow(unused_variables)]
 // so for Args I can have command? Does it call it during the augment_args(command) call?
-#[command(name="define", version, about, long_about = None,long_flag("define"),short_flag('D'))]
 struct DefineArgs {
-    #[arg(long, short)]
+    #[arg(long, short)] // note -c is this command
     checkout: bool,
 
     segment_name: String,
@@ -216,6 +220,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Commands::Delete(args) => {
                 delete(&repository, &args);
             },
+            Commands::Create(args) => {
+                // checkout immediate
+                define(&repository, &args).expect("failed to define new segment");
+                // try to switch
+                println!("should checkout now");
+            }
             Commands::Define(args) => {
                 define(&repository, &args).expect("failed to define new segment");
             },
