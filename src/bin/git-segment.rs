@@ -257,7 +257,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else if let Some(args) = clip.define_or_show_args {
         if args.len() == 0 {
             unreachable!("cannot be Some, and empty vector");
-            list_segments(&repository);
         } else if args.len() == 1 {
             describe(&repository, &args[0]);
         } else {
