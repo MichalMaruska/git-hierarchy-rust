@@ -231,8 +231,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("would restart from {}", args.commit);
             },
             Commands::Update(args) => {
-                println!("would rebase from {} {}", args.new_base,
-                         if args.rebase {"immediately"} else {""});
+                let gh = git_hierarchy::git_hierarchy::load(&repository, &args.segment_name).unwrap();
+                if let GitHierarchy::Segment(segment) = gh {
+                    let new_base = repository.resolve_reference_from_short_name(&args.new_base)
+                        .expect("new base should exist");
+                    println!("rebase from {} -> {} {}", args.new_base,
+                             new_base.name().unwrap(),
+                             if args.rebase {"immediately"} else {""});
+                    segment.set_base(&repository, &new_base);
+                }
             },
             Commands::Delete(args) => {
                 delete(&repository, &args);
