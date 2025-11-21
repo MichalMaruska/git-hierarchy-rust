@@ -119,34 +119,51 @@ struct DefineArgs {
 fn define<'repo> (repository: &'repo Repository, args: &DefineArgs) -> Result<Segment<'repo>, git2::Error>
 {
     let base = repository.resolve_reference_from_short_name(&args.base)?;
-    // reference? cannot clone base
-    let start = args.start.as_ref().map_or(repository.resolve_reference_from_short_name(base.name().unwrap()).unwrap(),
-                                           |name|
-                                           repository.resolve_reference_from_short_name(&name).unwrap());
-    let head = repository.resolve_reference_from_short_name(
-        args.head.as_ref().map_or("HEAD",
-                                  |x| &x)).unwrap();
-    let res = Segment::create(&repository, &args.segment_name, &base, &start, &head);
 
-    let hash = start.target().unwrap();
-    // todo: show it
+    let start = args.start.as_ref().map_or(
+        repository.resolve_reference_from_short_name(base.name().unwrap()).unwrap(),
+        |name|
+        repository.resolve_reference_from_short_name(&name).unwrap())
+        .target().unwrap();
+
+    let head =
+        args.head.as_ref().map_or(
+            start,
+            |x| repository.resolve_reference_from_short_name(&x).unwrap().target().unwrap());
+
+    let res = Segment::create(&repository, &args.segment_name, &base, start, head);
+
     println!("create {} in {:?}", args.segment_name, repository.path());
-    println!("base = {}, start {} = {}", base.name().unwrap(), start.name().unwrap(), hash.to_string());
+    println!("base = {}, start {} = {}", base.name().unwrap(), start, head);
     res
 }
 
 fn delete(repository: &Repository, args: &DeleteCmd) {
-    println!("would delete {} in {:?}", args.segment_name, repository.path());
+    // check sums above
+    // segments based on it.
+    let gh = git_hierarchy::git_hierarchy::load(repository, &args.segment_name).unwrap();
+    if let GitHierarchy::Segment(mut segment) = gh {
+        println!("Delete {} in {:?}", args.segment_name, repository.path());
+
+        segment.base.borrow_mut().delete().unwrap();
+        segment._start.delete().unwrap();
+        segment.reference.borrow_mut().delete().unwrap();
+    }
 }
 
 // see list_segment in git-walk-down.rs
 fn describe(repository: &Repository, segment_name: &str) {
     println!("Segment {} in {:?}", segment_name, repository.path());
+
     let gh = git_hierarchy::git_hierarchy::load(repository, segment_name).unwrap();
     if let GitHierarchy::Segment(segment) = gh {
         // todo: drop the refs/
         println!("Base {}", segment.base(repository).name().unwrap());
-        println!("Start {}", segment._start.name().unwrap());
+        println!("Start {} lenght {} {}", segment.start(),
+                 segment.iter(repository).unwrap().count(),
+                 if segment.uptodate(repository) { "clean" } else { "dirty"}
+        );
+        // uptodate?
         for oid in segment.iter(repository).unwrap() {
             let oid = oid.unwrap();
             let commit = repository.find_commit(oid).unwrap();
