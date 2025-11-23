@@ -246,9 +246,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
             Commands::Create(args) => {
                 // checkout immediate
-                define(&repository, &args).expect("failed to define new segment");
+                let seg = define(&repository, &args).expect("failed to define new segment");
+
                 // try to switch
                 println!("should checkout now");
+                repository.set_head(seg.reference.borrow().name().unwrap()).expect("should set HEAD");
+                repository.checkout_head(None).expect("should checkout");
             }
             Commands::Define(args) => {
                 define(&repository, &args).expect("failed to define new segment");
