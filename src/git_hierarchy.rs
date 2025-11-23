@@ -235,7 +235,8 @@ impl<'repo> Segment<'repo> {
 pub struct Sum<'repo> {
     name: String,
     pub reference: RefCell<Reference<'repo>>,
-    summands: Vec<Reference<'repo>>,
+    // to delete:
+    pub summands: Vec<Reference<'repo>>,
     // resolved: RefCell<Option<Vec<GitHierarchy<'repo>>>>,
 }
 
