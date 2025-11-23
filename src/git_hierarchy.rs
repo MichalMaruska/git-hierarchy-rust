@@ -48,7 +48,7 @@ pub fn sums<'repo>(repository: &'repo Repository) -> impl Iterator<Item = String
 {
     let iterator = repository.references_glob(&concatenate(SUM_SUMMAND_PATTERN, "*/*")).unwrap();
     // so .names() is bad api!
-    let mut all =
+    let all =
         iterator.map(move |r| {
             r.unwrap().name().unwrap().strip_prefix(SUM_SUMMAND_PATTERN).unwrap()
                 .trim_end_matches(char::is_numeric)
