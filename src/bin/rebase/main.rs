@@ -755,6 +755,8 @@ fn rebase_node<'repo>(
 // ancestor <---is parent-- ........ descendant
 fn is_linear_ancestor<'repo>(repository: &'repo Repository, ancestor: Oid, descendant: Oid) -> bool
 {
+    if ancestor == descendant { return true;}
+
     let mut walk = repository.revwalk().unwrap();
     walk.push(descendant).expect("should set upper bound for Walk");
     // segment.reference.borrow().target().unwrap()
@@ -778,9 +780,9 @@ fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
 {
     // no merge commits
     if ! is_linear_ancestor(repository,
-                            segment._start.target().unwrap(),
+                            segment.start(),
                             segment.reference.borrow().target().unwrap()) {
-        panic!("segment in mess");
+        panic!("segment {} in mess", segment.name());
     }
 
     // no segments inside. lenght limited....
