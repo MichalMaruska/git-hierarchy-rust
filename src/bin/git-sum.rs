@@ -2,38 +2,10 @@ use std::path::PathBuf;
 use std::process::exit;
 use clap::{Parser,Subcommand};
 use git2::{Repository,Reference,Oid};
+// use git2::Branch;
 
 #[allow(unused_imports)]
 use git_hierarchy::git_hierarchy::{GitHierarchy,Sum,load,sums};
-
-
-/*
-${0##* }
-  list all sums
-
-${0##*} [-c] {name}
-  show the definition -- list of summands
-
-  -c ... prune non-existings summands
-  # does this make it contiguous?
-
-${0##*} [-s start] [-r] branch new-merge-branch -drop-merge-branch ...
-  modify the definition -- stepwise?
-  -r reset: empty the definition first.
-  -s start_point
-  -n do NOT merge (yet)
-
-  -name ... remove this ref as summand
-  name | +name add.
-
-  -m  number the summands
-
-${0##*} [-d] branch
-  drop the definition.
-*/
-
-
-
 
 
 #[allow(unused)]
@@ -41,7 +13,7 @@ use tracing::{debug,info,error};
 
 /// Manage Sum information -- merge definitions
 #[derive(Parser)]
-#[command(version, long_about = None)]
+#[command(version, long_about = None)] // how to use the comment above?
 #[command(subcommand_negates_reqs = true)]
 #[command(args_conflicts_with_subcommands = true)] // positional arguments
 // ^^ this means that Factory produces command, and then ^^ those are called on it?
@@ -180,7 +152,6 @@ fn main()
     if let Some(command) = clip.command {
         match command {
             Commands::List(_args) => {
-                println!("list");
                 list_sums(&repository);
             }
             Commands::Define(args) => {
@@ -236,14 +207,14 @@ fn describe_sum<'repo>(repository: &'repo Repository, sum: &git_hierarchy::git_h
     }
     // report if clean or dirty.
 
-
     // prune non-existings summands ??? why?
     // fn show_prune_definition(){unimplemented!()}
 }
 
-
+/*
 fn git_sum_branches() {unimplemented!()}
 
 fn add_to_sum(){unimplemented!()}
 
 fn remove_from_sum() {unimplemented!()}
+*/
