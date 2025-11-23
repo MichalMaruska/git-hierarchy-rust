@@ -267,7 +267,7 @@ impl<'repo> Sum<'repo> {
         // let zipper: Vec<_> = (0..).zip("foo".chars()).collect();
 
         // create  sum/1 ... sum/N symbolic references.
-        let summands : Vec<Reference<'repo>> = components.enumerate().map(
+        let summands = components.enumerate().map(
             |(n, s)|
             {
                 repository.reference_symbolic(&(SUM_SUMMAND_PATTERN.to_string()
