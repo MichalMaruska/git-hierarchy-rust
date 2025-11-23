@@ -36,6 +36,8 @@ ${0##*} [-d] branch
 
 
 
+#[allow(unused)]
+use tracing::{debug,info,error};
 
 /// Manage Sum information -- merge definitions
 #[derive(Parser)]
