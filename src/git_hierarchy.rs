@@ -276,20 +276,29 @@ impl<'repo> Sum<'repo> {
                                                 + &n.to_string()),
                                               s.name().expect("should have name"),
                                               false,
-                                              "start").expect("should be a new symbolic reference")
+                                              "start")
+                   // return new ;.expect("should be a new symbolic reference");
             }
-        ).collect();
-
-        // create branch
-        let h = repository.branch(name,
-                                  // either at hinted
-                                  &hint.unwrap_or(summands[0].peel_to_commit().unwrap()),
-                                  // &head.peel_to_commit().unwrap()
-                                  false)?; // .expect("should be a new reference");
-        return Ok(Self::new(h.into_reference(), summands));
+        ).try_collect::<Vec<Reference<'repo>>>();
+        // collect Result<Reference, Error>
+        match summands {
+            Ok(summands) => {
+            // create branch
+            let h = repository.branch(name,
+                                      // either at hinted
+                                      &hint.unwrap_or(summands[0].peel_to_commit().unwrap()),
+                                      // &head.peel_to_commit().unwrap()
+                                      false)?; // .expect("should be a new reference");
+                return Ok(Self::new(h.into_reference(), summands));
+            }
+            Err(e) => {
+                // can I use Into ?
+                return Err(e);
+            }
+        }
     }
 
-    //
+    // todo: iterator?
     pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
         debug!("resolving summands for {:?}", self.name());
         let resolved: Vec<Reference<'repo>>;
