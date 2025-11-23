@@ -1,6 +1,7 @@
 use std::path::PathBuf;
+use std::process::exit;
 use clap::{Parser,Subcommand};
-use git2::{Repository,Reference};
+use git2::{Repository,Reference,Oid};
 
 #[allow(unused_imports)]
 use git_hierarchy::git_hierarchy::{GitHierarchy,Sum,load,sums};
@@ -117,6 +118,50 @@ struct DeleteCmd {
     sum_name: String,
 }
 
+// fn take<>(x: impl IntoIterator<Item=&'a T>)
+fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
+                                            name: &str,
+                                            summands: &[T], // impl Iterator<&'_ str>, // &[&str],
+                                            hint: Option<T>) {
+
+    let sumrefs : Vec<Reference>
+        = summands.iter().map(|x| {
+            repository.resolve_reference_from_short_name(x.as_ref()).unwrap()
+        }).collect();
+
+    let mut hint_oid = None;
+
+    if let Some(s) = hint {
+        // resolve:
+        if let Ok(sha) = Oid::from_str(s.as_ref()) {
+            if let Ok(commit) = repository.find_commit(sha) {
+                hint_oid = Some(commit); // .id()
+            } else {
+                debug!("couldn't resolve {}", sha)
+            }
+        } else {
+            debug!("not a valid commit id {}", s.as_ref());
+            // hint.map(|x| repository.resolve_reference_from_short_name(x.as_ref()).unwrap()),
+            // symbolic ...
+        }
+    }
+
+    // todo:
+    let sum = Sum::create(
+        &repository,
+        &name,
+        sumrefs.iter(),
+        hint_oid
+    );
+
+    if sum.is_err() {
+        error!("failed to create sum");
+        exit(1);
+        // panic!("failed to create sum");
+    }
+}
+
+
 fn main()
 {
     let clip = Cli::parse();
@@ -136,8 +181,11 @@ fn main()
                 println!("list");
                 list_sums(&repository);
             }
-            Commands::Define(_args) => {
-                unimplemented!();
+            Commands::Define(args) => {
+                define_sum(&repository,
+                           &args.name,
+                           &args.components,
+                           args.head);
             }
             Commands::Delete(args) => {
                 println!("would delete {}", args.sum_name);
@@ -151,25 +199,11 @@ fn main()
                 describe_sum(&repository, &sum);
             }
         } else {
-/*
-            let d = DefineArgs {
-                head: None,
-                name: args[0], // take
-                components: args[1..],
-            }
-*/
-            // println!("would create {} from {}", args.);
-            let summands : Vec<Reference>
-                               = args.iter().skip(1).map(|x| {
-                    repository.resolve_reference_from_short_name(&x).unwrap()
-            }).collect();
-            Sum::create(
-                &repository,
-                &args[0],
-                summands.iter(),
-                    // map(|x| &x),
-                None // d.head,
-            );
+            define_sum(&repository,
+                       &args[0],
+                       &args[1..],
+                       None);
+            // .expect("should not attempt to recreate existing sum");
         }
     } else {
         list_sums(&repository);
