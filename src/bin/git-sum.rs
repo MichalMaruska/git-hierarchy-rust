@@ -85,7 +85,8 @@ enum Commands {
 // why do I have this, and not #[arg()]?
 struct DefineArgs
 {
-    #[arg(long, short ='h')]
+    // run-time error to use "-h"
+    #[arg(long, short ='H')]
     head: Option<String>,
 
     name: String,
