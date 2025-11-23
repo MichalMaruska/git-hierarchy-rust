@@ -190,8 +190,16 @@ fn main()
                            args.head);
             }
             Commands::Delete(args) => {
-                println!("would delete {}", args.sum_name);
-                unimplemented!()
+                let gh = git_hierarchy::git_hierarchy::load(&repository, &args.sum_name).unwrap();
+                if let GitHierarchy::Sum(sum) = gh {
+                    info!("deleting {}", args.sum_name);
+                    // drop all summands
+                    sum.reference.borrow_mut().delete().unwrap();
+                    for mut summand in sum.summands { // (repository)
+                        summand.delete().expect("should be able to drop summand reference");
+                        // sum.reference.borrow_mut().delete();
+                    }
+                }
             }
         }
     } else if let Some(args) = clip.define_or_show_args {
