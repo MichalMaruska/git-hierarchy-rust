@@ -5,6 +5,7 @@ use git2::Repository;
 #[allow(unused_imports)]
 use git_hierarchy::git_hierarchy::{GitHierarchy,Segment,segments,load};
 
+use tracing::debug;
 
 /// Operate on segments or 1 segment
 #[derive(Parser)] // Debug
