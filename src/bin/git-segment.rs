@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use clap::{Parser,Subcommand,CommandFactory,FromArgMatches};
-use git2::Repository;
+use git2::{Repository,Oid}; // ,build::CheckoutBuilder
 
 #[allow(unused_imports)]
 use git_hierarchy::git_hierarchy::{GitHierarchy,Segment,segments,load};
@@ -117,20 +117,42 @@ struct DefineArgs {
     head: Option<String>,
 }
 
+fn resolve_user_commit<'repo>(repository: &'repo Repository, input: &str) -> Option<Oid> {
+    // either:
+    if let Ok(sha) = Oid::from_str(input) {
+        if let Ok(commit) = repository.find_commit(sha) {
+            return Some(commit.id())
+        } else {
+            debug!("couldn't find the commit {}", sha);
+            None
+        }
+    } else if let Ok(reference) = repository.resolve_reference_from_short_name(input) {
+        // refname_to_id
+        return Some(reference.target().unwrap());
+    } else {
+        debug!("couldn't find reference {}", input);
+        None
+    }
+}
+
 fn define<'repo> (repository: &'repo Repository, args: &DefineArgs) -> Result<Segment<'repo>, git2::Error>
 {
     let base = repository.resolve_reference_from_short_name(&args.base)?;
 
-    let start = args.start.as_ref().map_or(
-        repository.resolve_reference_from_short_name(base.name().unwrap()).unwrap(),
-        |name|
-        repository.resolve_reference_from_short_name(&name).unwrap())
-        .target().unwrap();
+    // no: either ref or sha
+    let start = if args.start.is_none() {
+        base.target().unwrap()
+    } else {
+        // as_ref().unwrap()  vs unwrap().as_ref() ...
+        resolve_user_commit(repository, args.start.as_ref().unwrap()).unwrap()
+    };
 
     let head =
         args.head.as_ref().map_or(
             start,
-            |x| repository.resolve_reference_from_short_name(&x).unwrap().target().unwrap());
+            |x|
+            resolve_user_commit(repository, x).expect("input must be valid")
+        );
 
     let res = Segment::create(&repository, &args.segment_name, &base, start, head);
 
