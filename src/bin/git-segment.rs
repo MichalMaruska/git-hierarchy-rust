@@ -143,7 +143,7 @@ fn define<'repo> (repository: &'repo Repository, args: &DefineArgs) -> Result<Se
     let start = if args.start.is_none() {
         base.target().unwrap()
     } else {
-        // as_ref().unwrap()  vs unwrap().as_ref() ...
+        // note: as_ref().unwrap()  vs unwrap().as_ref() ...
         resolve_user_commit(repository, args.start.as_ref().unwrap()).unwrap()
     };
 
