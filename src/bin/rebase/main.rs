@@ -16,7 +16,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
 };
 
 #[allow(unused_imports)]
-use tracing::{span, Level, debug, info, warn};
+use tracing::{span, Level, debug, info, warn,error};
 
 use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref};
 use ::git_hierarchy::execute::git_run;
@@ -159,7 +159,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                           if index.has_conflicts() {
                               eprintln!("SORRY conflicts detected");
                           }
-                          panic!();
+                          exit(1);
                       }
 
                       let new_oid = commit_cherry_picked(repository, &to_apply, &base_commit);
@@ -326,7 +326,8 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 
     // todo: maybe this before calling this function?
     if ! fs::exists(&path).unwrap() {
-        panic!("marker file does not exist -- no segment is being rebased.");
+        error!("marker file does not exist -- no segment is being rebased.");
+        exit(1);
     }
 
     let content: String = fs::read_to_string(path).unwrap();
