@@ -193,7 +193,18 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                       let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
 
                       if !(result.is_ok()) {
-                          eprintln!("cherrypick failed {:?}", result.err());
+                          let e = result.unwrap_err();
+                          eprintln!("cherrypick failed on {}\n {:?}",
+                                    to_apply.id(), e);
+                          eprintln!("error: code{:?}, class {:?}: {}",
+                                    e.code(),
+                                    e.class(),
+                                    e.message()
+                          );
+                          // code: -13, klass: 22, message: "1 uncommitted change would be overwritten by merge" }
+                          append_oid(repository, "0").unwrap();
+                          append_oid(repository, &format!("{}", to_apply.id())).unwrap();
+
                           let index = repository.index().unwrap();
                           if index.has_conflicts() {
                               eprintln!("SORRY conflicts detected");
