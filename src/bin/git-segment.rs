@@ -251,7 +251,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 list_segments(&repository);
             }
             Commands::Restart(args) => {
-                println!("would restart from {}", args.commit);
+                let gh = git_hierarchy::git_hierarchy::load(&repository, &args.segment_name).unwrap();
+                if let GitHierarchy::Segment(segment) = gh {
+                    let oid =
+                        resolve_user_commit(&repository,
+                                            args.commit.as_ref())
+                        .unwrap();
+                    println!("restart from {} {}", args.commit, oid);
+                    segment.set_start(&repository, oid);
+                }
+
             },
             Commands::Update(args) => {
                 let gh = git_hierarchy::git_hierarchy::load(&repository, &args.segment_name).unwrap();
