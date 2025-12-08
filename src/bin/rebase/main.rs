@@ -354,9 +354,14 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
         panic!("not found or last");
     }
 
+    // todo: check the index
     let parent = repository.head().unwrap().peel_to_commit().unwrap();
 
+    // panic!("not supported currently");
+    // commit
+    // find where to resume
 
+    // here we continue the whole sub-segment chain:
     debug!("now continue to pick the rest of the segment '{}'", segment.name());
 
     // check we are in a clean state!
@@ -370,7 +375,10 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
     let commit = cherry_pick_commits(repository,
                                      peek.skip(skip),
                                      parent).unwrap();
+    // might need this if nothing to cherrypick anymore.
     segment.reset(repository, commit.id());
+    // fixme:
+    // rebase_segment_finish(
 }
 
 // Continue after an issue:
