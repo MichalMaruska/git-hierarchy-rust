@@ -284,6 +284,7 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
         // move
         segment.reset(repository, commit.id());
 
+        // mmc: why still keeping the temp_head?
         // set temp_head to point at commit:
         debug!("setting {:?} at {:?} to {:?}",temp_head.name().unwrap().unwrap(),
                temp_head.get().target().unwrap(),
@@ -306,6 +307,7 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     return RebaseResult::Done;
 }
 
+// The old, using git(1)
 fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseResult {
     if !git_run(repository, &["cherry-pick", "--continue"]).success() {
         info!("Good?")
@@ -478,8 +480,6 @@ fn drop_temporary_head(repository: &Repository, mut temp_head: Branch<'_>) {
             panic!("branch -D failed");
         }
     }
-
-
 }
 
 // bad name:
@@ -709,7 +709,7 @@ fn remerge_sum<'repo>(
             // oid = save_index_with( message, signature);
             let mut index = repository.index().unwrap();
             if index.has_conflicts() {
-                info!("SORRY conflicts detected");
+                info!("{}: SORRY conflicts detected", line!());
                 exit(1);
             }
             let id = index.write_tree().unwrap();
@@ -859,6 +859,7 @@ fn is_linear_ancestor<'repo>(repository: &'repo Repository, ancestor: Oid, desce
     walk.push(descendant).expect("should set upper bound for Walk");
     // segment.reference.borrow().target().unwrap()
     walk.hide(ancestor).expect("should set the lower bound for Walk");
+
     walk.set_sorting(Sort::TOPOLOGICAL).expect("should set the topo ordering of the Walk");
 
     if walk.next().is_none() {
@@ -1025,6 +1026,8 @@ fn main() {
 
     let root = GitHierarchy::Name(root); // not load?
     println!("root is {}", root.node_identity());
+
+    // if file exists -> cli.cont
 
     if cli.cont {
         rebase_segment_continue(&repo);
