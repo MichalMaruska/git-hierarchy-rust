@@ -193,7 +193,8 @@ fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>
     info!("rebase_segment: {}", segment.name());
     debug!("rebasing by Cherry-picking {}!", segment.name());
     // can I raii ? so drop() would remove the file?
-    create_marker_file(repository, segment.name()).unwrap();
+    create_marker_file(repository,
+                       &format!("{}\n", segment.name())).unwrap();
 
     // checkout to that ref
     // todo: git stash
