@@ -409,6 +409,7 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
                     let commit_id = Oid::from_str(read_cherry_pick_head(repository).as_str().trim()).unwrap();
                     debug!("should continue the cherry-pick {:?}", commit_id);
 
+                    // commit it, or reset the state?
                     if !repository.index().unwrap().is_empty() {
                         debug!("non-empty index -> commit...");
                         let to_apply = repository.find_commit(commit_id).unwrap();
@@ -416,14 +417,17 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
                         let parent = repository.head().unwrap().peel_to_commit().unwrap();
                         let new_oid = commit_cherry_picked(repository,
                                                            &to_apply,
-                                                           // is this EVER different?
                                                            &parent);
                         debug!("new commit created {new_oid}");
+                        // parent = repository.find_commit(new_oid).unwrap();
                     } else {
+                        // the user might have decided to drop this change -- skip over.
+                        // todo: reset
                         info!("Cleaning cherry pick info: user unstaged the change");
                         repository.cleanup_state().unwrap();
                     }
                     skip = 1;
+                    // we need the next one.
                     commit_id
                 } else {
                     Oid::from_str(oid).unwrap()
