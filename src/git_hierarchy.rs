@@ -160,15 +160,15 @@ impl<'repo> Segment<'repo> {
         )
     }
 
+    // reference to oid
+    // start to base ?
     pub fn reset(&self, repository: &'repo Repository, oid: Oid) {
 
         let head_reference = self.reference.borrow();
-
         // I want to refresh this!
         debug!("reset: the head itself? {} with {}",
                head_reference.name().unwrap(),
-               oid
-        );
+               oid);
         drop(head_reference);
         // we cannot extract other references from there.
         self.reference.replace_with(|r| r.set_target(oid, "rebased").unwrap());
@@ -265,6 +265,7 @@ impl<'repo> Sum<'repo> {
         name: &str,
         components: impl Iterator<Item = &'a Reference<'repo>>,
         // I need mut to take ownership if items.
+        // Oid
         hint: Option<Commit<'repo>>) -> Result<Sum<'repo>, Error>
         where 'repo : 'a
     {
@@ -275,6 +276,7 @@ impl<'repo> Sum<'repo> {
         let summands = components.enumerate().map(
             |(n, s)|
             {
+                // let new =
                 repository.reference_symbolic(&(SUM_SUMMAND_PATTERN.to_string()
                                                 + SEPARATOR
                                                 + name
