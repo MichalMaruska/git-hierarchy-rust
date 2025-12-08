@@ -228,7 +228,8 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
     return Ok(final_commit);
 }
 
-// either exit or rewrite the segment ....its reference should update oid.
+/// Given a @segment, and HEAD ....
+/// either exit or rewrite the segment ....its reference should update oid.
 fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) -> RebaseResult {
     if segment.uptodate(repository) {
         info!("nothing to do -- base and start equal");
