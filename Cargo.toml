@@ -35,7 +35,7 @@ name = "git-sum"
 path = "src/bin/git-sum.rs"
 
 [dependencies]
-clap = { path = "/home/michal/git/clap/", features = ["derive"] }
+clap = { version = "4.5.53", features = ["derive"] }
 # , "debug" to have the debug!() macros active
 clap-verbosity-flag = {version = "3.0.4", features = ["tracing"] }
 
@@ -50,9 +50,3 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 petgraph = "0.8.3"
 # discover-graph = {path = "../discover-graph/"}
 discover-graph = {path = "submodules/discover-graph/"}
-
-# This tells Cargo to use a local version of `some-crate`
-# instead of the one from crates.io.
-[patch.crates-io]
-clap =  { path = "/home/michal/git/clap/", features = ["derive"] }
-
