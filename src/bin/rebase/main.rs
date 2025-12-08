@@ -13,6 +13,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
            // merge:
            AnnotatedCommit,
            Sort,
+           StatusOptions, StatusShow, Statuses,
 };
 
 #[allow(unused_imports)]
@@ -84,6 +85,15 @@ fn append_oid(repository: &'_ Repository, oid: &str) -> io::Result<()> {
     return Ok(());
 }
 
+fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'repo>, Error>{
+    let mut status_options = StatusOptions::new();
+    status_options
+        .show(StatusShow::Index)
+        .include_unmodified(false) ;
+
+    return repository.statuses(Some(&mut status_options));
+}
+
 /// Creates each commit during the rebase/cherry-picking: both in OK flow
 /// and after manual intervention.  Can the user do the commit himself? -- do we setup the ....
 /// @original is the original commit we try to clone.
@@ -101,7 +111,9 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
         append_oid(repository, &format!("{}", original.id())).unwrap();
         exit(1);
     }
-    if index.is_empty() {
+
+    let statusses = staged_files(repository).unwrap();
+    if statusses.is_empty() {
         // eprintln
         warn!("SORRY nothing staged, empty -- skip?");
         // so we have .git/CHERRY_PICK_HEAD ?
