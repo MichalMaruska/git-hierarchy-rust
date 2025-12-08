@@ -322,38 +322,40 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseRe
     }
 }
 
-fn continue_segment_cherry_pick<'repo, 'a>(repository: &'repo Repository, segment: &'_ Segment<'repo>,
-                                           commit_id: Oid) {
+/// resume rebasing segment, from certain commit, exclusive/inclusive based on `skip'.
+// HEAD is already correct.
+// can the status be still CHERRY_PICK ?
+fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
+                                       segment: &'_ Segment<'repo>,
+                                       commit_id: Oid,
+                                       skip: usize) {
+    // Find & skip:
+    let iter = segment.iter(repository).unwrap()
+        .skip_while(|x| x.as_ref().unwrap() != &commit_id );
 
-    let iter = segment.iter(repository).unwrap();
-    // here skip & find:
-    let over = iter.skip_while(|x| x.as_ref().unwrap() != &commit_id );
-    let mut peek = over.peekable();
-
+    let mut peek = iter.peekable();
     if peek.peek().is_none() {
         println!("Empty!");
         panic!("not found or last");
-    } else {
-        // todo: check the index
-        // no unstaged changes?
-        let to_apply = repository.find_commit(commit_id).unwrap();
-        let new_oid = commit_cherry_picked(repository,
-                                           &to_apply,
-                                           &repository.head().unwrap().peel_to_commit().unwrap());
-        // panic!("not supported currently");
-        // commit
-        // find where to resume
-
-        // here we continue the whole sub-segment chain:
-        debug!("now continue to pick the rest of the segment '{}'", segment.name());
-        let commit = cherry_pick_commits(repository,
-                                         peek.skip(1),
-                                         repository.find_commit(new_oid).unwrap()).unwrap();
-
-        // might need this if nothing to cherrypick anymore.
-        segment.reset(repository, commit.id());
-
     }
+
+    let parent = repository.head().unwrap().peel_to_commit().unwrap();
+
+
+    debug!("now continue to pick the rest of the segment '{}'", segment.name());
+
+    // check we are in a clean state!
+    // The default, if unspecified, is to show the index and the working
+    let statuses = repository.statuses(None).unwrap();
+    if ! statuses.len() == 0 {
+        eprintln!("Status is not clean!");
+        exit(-1);
+    }
+
+    let commit = cherry_pick_commits(repository,
+                                     peek.skip(skip),
+                                     parent).unwrap();
+    segment.reset(repository, commit.id());
 }
 // we cherry-pick on detached head. Unlike other tools.
 //
