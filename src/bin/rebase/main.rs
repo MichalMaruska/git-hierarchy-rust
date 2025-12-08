@@ -94,6 +94,10 @@ fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'repo>,
     return repository.statuses(Some(&mut status_options));
 }
 
+fn read_cherry_pick_head(repository: &'_ Repository) -> String {
+    fs::read_to_string(repository.commondir().join("CHERRY_PICK_HEAD")).unwrap()
+}
+
 /// Creates each commit during the rebase/cherry-picking: both in OK flow
 /// and after manual intervention.  Can the user do the commit himself? -- do we setup the ....
 /// @original is the original commit we try to clone.
@@ -357,8 +361,10 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
                                      parent).unwrap();
     segment.reset(repository, commit.id());
 }
-// we cherry-pick on detached head. Unlike other tools.
-//
+
+// Continue after an issue:
+// either cherry-pick conflicts resolved by the user, or
+// he left mess, and ....on detached head. Unlike other tools.
 fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let path = marker_filename(repository);
 
@@ -368,31 +374,61 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
         exit(1);
     }
 
-    let content: String = fs::read_to_string(path).unwrap();
-    let segment_name = content.trim();
-    debug!("continue on {}", segment_name);
+    // load persistent state:
+    let content: String = fs::read_to_string(path).unwrap(); // .... and the oid
+    let mut lines = content.lines();
+    let segment_name = lines.next().unwrap().trim();
 
     if false {
         return rebase_continue_git1(repository, segment_name);
     } else {
-        // native:
-        // could be SKIP
         if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
+            // higher level .. our file:
 
-            if repository.state() == RepositoryState::CherryPick {
-                // read the CHERRY_PICK_HEAD
-                // todo: convert to step.step2...
-                let commit_id  = Oid::from_str(
-                    &fs::read_to_string(repository.commondir().join("CHERRY_PICK_HEAD")).unwrap().trim()).unwrap();
+            // this should contain the `skip'
+            let oid = lines.next_back().unwrap();
+            let mut skip : usize = lines.next_back().unwrap().parse().unwrap();
+            // native:
+            debug!("from file: continue on {}, after {:?}", segment_name, oid);
 
-                debug!("should continue the cherry-pick {:?}", commit_id);
+            let commit_id =
+                if repository.state() == RepositoryState::CherryPick {
+                    // read the CHERRY_PICK_HEAD
+                    // todo: convert to step.step2...
+                    let commit_id = Oid::from_str(read_cherry_pick_head(repository).as_str().trim()).unwrap();
+                    debug!("should continue the cherry-pick {:?}", commit_id);
 
-                continue_segment_cherry_pick(repository, &segment, commit_id);
-            } else if repository.state() == RepositoryState::Clean {
-                // the state
-                segment.reset(repository,
-                              repository.head().unwrap().peel_to_commit().unwrap().id());
+                    if !repository.index().unwrap().is_empty() {
+                        debug!("non-empty index -> commit...");
+                        let to_apply = repository.find_commit(commit_id).unwrap();
+
+                        let parent = repository.head().unwrap().peel_to_commit().unwrap();
+                        let new_oid = commit_cherry_picked(repository,
+                                                           &to_apply,
+                                                           // is this EVER different?
+                                                           &parent);
+                        debug!("new commit created {new_oid}");
+                    } else {
+                        info!("Cleaning cherry pick info: user unstaged the change");
+                        repository.cleanup_state().unwrap();
+                    }
+                    skip = 1;
+                    commit_id
+                } else {
+                    Oid::from_str(oid).unwrap()
+                };
+
+            eprintln!("should cherry-pick starting from oid {}", commit_id);
+
+            let statuses = repository.statuses(None).unwrap();
+            if ! statuses.is_empty() {
+                panic!()
             }
+
+            continue_segment_cherry_pick(repository, &segment, commit_id, skip);
+
+            segment.reset(repository,
+                          repository.head().unwrap().peel_to_commit().unwrap().id());
 
             let tmp_head: Branch<'_> = repository
                 .find_branch(TEMP_HEAD_NAME, BranchType::Local)
