@@ -93,8 +93,12 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
                                parent_commit: &Commit<'repo>) -> Oid {
     let mut index = repository.index().unwrap();
     if index.has_conflicts() {
-        eprintln!("SORRY conflicts detected");
-        // so we have .git/CHERRY_PICK_HEAD ?
+        eprintln!("{} SORRY conflicts detected", line!());
+        eprintln!("resolve them, and either commit or stage them");
+
+        // next time resumve from this, exclusive.
+        append_oid(repository, "1").unwrap();
+        append_oid(repository, &format!("{}", original.id())).unwrap();
         exit(1);
     }
     if index.is_empty() {
