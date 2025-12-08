@@ -68,10 +68,13 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 }
 
 
+/// Creates each commit during the rebase/cherry-picking: both in OK flow
+/// and after manual intervention.  Can the user do the commit himself? -- do we setup the ....
+/// @original is the original commit we try to clone.
+///
 fn commit_cherry_picked<'repo>(repository: &'repo Repository,
-                                  to_apply: &Commit<'repo>,
-                                  parent_commit: &Commit<'repo>) -> Oid {
-
+                               original: &Commit<'repo>,
+                               parent_commit: &Commit<'repo>) -> Oid {
     let mut index = repository.index().unwrap();
     if index.has_conflicts() {
         eprintln!("SORRY conflicts detected");
@@ -107,9 +110,9 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
             new_oid = repository.commit(
                 Some("HEAD"),
                 // copy over:
-                &to_apply.author(),
-                &to_apply.committer(),
-                &to_apply.message().unwrap(),
+                &original.author(),
+                &original.committer(),
+                &original.message().unwrap(),
                 // and timestamps? part of those ^^ !
                 &tree,
                 &[parent_commit],
