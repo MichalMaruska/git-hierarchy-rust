@@ -123,13 +123,11 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
         // so we have .git/CHERRY_PICK_HEAD ?
         exit(1);
     } else {
-        info!("not empty, something staged, will commit. {}", index.len());
+        info!("something staged");
     }
 
     let tree_oid = index.write_tree().unwrap();
-
     let new_oid;
-
     if repository.head().unwrap().peel_to_tree().unwrap().id()
         == tree_oid {
             warn!("SORRY nothing staged, empty -- skip?");
@@ -139,7 +137,6 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
             // exit(1);
         } else {
             // same tree id ... it was empty!
-
 
             //  "cannot create a tree from a not fully merged index."
             let tree = repository.find_tree(tree_oid).unwrap();
@@ -158,6 +155,7 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
     repository.cleanup_state().unwrap();
     return new_oid;
 }
+
 
 // on top of HEAD
 fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
@@ -187,6 +185,9 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                       let mut checkout_opts = CheckoutBuilder::new();
                       checkout_opts.safe();
 
+                      // todo: we need to register that we resume from some point.
+                      // if this fails, the user might .... clean up the repo,
+                      // and we can resume.
                       let mut cherrypick_opts = CherrypickOptions::new();
                       cherrypick_opts.checkout_builder(checkout_opts);
 
@@ -207,8 +208,9 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
                           let index = repository.index().unwrap();
                           if index.has_conflicts() {
-                              eprintln!("SORRY conflicts detected");
+                              eprintln!("{}: SORRY conflicts detected", line!());
                           }
+
                           exit(1);
                       }
 
