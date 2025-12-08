@@ -32,8 +32,8 @@ use crate::graph::discover_pet::find_hierarchy;
 #[allow(unused)]
 use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
 
-use std::fs;
-use std::io;
+use std::fs::{self,OpenOptions};
+use std::io::{Write,self};
 use std::path::PathBuf;
 use std::process::exit;
 
@@ -67,6 +67,22 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
     fs::write(path, content)
 }
 
+/// Store persistently (between runs) the commit we stubled on
+fn append_oid(repository: &'_ Repository, oid: &str) -> io::Result<()> {
+    let path = marker_filename(repository);
+    debug!("Update persistent state: {:?}", path);
+
+    let mut file = OpenOptions::new()
+        .append(true)
+        .open(path)
+        .unwrap();
+
+    if let Err(e) = writeln!(file, "{}", oid) {
+        eprintln!("Couldn't write to file: {}", e);
+        return Err(e);
+    }
+    return Ok(());
+}
 
 /// Creates each commit during the rebase/cherry-picking: both in OK flow
 /// and after manual intervention.  Can the user do the commit himself? -- do we setup the ....
