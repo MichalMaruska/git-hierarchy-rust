@@ -386,6 +386,19 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
     // rebase_segment_finish(
 }
 
+fn ensure_repository_clean(repository: &Repository) {
+    let mut options = StatusOptions::new();
+    options.include_untracked(false)
+        .include_ignored(false);
+    let statuses = repository.statuses(Some(&mut options)).unwrap();
+    if ! statuses.is_empty() {
+        for entry in statuses.iter() {
+            eprintln!("{:?}", entry.path());
+        }
+        panic!("git repository is not clean");
+    }
+}
+
 // Continue after an issue:
 // either cherry-pick conflicts resolved by the user, or
 // he left mess, and ....on detached head. Unlike other tools.
@@ -448,11 +461,7 @@ fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 
             eprintln!("should cherry-pick starting from oid {}", commit_id);
 
-            let statuses = repository.statuses(None).unwrap();
-            if ! statuses.is_empty() {
-                panic!()
-            }
-
+            ensure_repository_clean(&repository);
             continue_segment_cherry_pick(repository, &segment, commit_id, skip);
 
             segment.reset(repository,
