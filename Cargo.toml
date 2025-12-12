@@ -35,12 +35,12 @@ name = "git-sum"
 path = "src/bin/git-sum.rs"
 
 [dependencies]
-clap = { path = "/home/michal/git/clap/", features = ["derive"] }
+clap = { version = "4.5.53", features = ["derive"] }
+# path = "/home/michal/git/clap/",
 # , "debug" to have the debug!() macros active
 clap-verbosity-flag = {version = "3.0.4", features = ["tracing"] }
 
 derive = "1.0.0"
-log = { version = "0.4.28", features = ["std"] }
 git2 = "0.20.3"
 stderrlog = "0.6.0"
 tracing = { version = "0.1.43" }

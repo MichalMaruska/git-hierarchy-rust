@@ -2,7 +2,7 @@ use git2::Repository;
 pub use std::process::{Command, ExitStatus};
 
 #[allow(unused)]
-use log::{self, debug, error, info, warn};
+use tracing::{debug, info, warn, error};
 
 /// Invoke git with the given CLI arguments. In the directory of the @repository.
 pub fn git_run(repository: &Repository, cmd_line: &[&str]) -> ExitStatus {
