@@ -95,21 +95,20 @@ struct DeleteCmd {
 // fn take<>(x: impl IntoIterator<Item=&'a T>)
 fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
                                             name: &str,
-                                            summands: &[T], // impl Iterator<&'_ str>, // &[&str],
+                                            summands: &[T],
                                             hint: Option<T>) {
-
     let sumrefs : Vec<Reference>
         = summands.iter().map(|x| {
             repository.resolve_reference_from_short_name(x.as_ref()).unwrap()
         }).collect();
 
-    let mut hint_oid = None;
+    let mut hint_head_oid = None;
 
     if let Some(s) = hint {
         // resolve:
         if let Ok(sha) = Oid::from_str(s.as_ref()) {
             if let Ok(commit) = repository.find_commit(sha) {
-                hint_oid = Some(commit); // .id()
+                hint_head_oid = Some(commit); // .id()
             } else {
                 debug!("couldn't resolve {}", sha)
             }
@@ -125,7 +124,7 @@ fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
         &repository,
         &name,
         sumrefs.iter(),
-        hint_oid
+        hint_head_oid
     );
 
     if sum.is_err() {
