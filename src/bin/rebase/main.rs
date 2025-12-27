@@ -911,9 +911,8 @@ fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
 fn check_sum<'repo>(
     _repository: &'repo Repository,
     sum: &Sum<'repo>,
-    _object_map: &HashMap<String, GitHierarchy<'repo>>, // this lifetime
+    _object_map: &HashMap<String, GitHierarchy<'repo>>,
 ) {
-    // merge commit?
     let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
     // terrible:
     // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
