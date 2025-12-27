@@ -107,7 +107,7 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
                                parent_commit: &Commit<'repo>) -> Oid {
     let mut index = repository.index().unwrap();
     if index.has_conflicts() {
-        eprintln!("{} SORRY conflicts detected", line!());
+        eprintln!("SORRY conflicts detected");
         eprintln!("resolve them, and either commit or stage them");
 
         // next time resumve from this, exclusive.
@@ -118,8 +118,7 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
 
     let statusses = staged_files(repository).unwrap();
     if statusses.is_empty() {
-        // eprintln
-        warn!("SORRY nothing staged, empty -- skip?");
+        eprintln!("SORRY nothing staged, empty -- skip?");
         // so we have .git/CHERRY_PICK_HEAD ?
         exit(1);
     } else {
