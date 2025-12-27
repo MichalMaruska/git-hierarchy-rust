@@ -1013,8 +1013,9 @@ fn rebase_tree(repository: &Repository,
 struct Cli {
     #[arg(long, short = 'g')]
     directory: Option<PathBuf>,
-    #[arg(short, long)]
-    fetch: bool,
+
+    #[arg(short='f', long="fetch" )]
+    no_fetch: bool,
 
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
