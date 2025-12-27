@@ -956,8 +956,13 @@ fn check_node<'repo>(
 }
 
 
-fn start_rebase(repository: &Repository, root: String, fetch: bool, ignore: &Vec<String> ) {
-    // summand -> object_map ->
+// whole hierarchy
+fn rebase_tree(repository: &Repository,
+               root: String,
+               fetch: bool,
+               ignore: &Vec<String>,
+               skip: &Vec<String>
+) {
     let (
         object_map,    // String -> GitHierarchy
         hash_to_graph, // stable graph:  String -> index ?
@@ -1043,6 +1048,7 @@ fn main() {
         rebase_segment_continue(&repo);
     }
 
-    start_rebase(&repo, root.node_identity().to_owned(), cli.fetch,
-                 &cli.ignore);
+    rebase_tree(&repository, root.node_identity().to_owned(), !cli.no_fetch,
+                &cli.ignore,
+                &cli.skip);
 }
