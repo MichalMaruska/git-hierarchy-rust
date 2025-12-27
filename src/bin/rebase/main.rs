@@ -1027,8 +1027,8 @@ fn main() {
     // cli can override the Env variable.
     init_tracing(cli.verbose);
 
-    let repo = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
-        Ok(repo) => repo,
+    let repository = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
+        Ok(repository) => repository,
         Err(e) => panic!("failed to open: {}", e),
     };
 
@@ -1037,7 +1037,7 @@ fn main() {
 
     let root = cli.root_reference
         // if in detached HEAD -- will panic.
-        .unwrap_or_else(|| repo.head().unwrap().name().unwrap().to_owned());
+        .unwrap_or_else(|| repository.head().unwrap().name().unwrap().to_owned());
 
     let root = GitHierarchy::Name(root); // not load?
     println!("root is {}", root.node_identity());
@@ -1045,7 +1045,7 @@ fn main() {
     // if file exists -> cli.cont
 
     if cli.cont {
-        rebase_segment_continue(&repo);
+        rebase_segment_continue(&repository);
     }
 
     rebase_tree(&repository, root.node_identity().to_owned(), !cli.no_fetch,
