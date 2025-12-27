@@ -989,6 +989,12 @@ fn rebase_tree(repository: &Repository,
     }
 
     for v in discovery_order {
+        let name = object_map.get(&v).unwrap().node_identity();
+        eprintln!("Skipping: {name}?");
+        if skip.iter().find(|x| x == &name).is_some() {
+            eprintln!("Skipping: {name}");
+            continue;
+        }
         println!(
             "{:?} {:?} {:?}",
             v,
@@ -1018,12 +1024,15 @@ struct Cli {
     root_reference: Option<String>,
 
     #[arg(short, long = "ignore")]
-    ignore: Vec<String>
+    ignore: Vec<String>,
+
+    #[arg(short, long = "skip")]
+    skip: Vec<String>
 }
 
 ///
 fn main() {
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
     // cli can override the Env variable.
     init_tracing(cli.verbose);
 
@@ -1046,6 +1055,15 @@ fn main() {
 
     if cli.cont {
         rebase_segment_continue(&repository);
+    }
+
+    // todo: I must rewrite ignore to full ref names!
+    if !cli.skip.is_empty() {
+        // rewrite it:
+        for e in cli.skip.iter_mut() {
+            // rewrite String:
+            e.replace_range(..e.len(), repository.resolve_reference_from_short_name(e).unwrap().name().unwrap());
+        }
     }
 
     rebase_tree(&repository, root.node_identity().to_owned(), !cli.no_fetch,
