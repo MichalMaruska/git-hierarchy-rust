@@ -160,6 +160,7 @@ fn main()
                            args.head);
             }
             Commands::Delete(args) => {
+                todo!("load the whole graph, and see this is at the top.");
                 let gh = git_hierarchy::git_hierarchy::load(&repository, &args.sum_name).unwrap();
                 if let GitHierarchy::Sum(sum) = gh {
                     info!("deleting {}", args.sum_name);
