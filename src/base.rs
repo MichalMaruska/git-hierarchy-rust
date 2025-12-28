@@ -136,7 +136,7 @@ pub fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'re
 }
 
 //Todo: I need my error.
-pub fn ensure_repository_clean(repository: &Repository) -> Result<(), Error>{
+pub fn repository_clean(repository: &Repository) -> bool {
     // rely on
     let options = &mut StatusOptions::new();
         options.include_untracked(false)
@@ -146,9 +146,9 @@ pub fn ensure_repository_clean(repository: &Repository) -> Result<(), Error>{
         for entry in statuses.iter() {
             eprintln!("{:?}", entry.path());
         }
-        Err("git repository is not clean");
+        return false;
     }
-    Ok(())
+    true
 }
 
 pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {

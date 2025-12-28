@@ -16,7 +16,7 @@ use crate::git_hierarchy::{GitHierarchy, Segment, load};
 
 use crate::execute::git_run;
 use crate::base::{checkout_new_head_at,
-                            ensure_repository_clean,
+                            repository_clean,
                             force_head_to,
                             staged_files,
 };
@@ -423,7 +423,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 
             eprintln!("should cherry-pick starting from oid {}", commit_id);
 
-            ensure_repository_clean(&repository);
+            assert!(repository_clean(&repository));
             continue_segment_cherry_pick(repository, &segment, commit_id, skip);
 
             segment.reset(repository,
