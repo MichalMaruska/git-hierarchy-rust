@@ -2,7 +2,10 @@
 #![deny(elided_lifetimes_in_paths)]
 
 use crate::utils::concatenate;
-use git2::{Branch, Commit, Oid, Reference, Repository, build::CheckoutBuilder};
+use git2::{Branch, Commit, Oid,
+           Error,
+           Reference, Repository, build::CheckoutBuilder,
+           StatusShow,StatusOptions, Statuses,};
 use std::cell::OnceCell;
 #[allow(unused)]
 use tracing::{debug, info, warn};
@@ -121,3 +124,41 @@ pub fn checkout_new_head_at<'repo>(
         return None;
     }
 }
+
+
+pub fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'repo>, Error>{
+    let mut status_options = StatusOptions::new();
+    status_options
+        .show(StatusShow::Index)
+        .include_unmodified(false) ;
+
+    return repository.statuses(Some(&mut status_options));
+}
+
+pub fn ensure_repository_clean(repository: &Repository) {
+    // rely on
+    let options = &mut StatusOptions::new();
+        options.include_untracked(false)
+        .include_ignored(false);
+    let statuses = repository.statuses(Some(options)).unwrap();
+    if ! statuses.is_empty() {
+        for entry in statuses.iter() {
+            eprintln!("{:?}", entry.path());
+        }
+        panic!("git repository is not clean");
+    }
+}
+
+pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {
+    let oid = new_head.peel_to_commit().unwrap();
+    // create it:
+    debug!("relocating {:?} to {:?}", name, oid);
+    repository.branch(name, &oid, true).unwrap();
+    // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
+
+    // checkout, since then I drop ...:
+    let full_name = concatenate("refs/heads/", name);
+    repository.set_head(&full_name).expect("failed to checkout");
+    // git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
+}
+
