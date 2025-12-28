@@ -27,6 +27,10 @@ name = "git-rebase-poset"
 path = "src/bin/rebase/main.rs"
 
 [[bin]]
+name = "git-rebase-segment"
+path = "src/bin/git-rebase-segment.rs"
+
+[[bin]]
 name = "git-segment"
 path = "src/bin/git-segment.rs"
 
