@@ -121,8 +121,8 @@ fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
 
     // todo:
     let sum = Sum::create(
-        &repository,
-        &name,
+        repository,
+        name,
         sumrefs.iter(),
         hint_head_oid
     );
@@ -192,7 +192,7 @@ fn main()
 }
 
 fn list_sums(repository: &Repository) {
-    let ref_iterator = sums(&repository);
+    let ref_iterator = sums(repository);
 
     for r in ref_iterator {
         println!("{}", r);
