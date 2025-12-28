@@ -68,7 +68,7 @@ where
             message += "\n"
         }
     }
-    return message;
+    message
 }
 
 /// Given @sum, check if it's up-to-date.
@@ -113,8 +113,7 @@ fn remerge_sum<'repo>(
     let v = find_non_matching_elements(
         // iter2 - hash(iter1)
         graphed_summands.iter(), // these are &GitHierarchy
-
-        sum.parent_commits().into_iter(), // Vec<Oid>
+        sum.parent_commits(),
         // we get reference.
         // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
         |gh| {
@@ -129,7 +128,7 @@ fn remerge_sum<'repo>(
     } else {
         info!("so the sum is not up-to-date!");
 
-        let first = graphed_summands.get(0).unwrap();
+        let first = graphed_summands.first().unwrap();
 
         let message = get_merge_commit_message(
             sum.name(),
@@ -264,12 +263,11 @@ fn remerge_sum<'repo>(
 
     // do we have a hint -- another merge?
     // git merge
-
-    return RebaseResult::Done;
+    RebaseResult::Done
 }
 
 /// Given full git-reference name /refs/remotes/xx/bb return xx and bb
-fn extract_remote_name<'a>(name: &'a str) -> (&'a str, &'a str) {
+fn extract_remote_name(name: &str) -> (&str, &str) {
     debug!("extract_remote_name: {:?}", name);
     // let norm = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
 
@@ -281,7 +279,7 @@ fn extract_remote_name<'a>(name: &'a str) -> (&'a str, &'a str) {
     assert_eq!(prefix, "remotes");
 
     let (remote, branch) = rest.split_once(split_char).unwrap();
-    return (remote, branch);
+    (remote, branch)
 }
 
 fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Result<(), Error> {
@@ -370,7 +368,7 @@ fn rebase_node<'repo>(
 
 
 // ancestor <---is parent-- ........ descendant
-fn is_linear_ancestor<'repo>(repository: &'repo Repository, ancestor: Oid, descendant: Oid) -> bool
+fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oid) -> bool
 {
     if ancestor == descendant { return true;}
 
@@ -390,7 +388,7 @@ fn is_linear_ancestor<'repo>(repository: &'repo Repository, ancestor: Oid, desce
             panic!("a merge found");
         }
     }
-    return true;
+    true
 }
 
 
@@ -426,7 +424,7 @@ fn check_sum<'repo>(
     // terrible:
     // !i>2 in Rust  means ~i>2 in C
     // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
-    if !(count > 1) {
+    if count <= 1 {
         panic!("not a merge: {}, only {} parent commits", sum.name(), count);
     };
 
@@ -470,8 +468,8 @@ fn check_node<'repo>(
 fn rebase_tree(repository: &Repository,
                root: String,
                fetch: bool,
-               ignore: &Vec<String>,
-               skip: &Vec<String>
+               ignore: &[String],
+               skip: &[String]
 ) {
     let (
         object_map,    // String -> GitHierarchy
@@ -488,10 +486,10 @@ fn rebase_tree(repository: &Repository,
             v,
             name,
             graph
-                .node_weight(hash_to_graph.get(v).unwrap().clone())
+                .node_weight(*hash_to_graph.get(v).unwrap())
                 .unwrap()
         );
-        if ignore.iter().find(|x| x == &name).is_some() {
+        if ignore.iter().any(|x| x == name) {
             eprintln!("found to be ignored {name}");
             continue;
         }
@@ -502,7 +500,7 @@ fn rebase_tree(repository: &Repository,
     for v in discovery_order {
         let name = object_map.get(&v).unwrap().node_identity();
 
-        if skip.iter().find(|x| x == &name).is_some() {
+        if skip.iter().any(|x| x == name) {
             eprintln!("Skipping: {name}");
             continue;
         }
@@ -512,7 +510,7 @@ fn rebase_tree(repository: &Repository,
             v,
             object_map.get(&v).unwrap().node_identity(),
             graph
-                .node_weight(hash_to_graph.get(&v).unwrap().clone())
+                .node_weight(*hash_to_graph.get(&v).unwrap())
                 .unwrap()
         );
         let vertex = object_map.get(&v).unwrap();
@@ -543,7 +541,6 @@ struct Cli {
     skip: Vec<String>
 }
 
-///
 fn main() {
     let mut cli = Cli::parse();
     // cli can override the Env variable.
