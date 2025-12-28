@@ -12,13 +12,13 @@ pub fn extract_name(refname: &str) -> &str {
     let mut a = refname.strip_prefix("ref: ").unwrap_or(refname);
     a = a.strip_prefix("refs/").unwrap_or(a);
     a = a.strip_prefix("heads/").unwrap_or(a);
-    return a;
+    a
 }
 
 pub fn divide_str(s: &'_ str, split_char: char) -> (&'_ str, &'_ str) {
     let v: Vec<&str> = s.split(split_char).take(2).collect();
 
-    return (v[0], v[1]);
+    (v[0], v[1])
 }
 
 // todo: use hash_fn2 and use identity if necessary
@@ -49,7 +49,7 @@ where
     iter2
         .into_iter()
         .filter(|item| // !hashed_set.iter().any(|hashed| item == hashed
-                hashed_set.get(item).is_none()
+                hashed_set.contains(item)
                 // iter().any(|hashed| item == hashed)
         )
         .collect()
