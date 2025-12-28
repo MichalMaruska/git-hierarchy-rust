@@ -991,12 +991,13 @@ fn rebase_tree(repository: &Repository,
 
     for v in discovery_order {
         let name = object_map.get(&v).unwrap().node_identity();
-        eprintln!("Skipping: {name}?");
+
         if skip.iter().find(|x| x == &name).is_some() {
             eprintln!("Skipping: {name}");
             continue;
         }
-        println!(
+
+        eprintln!(
             "{:?} {:?} {:?}",
             v,
             object_map.get(&v).unwrap().node_identity(),
