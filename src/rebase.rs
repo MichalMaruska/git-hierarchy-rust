@@ -166,8 +166,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
                       let result = repository.cherrypick(&to_apply, Some(&mut cherrypick_opts));
 
-                      if !(result.is_ok()) {
-                          let e = result.unwrap_err();
+                      if let Err(e) = result {
                           eprintln!("cherrypick failed on {}\n {:?}",
                                     to_apply.id(), e);
                           eprintln!("error: code{:?}, class {:?}: {}",
