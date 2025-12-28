@@ -379,7 +379,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 
     if false {
         return rebase_continue_git1(repository, segment_name);
-    } if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
+    } else if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
         // higher level .. our file:
 
         // this should contain the `skip'
