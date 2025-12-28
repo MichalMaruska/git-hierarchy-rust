@@ -811,7 +811,7 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
         if git_same_ref(repository, reference, upstream.get()) {
             debug!("in sync, so let's fetch & update");
         } else {
-            panic!("NOT in sync; should not update.");
+            panic!("{} not in sync with upstream {}; should not update.", name, upstream_name);
             // or merge/rebase.
         }
 
