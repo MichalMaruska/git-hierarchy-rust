@@ -386,10 +386,11 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
 }
 
 fn ensure_repository_clean(repository: &Repository) {
-    let mut options = StatusOptions::new();
-    options.include_untracked(false)
+    // rely on
+    let options = &mut StatusOptions::new();
+        options.include_untracked(false)
         .include_ignored(false);
-    let statuses = repository.statuses(Some(&mut options)).unwrap();
+    let statuses = repository.statuses(Some(options)).unwrap();
     if ! statuses.is_empty() {
         for entry in statuses.iter() {
             eprintln!("{:?}", entry.path());
