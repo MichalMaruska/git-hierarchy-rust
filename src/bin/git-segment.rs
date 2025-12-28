@@ -117,18 +117,18 @@ struct DefineArgs {
     head: Option<String>,
 }
 
-fn resolve_user_commit<'repo>(repository: &'repo Repository, input: &str) -> Option<Oid> {
+fn resolve_user_commit(repository: &Repository, input: &str) -> Option<Oid> {
     // either:
     if let Ok(sha) = Oid::from_str(input) {
         if let Ok(commit) = repository.find_commit(sha) {
-            return Some(commit.id())
+            Some(commit.id())
         } else {
             debug!("couldn't find the commit {}", sha);
             None
         }
     } else if let Ok(reference) = repository.resolve_reference_from_short_name(input) {
         // refname_to_id
-        return Some(reference.target().unwrap());
+        Some(reference.target().unwrap())
     } else {
         debug!("couldn't find reference {}", input);
         None
@@ -154,7 +154,7 @@ fn define<'repo> (repository: &'repo Repository, args: &DefineArgs) -> Result<Se
             resolve_user_commit(repository, x).expect("input must be valid")
         );
 
-    let res = Segment::create(&repository, &args.segment_name, &base, start, head);
+    let res = Segment::create(repository, &args.segment_name, &base, start, head);
 
     println!("create {} in {:?}", args.segment_name, repository.path());
     println!("base = {}, start {} = {}", base.name().unwrap(), start, head);
@@ -196,7 +196,7 @@ fn describe(repository: &Repository, segment_name: &str) {
 }
 
 fn list_segments(repository: &Repository) {
-    let ref_iterator = segments(&repository);
+    let ref_iterator = segments(repository);
 
     for r in ref_iterator {
         println!("{}", r);
@@ -290,7 +290,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         }
     } else if let Some(args) = clip.define_or_show_args {
-        if args.len() == 0 {
+        if args.is_empty() {
             unreachable!("cannot be Some, and empty vector");
         } else if args.len() == 1 {
             describe(&repository, &args[0]);
