@@ -134,6 +134,18 @@ fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
     }
 }
 
+fn delete_sum(repository: &Repository, args: &DeleteCmd) {
+    let gh = git_hierarchy::git_hierarchy::load(repository, &args.sum_name).unwrap();
+    if let GitHierarchy::Sum(sum) = gh {
+        info!("deleting {}", args.sum_name);
+        // drop all summands
+        sum.reference.borrow_mut().delete().unwrap();
+        for mut summand in sum.summands { // (repository)
+            summand.delete().expect("should be able to drop summand reference");
+            // sum.reference.borrow_mut().delete();
+        }
+    }
+}
 
 fn main()
 {
@@ -160,17 +172,7 @@ fn main()
                            args.head);
             }
             Commands::Delete(args) => {
-                todo!("load the whole graph, and see this is at the top.");
-                let gh = git_hierarchy::git_hierarchy::load(&repository, &args.sum_name).unwrap();
-                if let GitHierarchy::Sum(sum) = gh {
-                    info!("deleting {}", args.sum_name);
-                    // drop all summands
-                    sum.reference.borrow_mut().delete().unwrap();
-                    for mut summand in sum.summands { // (repository)
-                        summand.delete().expect("should be able to drop summand reference");
-                        // sum.reference.borrow_mut().delete();
-                    }
-                }
+                delete_sum(&repository, &args);
             }
         }
     } else if let Some(args) = clip.define_or_show_args {
