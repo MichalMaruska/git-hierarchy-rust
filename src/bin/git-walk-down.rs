@@ -65,13 +65,12 @@ fn process_node<'repo>(
             // start == base.peel_to_commit().unwrap())
 
             // target
-            let state;
-
-            if segment.uptodate(repository) {
-                state = "up-to-date";
-            } else {
-                state = "need-rebase";
-            }
+            let state =
+                if segment.uptodate(repository) {
+                    "up-to-date"
+                } else {
+                    "need-rebase"
+                };
             println!(
                 "segment {}: {:?} on {:?}",
                 segment.name(),
@@ -154,7 +153,7 @@ fn register_for_replacement<'repo>(
     let name = from.name().unwrap().to_owned();
     let target = target.name().unwrap().to_owned();
     info!("will replace {} with {}", &name, &target);
-    remapped.insert(name, target).and_then(|_ : String| -> Option<String> {panic!("double")});
+    remapped.insert(name, target).map(|_ : String| -> Option<String> {panic!("double")});
     debug!("hash: {remapped:?}");
 }
 
@@ -188,7 +187,7 @@ fn clone_node<'repo>(
             debug!("searching for replace of base {} in {:?}", base_name, remapped);
             if let Some(replacement) = remapped.get(base_name) {
                 debug!("found! {replacement}");
-                base = repository.find_reference(&replacement).unwrap();
+                base = repository.find_reference(replacement).unwrap();
             }
             let new_segment = Segment::create(repository,
                                               &new_name,
@@ -199,8 +198,8 @@ fn clone_node<'repo>(
 
             // fixme: I need full ref name:
             register_for_replacement(remapped,
-                                     &*segment.reference.borrow(),
-                                     &*new_segment.reference.borrow());
+                                     &segment.reference.borrow(),
+                                     &new_segment.reference.borrow());
         }
         GitHierarchy::Sum(sum) => {
             let new_name = concatenate(sum.name(), suffix);
@@ -222,7 +221,7 @@ fn clone_node<'repo>(
                         if let Some(replacement) = remapped.get(name) {
                             debug!("found! {replacement}");
                             // println!("Would change the summand {}", name);
-                            repository.find_reference(&replacement).unwrap()
+                            repository.find_reference(replacement).unwrap()
                         } else {
                             s
                         }
@@ -235,8 +234,8 @@ fn clone_node<'repo>(
                                       summands_refs.into_iter(),
                                       Some(sum.reference.borrow().peel_to_commit().unwrap())).unwrap();
             register_for_replacement(remapped,
-                                     &*sum.reference.borrow(),
-                                     &*new_sum.reference.borrow()
+                                     &sum.reference.borrow(),
+                                     &new_sum.reference.borrow()
             );
         }
     }
@@ -249,8 +248,8 @@ where
         &'repo git2::Repository,
         &GitHierarchy<'repo>,
         &'a HashMap<String, GitHierarchy<'repo>>,
-    ) -> (), // F : FnMut(&Repository, GitHierarchy,
-             //          &HashMap<String, GitHierarchy>) -> ()
+    ) // F : FnMut(&Repository, GitHierarchy,
+      // &HashMap<String, GitHierarchy>) -> ()
 {
     let (
         object_map,     // String -> GitHierarchy
