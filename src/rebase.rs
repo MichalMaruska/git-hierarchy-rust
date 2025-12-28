@@ -63,7 +63,7 @@ fn append_oid(repository: &'_ Repository, oid: &str) -> io::Result<()> {
         eprintln!("Couldn't write to file: {}", e);
         return Err(e);
     }
-    return Ok(());
+    Ok(())
 }
 
 fn read_cherry_pick_head(repository: &'_ Repository) -> String {
@@ -100,12 +100,11 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
     }
 
     let tree_oid = index.write_tree().unwrap();
-    let new_oid;
-    if repository.head().unwrap().peel_to_tree().unwrap().id()
-        == tree_oid {
+    let new_oid =
+        if repository.head().unwrap().peel_to_tree().unwrap().id() == tree_oid {
             warn!("SORRY nothing staged, empty -- skip?");
             // bug: and no changes in the worktree!
-            new_oid = repository.head().unwrap().target().unwrap();
+            repository.head().unwrap().target().unwrap()
             // silently skipping over?
             // exit(1);
         } else {
@@ -113,7 +112,8 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
 
             //  "cannot create a tree from a not fully merged index."
             let tree = repository.find_tree(tree_oid).unwrap();
-            new_oid = repository.commit(
+
+            repository.commit(
                 Some("HEAD"),
                 // copy over:
                 &original.author(),
@@ -122,11 +122,11 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
                 // and timestamps? part of those ^^ !
                 &tree,
                 &[parent_commit],
-            ).unwrap();
-        }
+            ).unwrap()
+        };
 
     repository.cleanup_state().unwrap();
-    return new_oid;
+    new_oid
 }
 
 
@@ -378,7 +378,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
     let segment_name = lines.next().unwrap().trim();
 
     if false {
-        return rebase_continue_git1(repository, segment_name);
+        rebase_continue_git1(repository, segment_name)
     } else if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
         // higher level .. our file:
 
