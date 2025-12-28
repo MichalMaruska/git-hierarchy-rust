@@ -3,7 +3,7 @@
 // which means the permutation   a[i] -> i
 // and we want to apply this permutation by swap()
 
-pub fn reorder_by_permutation<T>(vec: &mut Vec<T>, permutation: &[usize]) {
+pub fn reorder_by_permutation<T>(vec: &mut [T], permutation: &[usize]) {
     assert_eq!(
         vec.len(),
         permutation.len(),
