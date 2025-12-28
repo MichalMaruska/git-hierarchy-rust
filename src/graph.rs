@@ -9,6 +9,13 @@ pub struct Graph {
     adjacency_list: Vec<Vec<Range>>,
 }
 
+// clippy suggestion:
+impl Default for Graph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Graph {
     pub fn new() -> Self {
         Graph {
@@ -16,6 +23,7 @@ impl Graph {
             adjacency_list: Vec::new(),
         }
     }
+
     pub fn add_vertices(&mut self, n: usize) {
         if n > self.vertices {
             self.vertices = n;
@@ -25,7 +33,7 @@ impl Graph {
         let list = &mut self.adjacency_list;
         if list.len() <= n {
             list.resize(n + 1, Vec::new());
-            list.resize_with(n + 1, || Vec::new());
+            list.resize_with(n + 1, Vec::new);
         }
     }
 
@@ -51,7 +59,7 @@ impl Graph {
     pub fn dump_graph(&self) {
         println!("Graph of {} vertices:", self.vertices);
         let matrix = &self.adjacency_list;
-        for (index, row) in matrix.into_iter().enumerate() {
+        for (index, row) in matrix.iter().enumerate() {
             print!("{}:", index);
             for edge in row {
                 print!("{}", edge);
