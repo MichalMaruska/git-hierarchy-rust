@@ -111,6 +111,8 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
         eprintln!("resolve them, and either commit or stage them");
 
         // next time resumve from this, exclusive.
+        // todo: unify these 2 calls into 1
+        // record_applied(original.id())
         append_oid(repository, "1").unwrap();
         append_oid(repository, &format!("{}", original.id())).unwrap();
         exit(1);
@@ -210,6 +212,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                               eprintln!("{}: SORRY conflicts detected", line!());
                           }
 
+                          eprintln!("should skip");
                           exit(1);
                       }
 
@@ -782,6 +785,7 @@ fn extract_remote_name<'a>(name: &'a str) -> (&'a str, &'a str) {
 }
 
 fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Result<(), Error> {
+    // resolve what to fetch.
     if reference.is_remote() {
         let (remote_name, branch) = extract_remote_name(reference.name().unwrap());
         let mut remote = repository.find_remote(remote_name).unwrap();
@@ -795,6 +799,9 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
             panic!("** Fetch failed");
         }
     } else if reference.is_branch() {
+        // the user has a reason to use local branch.
+        // So we don't want to change it (by fetching) without explicit permission.
+        // implicit permission -- that it's just following a remove branch.
         let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
 
         // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
@@ -915,7 +922,9 @@ fn check_sum<'repo>(
     _object_map: &HashMap<String, GitHierarchy<'repo>>,
 ) {
     let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
+
     // terrible:
+    // !i>2 in Rust  means ~i>2 in C
     // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
     if !(count > 1) {
         panic!("not a merge: {}, only {} parent commits", sum.name(), count);
@@ -971,6 +980,7 @@ fn rebase_tree(repository: &Repository,
         discovery_order,
     ) = find_hierarchy(repository, root);
 
+    // verify we can do it:
     for v in &discovery_order {
         let name = object_map.get(v).unwrap().node_identity();
         println!(
