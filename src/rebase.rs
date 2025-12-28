@@ -118,7 +118,7 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
                 // copy over:
                 &original.author(),
                 &original.committer(),
-                &original.message().unwrap(),
+                original.message().unwrap(),
                 // and timestamps? part of those ^^ !
                 &tree,
                 &[parent_commit],
@@ -199,7 +199,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                       // return:
                       new_commit});
 
-    return Ok(final_commit);
+    Ok(final_commit)
 }
 
 /// Given a @segment, and HEAD ....
@@ -276,12 +276,12 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
         segment,
         // temp_head.get()
         repository
-            .find_branch(&TEMP_HEAD_NAME, BranchType::Local)
+            .find_branch(TEMP_HEAD_NAME, BranchType::Local)
             .unwrap()
             .get(),
     );
     cleanup_segment_rebase(repository, segment, temp_head);
-    return RebaseResult::Done;
+    RebaseResult::Done
 }
 
 // The old, using git(1)
@@ -301,12 +301,12 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseRe
                 repository,
                 &segment,
                 repository
-                    .find_branch(&TEMP_HEAD_NAME, BranchType::Local)
+                    .find_branch(TEMP_HEAD_NAME, BranchType::Local)
                     .unwrap()
                     .get(),
             );
             cleanup_segment_rebase(repository, &segment, tmp_head);
-            return RebaseResult::Done;
+            RebaseResult::Done
         } else {
             // mismatch
             panic!();
@@ -380,63 +380,61 @@ pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 
     if false {
         return rebase_continue_git1(repository, segment_name);
-    } else {
-        if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
-            // higher level .. our file:
+    } if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
+        // higher level .. our file:
 
-            // this should contain the `skip'
-            let oid = lines.next_back().unwrap();
-            let mut skip : usize = lines.next_back().unwrap().parse().unwrap();
-            // native:
-            debug!("from file: continue on {}, after {:?}", segment_name, oid);
+        // this should contain the `skip'
+        let oid = lines.next_back().unwrap();
+        let mut skip : usize = lines.next_back().unwrap().parse().unwrap();
+        // native:
+        debug!("from file: continue on {}, after {:?}", segment_name, oid);
 
-            let commit_id =
-                if repository.state() == RepositoryState::CherryPick {
-                    // read the CHERRY_PICK_HEAD
-                    // todo: convert to step.step2...
-                    let commit_id = Oid::from_str(read_cherry_pick_head(repository).as_str().trim()).unwrap();
-                    debug!("should continue the cherry-pick {:?}", commit_id);
+        let commit_id =
+            if repository.state() == RepositoryState::CherryPick {
+                // read the CHERRY_PICK_HEAD
+                // todo: convert to step.step2...
+                let commit_id = Oid::from_str(read_cherry_pick_head(repository).as_str().trim()).unwrap();
+                debug!("should continue the cherry-pick {:?}", commit_id);
 
-                    // commit it, or reset the state?
-                    if !repository.index().unwrap().is_empty() {
-                        debug!("non-empty index -> commit...");
-                        let to_apply = repository.find_commit(commit_id).unwrap();
+                // commit it, or reset the state?
+                if !repository.index().unwrap().is_empty() {
+                    debug!("non-empty index -> commit...");
+                    let to_apply = repository.find_commit(commit_id).unwrap();
 
-                        let parent = repository.head().unwrap().peel_to_commit().unwrap();
-                        let new_oid = commit_cherry_picked(repository,
-                                                           &to_apply,
-                                                           &parent);
-                        debug!("new commit created {new_oid}");
-                        // parent = repository.find_commit(new_oid).unwrap();
-                    } else {
-                        // the user might have decided to drop this change -- skip over.
-                        // todo: reset
-                        info!("Cleaning cherry pick info: user unstaged the change");
-                        repository.cleanup_state().unwrap();
-                    }
-                    skip = 1;
-                    // we need the next one.
-                    commit_id
+                    let parent = repository.head().unwrap().peel_to_commit().unwrap();
+                    let new_oid = commit_cherry_picked(repository,
+                                                       &to_apply,
+                                                       &parent);
+                    debug!("new commit created {new_oid}");
+                    // parent = repository.find_commit(new_oid).unwrap();
                 } else {
-                    Oid::from_str(oid).unwrap()
-                };
+                    // the user might have decided to drop this change -- skip over.
+                    // todo: reset
+                    info!("Cleaning cherry pick info: user unstaged the change");
+                    repository.cleanup_state().unwrap();
+                }
+                skip = 1;
+                // we need the next one.
+                commit_id
+            } else {
+                Oid::from_str(oid).unwrap()
+            };
 
-            eprintln!("should cherry-pick starting from oid {}", commit_id);
+        eprintln!("should cherry-pick starting from oid {}", commit_id);
 
-            assert!(repository_clean(&repository));
-            continue_segment_cherry_pick(repository, &segment, commit_id, skip);
+        assert!(repository_clean(repository));
+        continue_segment_cherry_pick(repository, &segment, commit_id, skip);
 
-            segment.reset(repository,
-                          repository.head().unwrap().peel_to_commit().unwrap().id());
+        segment.reset(repository,
+                      repository.head().unwrap().peel_to_commit().unwrap().id());
 
-            let tmp_head: Branch<'_> = repository
-                .find_branch(TEMP_HEAD_NAME, BranchType::Local)
-                .unwrap();
-            cleanup_segment_rebase(repository, &segment, tmp_head);
-            return RebaseResult::Done;
-        } else {
-            panic!("segment not found");
-        }
+        let tmp_head: Branch<'_> = repository
+            .find_branch(TEMP_HEAD_NAME, BranchType::Local)
+            .unwrap();
+        cleanup_segment_rebase(repository, &segment, tmp_head);
+        RebaseResult::Done
+    } else {
+        panic!("segment not found");
     }
 }
 
@@ -444,16 +442,13 @@ pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
 fn drop_temporary_head(repository: &Repository, mut temp_head: Branch<'_>) {
     if true {
         temp_head.delete().expect("failed to delete a branch");
-    } else {
-        if !git_run(
+    } else if !git_run(
             repository,
             &["branch", "-D", temp_head.name().unwrap().unwrap()],
-        )
-            .success()
+        ).success()
         {
             panic!("branch -D failed");
         }
-    }
 }
 
 // bad name:
@@ -478,7 +473,7 @@ fn rebase_empty_segment<'repo>(
 
     segment.reset(repository,
                   segment.base(repository).peel_to_commit().unwrap().id());
-    return RebaseResult::Done;
+    RebaseResult::Done
 }
 
 fn rebase_segment_finish<'repo>(
