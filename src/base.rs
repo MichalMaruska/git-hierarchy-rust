@@ -105,11 +105,11 @@ pub fn checkout_new_head_at<'repo>(
         .checkout_tree(tree.as_object(), Some(&mut checkout_opts))
         .expect("failed to checkout the newly created branch");
 
-    if name.is_some() {
+    if let Some(name) = name {
         info!("create temp branch {:?}", name);
 
         // target = target.peel_to_commit().unwrap()
-        let new_branch = repository.branch(name.unwrap(), target, false).unwrap();
+        let new_branch = repository.branch(name, target, false).unwrap();
 
         let full_name = new_branch.name().unwrap().unwrap();
         let full_name = concatenate(GIT_HEADS_PATTERN, full_name);
@@ -118,11 +118,11 @@ pub fn checkout_new_head_at<'repo>(
         repository
             .set_head(&full_name)
             .expect("failed to create a branch on given commit");
-        return Some(new_branch);
+        Some(new_branch)
     } else {
         info!("detached checkout {:?}", target.id());
         repository.set_head_detached(target.id()).unwrap();
-        return None;
+        None
     }
 }
 
@@ -133,7 +133,7 @@ pub fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'re
         .show(StatusShow::Index)
         .include_unmodified(false) ;
 
-    return repository.statuses(Some(&mut status_options));
+    repository.statuses(Some(&mut status_options))
 }
 
 //Todo: I need my error.
