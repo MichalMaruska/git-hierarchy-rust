@@ -12,7 +12,6 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
            RepositoryState,
            // merge:
            AnnotatedCommit,
-           Sort,
 };
 
 #[allow(unused_imports)]
@@ -365,82 +364,6 @@ fn rebase_node<'repo>(
         }
     }
 }
-
-
-// ancestor <---is parent-- ........ descendant
-fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oid) -> bool
-{
-    if ancestor == descendant { return true;}
-
-    let mut walk = repository.revwalk().unwrap();
-    walk.push(descendant).expect("should set upper bound for Walk");
-    // segment.reference.borrow().target().unwrap()
-    walk.hide(ancestor).expect("should set the lower bound for Walk");
-
-    walk.set_sorting(Sort::TOPOLOGICAL).expect("should set the topo ordering of the Walk");
-
-    if walk.next().is_none() {
-        return false;
-    }
-
-    for oid in walk {
-        if repository.find_commit(oid.unwrap()).unwrap().parent_count() > 1 {
-            panic!("a merge found");
-        }
-    }
-    true
-}
-
-
-fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
-{
-    // no merge commits
-    if ! is_linear_ancestor(repository,
-                            segment.start(),
-                            segment.reference.borrow().target().unwrap()) {
-        panic!("segment {} in mess", segment.name());
-    }
-
-    // no segments inside. lenght limited....
-
-    // git_revisions()
-    // walk.push_ref(segment.reference.borrow());
-    // walk.hide(segment._start.target().unwrap());
-    // walk.hide_ref(ref);
-
-    // push_range
-    // descendant of start.
-
-    // start.is_ancestor(reference);
-}
-
-fn check_sum<'repo>(
-    _repository: &'repo Repository,
-    sum: &Sum<'repo>,
-    _object_map: &HashMap<String, GitHierarchy<'repo>>,
-) {
-    let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
-
-    // terrible:
-    // !i>2 in Rust  means ~i>2 in C
-    // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
-    if count <= 1 {
-        panic!("not a merge: {}, only {} parent commits", sum.name(), count);
-    };
-
-    // each of the summands has relationship to a parent commit.
-    // divide
-    /*
-    (mapped, rest_summands, left_overs_parent_commits) = distribute(sum);
-    // either it went ahead ....or? what if it's rebased?
-    for bad in rest_summands {
-        // try to find in over
-        find_ancestor()
-    }
-
-    */
-}
-
 
 fn check_node<'repo>(
     repo: &'repo Repository,

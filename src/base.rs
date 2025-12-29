@@ -5,6 +5,7 @@ use crate::utils::concatenate;
 use git2::{Branch, Commit, Oid,
            Error,
            Reference, Repository, build::CheckoutBuilder,
+           Sort,
            StatusShow,StatusOptions, Statuses,};
 use std::cell::OnceCell;
 #[allow(unused)]
@@ -79,6 +80,30 @@ pub fn git_same_ref(
     }
 
     sha(repository, reference) == sha(repository, next)
+}
+
+// ancestor <---is parent-- ........ descendant
+pub fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oid) -> bool
+{
+    if ancestor == descendant { return true;}
+
+    let mut walk = repository.revwalk().unwrap();
+    walk.push(descendant).expect("should set upper bound for Walk");
+    // segment.reference.borrow().target().unwrap()
+    walk.hide(ancestor).expect("should set the lower bound for Walk");
+
+    walk.set_sorting(Sort::TOPOLOGICAL).expect("should set the topo ordering of the Walk");
+
+    if walk.next().is_none() {
+        return false;
+    }
+
+    for oid in walk {
+        if repository.find_commit(oid.unwrap()).unwrap().parent_count() > 1 {
+            panic!("a merge found");
+        }
+    }
+    true
 }
 
 pub const GIT_HEADS_PATTERN: &str = "refs/heads/";
