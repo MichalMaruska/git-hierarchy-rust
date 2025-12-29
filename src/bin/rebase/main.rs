@@ -471,34 +471,29 @@ fn rebase_tree(repository: &Repository,
                ignore: &[String],
                skip: &[String]
 ) {
-    let (
-        object_map,    // String -> GitHierarchy
-        hash_to_graph, // stable graph:  String -> index ?
-        graph,         // index -> String?
-        discovery_order,
-    ) = find_hierarchy(repository, root);
+    let hierarchy_graph = find_hierarchy(repository, root);
 
     // verify we can do it:
-    for v in &discovery_order {
-        let name = object_map.get(v).unwrap().node_identity();
+    for v in &hierarchy_graph.discovery_order {
+        let name = hierarchy_graph.object_map.get(v).unwrap().node_identity();
         println!(
             "{:?} {:?} {:?}",
             v,
             name,
-            graph
-                .node_weight(*hash_to_graph.get(v).unwrap())
+            hierarchy_graph.graph
+                .node_weight(*hierarchy_graph.nodes.get(v).unwrap())
                 .unwrap()
         );
         if ignore.iter().any(|x| x == name) {
             eprintln!("found to be ignored {name}");
             continue;
         }
-        let vertex = object_map.get(v).unwrap();
-        check_node(repository, vertex, &object_map);
+        let vertex = hierarchy_graph.object_map.get(v).unwrap();
+        check_node(repository, vertex, &hierarchy_graph.object_map);
     }
 
-    for v in discovery_order {
-        let name = object_map.get(&v).unwrap().node_identity();
+    for v in hierarchy_graph.discovery_order {
+        let name = hierarchy_graph.object_map.get(&v).unwrap().node_identity();
 
         if skip.iter().any(|x| x == name) {
             eprintln!("Skipping: {name}");
@@ -508,13 +503,13 @@ fn rebase_tree(repository: &Repository,
         eprintln!(
             "{:?} {:?} {:?}",
             v,
-            object_map.get(&v).unwrap().node_identity(),
-            graph
-                .node_weight(*hash_to_graph.get(&v).unwrap())
+            hierarchy_graph.object_map.get(&v).unwrap().node_identity(),
+            hierarchy_graph.graph
+                .node_weight(*hierarchy_graph.nodes.get(&v).unwrap())
                 .unwrap()
         );
-        let vertex = object_map.get(&v).unwrap();
-        rebase_node(repository, vertex, fetch, &object_map);
+        let vertex = hierarchy_graph.object_map.get(&v).unwrap();
+        rebase_node(repository, vertex, fetch, &hierarchy_graph.object_map);
     }
 }
 

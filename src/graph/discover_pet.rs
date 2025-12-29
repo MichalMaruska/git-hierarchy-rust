@@ -90,19 +90,20 @@ impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
     */
 }
 
+//
+pub struct HierarchyGraph<'repo> {
+    pub object_map: HashMap<String, GitHierarchy<'repo>>,
+    // label->index
+    pub nodes: HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
+    pub graph: petgraph::stable_graph::StableGraph<std::string::String, ()>,
+    // order labels
+    pub discovery_order: Vec<std::string::String>,
+}
+
 pub fn find_hierarchy<'repo>(
     repo: &'repo Repository,
     root: String,
-) -> (
-    // how to return these types?
-    // labels -> object
-    HashMap<String, GitHierarchy<'repo>>,
-    // label->index
-    HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
-    petgraph::stable_graph::StableGraph<std::string::String, ()>,
-    // order labels
-    Vec<std::string::String>,
-)
+) -> HierarchyGraph<'repo>
 // GraphDiscoverer<String,GitHierarchyProvider<'repo>>
 {
     // 1. Perform discovery
@@ -121,10 +122,10 @@ pub fn find_hierarchy<'repo>(
 
     // we cannot drop the provider.
     // but we can move out of it?
-    return (
-        provider.object_map, // String -> GitHierarchy
-        hash_to_graph,       // stable graph:  String -> index ?
+    HierarchyGraph {
+        object_map: provider.object_map, // String -> GitHierarchy
+        nodes: hash_to_graph,       // stable graph:  String -> index ?
         graph,               // index -> String?
         discovery_order,
-    ); //  indices?
+    } //  indices?
 }

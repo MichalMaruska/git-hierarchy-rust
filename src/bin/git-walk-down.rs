@@ -251,17 +251,12 @@ where
     ) // F : FnMut(&Repository, GitHierarchy,
       // &HashMap<String, GitHierarchy>) -> ()
 {
-    let (
-        object_map,     // String -> GitHierarchy
-        _hash_to_graph, // stable graph:  String -> index ?
-        _graph,         // index -> String?
-        discovery_order,
-    ) = find_hierarchy(repository, root.to_owned());
+    let hierarchy_graph = find_hierarchy(repository, root.to_owned());
 
     // convert the gh objects?
-    for v in discovery_order {
-        let vertex = object_map.get(&v).unwrap();
-        process(repository, vertex, &object_map);
+    for v in hierarchy_graph.discovery_order {
+        let vertex = hierarchy_graph.object_map.get(&v).unwrap();
+        process(repository, vertex, &hierarchy_graph.object_map);
     }
 }
 
