@@ -41,10 +41,10 @@ fn sum_summands<'repo>(repository: &'repo Repository, name: &str) -> Vec<Referen
         }
     }
 
-    return v;
+    v
 }
 
-pub fn sums<'repo>(repository: &'repo Repository) -> impl Iterator<Item = String>
+pub fn sums(repository: &Repository) -> impl Iterator<Item = String>
 {
     let iterator = repository.references_glob(&concatenate(SUM_SUMMAND_PATTERN, "*/*")).unwrap();
     // so .names() is bad api!
@@ -61,28 +61,25 @@ pub fn sums<'repo>(repository: &'repo Repository) -> impl Iterator<Item = String
 
 // I want an iterator on strings.
 // dyn Iterator<item = >
-pub fn segments<'repo>(repository: &'repo Repository) -> impl Iterator<Item = String>
+pub fn segments(repository: &Repository) -> impl Iterator<Item = String>
 {
     let iterator = repository.references_glob(&concatenate(SEGMENT_BASE_PATTERN, "*")).unwrap();
     // so .names() is bad api!
 
-    let segments = iterator
-        .map(move |r| {
-            r.unwrap().name().unwrap().strip_prefix(SEGMENT_BASE_PATTERN).unwrap().to_string()
-        });
-
-    return segments;
+    iterator .map(move |r| {
+        r.unwrap().name().unwrap().strip_prefix(SEGMENT_BASE_PATTERN).unwrap().to_string()
+    })
 }
 
 fn branch_name<'a, 'repo>(reference: &'a Reference<'repo>) -> &'a str {
-    return reference
+    reference
         .name()
         .unwrap()
         .strip_prefix(GIT_HEADS_PATTERN)
-        .unwrap();
+        .unwrap()
 }
 
-///
+/// a linear sequence of commits.
 pub struct Segment<'repo> {
     name: String,
     pub reference: RefCell<Reference<'repo>>,
@@ -194,7 +191,7 @@ impl<'repo> Segment<'repo> {
     }
 
     pub fn start(&self) -> Oid {
-        return self._start.target().expect("start reference should resolve to Oid");
+        self._start.target().expect("start reference should resolve to Oid")
     }
 
     pub fn base(&self, repository: &'repo Repository) -> Reference<'repo> {
@@ -206,7 +203,7 @@ impl<'repo> Segment<'repo> {
             )
             .unwrap();
         debug!("base points at {:?}", reference.name().unwrap());
-        return reference;
+        reference
     }
 
 
@@ -221,7 +218,7 @@ impl<'repo> Segment<'repo> {
         let oid = self._start.target().unwrap();
         walk.hide(oid)?;
 
-        return Ok(walk);
+        Ok(walk)
     }
 
     // todo: -> Result<Reference>
@@ -297,11 +294,11 @@ impl<'repo> Sum<'repo> {
                                       &hint.unwrap_or(summands[0].peel_to_commit().unwrap()),
                                       // &head.peel_to_commit().unwrap()
                                       false)?; // .expect("should be a new reference");
-                return Ok(Self::new(h.into_reference(), summands));
+                Ok(Self::new(h.into_reference(), summands))
             }
             Err(e) => {
                 // can I use Into ?
-                return Err(e);
+                Err(e)
             }
         }
     }
@@ -309,10 +306,9 @@ impl<'repo> Sum<'repo> {
     // todo: iterator?
     pub fn summands(&self, repository: &'repo Repository) -> Vec<Reference<'repo>> {
         debug!("resolving summands for {:?}", self.name());
-        let resolved: Vec<Reference<'repo>>;
-        // = Vec::with_capacity(self.summands.len());
 
-        resolved = self.summands.iter().map(
+        // = Vec::with_capacity(self.summands.len());
+        self.summands.iter().map(
             |summand| {
                 let symbolic_base = repository.find_reference(
                     summand.symbolic_target().expect("base should be a symbolic reference"),
@@ -322,15 +318,13 @@ impl<'repo> Sum<'repo> {
                        symbolic_base.name().unwrap());
 
                 symbolic_base
-            }).collect();
-
-        return resolved;
+            }).collect()
     }
 
     pub fn name(&self) -> &str {
         // fixme: same as ....
         // branch_name(&self.reference.borrow());
-        return &self.name;
+        &self.name
     }
 
     pub fn parent_commits(&self) -> Vec<Oid> {
@@ -358,9 +352,9 @@ impl<'repo> GitHierarchy<'repo> {
             }
             GitHierarchy::Segment(s) => &s.reference.borrow(),
             GitHierarchy::Sum(s) => &s.reference.borrow(),
-            GitHierarchy::Reference(r) => &r,
+            GitHierarchy::Reference(r) => r,
         };
-        return reference.peel_to_commit().unwrap();
+        reference.peel_to_commit().unwrap()
     }
 }
 
@@ -384,14 +378,14 @@ pub fn load<'repo>(
         };
     }
 
-    let summands = sum_summands(&repository, name);
+    let summands = sum_summands(repository, name);
     if !summands.is_empty() {
         info!("a sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum::new(reference, summands)))
     };
 
     info!("plain reference {}", name);
-    return Ok(GitHierarchy::Reference(reference));
+    Ok(GitHierarchy::Reference(reference))
 }
 
 // note: trait items always share the visibility of their trait
