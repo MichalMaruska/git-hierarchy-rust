@@ -44,15 +44,16 @@ pub fn get_repository() -> &'static Repository {
         repository = GLOBAL_REPOSITORY.get();
         // .as_ref().expect("no repository"); // unwrap custom msg?
     };
-    return repository.expect("no repository");
+    repository.expect("no repository")
 }
 
 // consumes, so moves?
+// todo: drop this
 pub fn set_repository(repo: Repository) {
     unsafe {
         let _ = GLOBAL_REPOSITORY
             .set(repo)
-            .or_else(|_e| -> Result<(), ()> { panic!() });
+            .map_err(|_e| { panic!() });
     }
 }
 pub fn unset_repository() {
