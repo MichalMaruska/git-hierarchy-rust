@@ -92,9 +92,9 @@ impl<'repo> GraphProvider<String> for GitHierarchyProvider<'repo> {
 
 //
 pub struct HierarchyGraph<'repo> {
-    pub object_map: HashMap<String, GitHierarchy<'repo>>,
+    pub labeled_objects: HashMap<String, GitHierarchy<'repo>>,
     // label->index
-    pub nodes: HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
+    pub labeled_nodes: HashMap<std::string::String, petgraph::stable_graph::NodeIndex>,
     pub graph: petgraph::stable_graph::StableGraph<std::string::String, ()>,
     // order labels
     pub discovery_order: Vec<std::string::String>,
@@ -123,8 +123,8 @@ pub fn find_hierarchy<'repo>(
     // we cannot drop the provider.
     // but we can move out of it?
     HierarchyGraph {
-        object_map: provider.object_map, // String -> GitHierarchy
-        nodes: hash_to_graph,       // stable graph:  String -> index ?
+        labeled_objects: provider.object_map, // String -> GitHierarchy
+        labeled_nodes: hash_to_graph,       // stable graph:  String -> index ?
         graph,               // index -> String?
         discovery_order,
     } //  indices?

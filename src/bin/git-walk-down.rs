@@ -255,8 +255,8 @@ where
 
     // convert the gh objects?
     for v in hierarchy_graph.discovery_order {
-        let vertex = hierarchy_graph.object_map.get(&v).unwrap();
-        process(repository, vertex, &hierarchy_graph.object_map);
+        let vertex = hierarchy_graph.labeled_objects.get(&v).unwrap();
+        process(repository, vertex, &hierarchy_graph.labeled_objects);
     }
 }
 

@@ -475,25 +475,25 @@ fn rebase_tree(repository: &Repository,
 
     // verify we can do it:
     for v in &hierarchy_graph.discovery_order {
-        let name = hierarchy_graph.object_map.get(v).unwrap().node_identity();
+        let name = hierarchy_graph.labeled_objects.get(v).unwrap().node_identity();
         println!(
             "{:?} {:?} {:?}",
             v,
             name,
             hierarchy_graph.graph
-                .node_weight(*hierarchy_graph.nodes.get(v).unwrap())
+                .node_weight(*hierarchy_graph.labeled_nodes.get(v).unwrap())
                 .unwrap()
         );
         if ignore.iter().any(|x| x == name) {
             eprintln!("found to be ignored {name}");
             continue;
         }
-        let vertex = hierarchy_graph.object_map.get(v).unwrap();
-        check_node(repository, vertex, &hierarchy_graph.object_map);
+        let vertex = hierarchy_graph.labeled_objects.get(v).unwrap();
+        check_node(repository, vertex, &hierarchy_graph.labeled_objects);
     }
 
     for v in hierarchy_graph.discovery_order {
-        let name = hierarchy_graph.object_map.get(&v).unwrap().node_identity();
+        let name = hierarchy_graph.labeled_objects.get(&v).unwrap().node_identity();
 
         if skip.iter().any(|x| x == name) {
             eprintln!("Skipping: {name}");
@@ -503,13 +503,13 @@ fn rebase_tree(repository: &Repository,
         eprintln!(
             "{:?} {:?} {:?}",
             v,
-            hierarchy_graph.object_map.get(&v).unwrap().node_identity(),
+            hierarchy_graph.labeled_objects.get(&v).unwrap().node_identity(),
             hierarchy_graph.graph
-                .node_weight(*hierarchy_graph.nodes.get(&v).unwrap())
+                .node_weight(*hierarchy_graph.labeled_nodes.get(&v).unwrap())
                 .unwrap()
         );
-        let vertex = hierarchy_graph.object_map.get(&v).unwrap();
-        rebase_node(repository, vertex, fetch, &hierarchy_graph.object_map);
+        let vertex = hierarchy_graph.labeled_objects.get(&v).unwrap();
+        rebase_node(repository, vertex, fetch, &hierarchy_graph.labeled_objects);
     }
 }
 
