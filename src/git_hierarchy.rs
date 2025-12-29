@@ -256,7 +256,7 @@ impl<'repo> Sum<'repo> {
         Sum::<'repo> {
             name: branch_name(&reference).to_owned(),
             reference: RefCell::new(reference),
-            summands: summands,
+            summands,
         }
     }
 
