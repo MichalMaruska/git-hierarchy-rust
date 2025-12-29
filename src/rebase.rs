@@ -12,7 +12,7 @@ use git2::{Branch, BranchType, Error, Commit,
 
 
 #[allow(unused)]
-use crate::git_hierarchy::{GitHierarchy, Segment, load};
+use crate::git_hierarchy::{GitHierarchy, Segment, Sum, load};
 
 use crate::execute::git_run;
 use crate::base::{checkout_new_head_at,
@@ -22,6 +22,7 @@ use crate::base::{checkout_new_head_at,
                   is_linear_ancestor,
 };
 
+use std::collections::HashMap;
 use std::fs::{self,OpenOptions};
 use std::io::{Write,self};
 use std::path::PathBuf;
@@ -486,3 +487,54 @@ fn rebase_segment_finish<'repo>(
     // reflog etc.
     force_head_to(repository, segment.name(), new_head);
 }
+
+pub fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
+{
+    // no merge commits
+    if ! is_linear_ancestor(repository,
+                            segment.start(),
+                            segment.reference.borrow().target().unwrap()) {
+        panic!("segment {} in mess", segment.name());
+    }
+
+    // no segments inside. lenght limited....
+
+    // git_revisions()
+    // walk.push_ref(segment.reference.borrow());
+    // walk.hide(segment._start.target().unwrap());
+    // walk.hide_ref(ref);
+
+    // push_range
+    // descendant of start.
+
+    // start.is_ancestor(reference);
+}
+
+pub fn check_sum<'repo>(
+    _repository: &'repo Repository,
+    sum: &Sum<'repo>,
+    _object_map: &HashMap<String, GitHierarchy<'repo>>,
+) {
+    let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
+
+    // terrible:
+    // !i>2 in Rust  means ~i>2 in C
+    // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
+    if count <= 1 {
+        panic!("not a merge: {}, only {} parent commits", sum.name(), count);
+    };
+
+    // each of the summands has relationship to a parent commit.
+    // divide
+    /*
+    (mapped, rest_summands, left_overs_parent_commits) = distribute(sum);
+    // either it went ahead ....or? what if it's rebased?
+    for bad in rest_summands {
+        // try to find in over
+        find_ancestor()
+    }
+
+    */
+}
+
+

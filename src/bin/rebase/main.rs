@@ -22,7 +22,8 @@ use ::git_hierarchy::execute::git_run;
 use ::git_hierarchy::utils::{
     divide_str, extract_name, find_non_matching_elements, init_tracing,
 };
-use ::git_hierarchy::rebase::{rebase_segment,rebase_segment_continue,RebaseResult};
+use ::git_hierarchy::rebase::{check_segment, check_sum,
+                              rebase_segment,rebase_segment_continue,RebaseResult};
 use std::collections::HashMap;
 use std::iter::Iterator;
 
