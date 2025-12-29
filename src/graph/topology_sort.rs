@@ -8,13 +8,13 @@ use std::collections::VecDeque;
 /// # Returns
 /// * `Some(Vec<usize>)` - Topologically sorted order if graph is acyclic
 /// * `None` - If graph contains a cycle
-pub fn topological_sort(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
+pub fn topological_sort(graph: &[Vec<usize>]) -> Option<Vec<usize>> {
     let n = graph.len();
 
     // Calculate in-degrees for each vertex
     let mut in_degree = vec![0; n];
-    for u in 0..n {
-        for &v in &graph[u] {
+    for (n, neighbors) in graph.iter().enumerate() {
+        for &v in neighbors {
             if v < n {
                 // Bounds check
                 in_degree[v] += 1;
@@ -24,8 +24,8 @@ pub fn topological_sort(graph: &Vec<Vec<usize>>) -> Option<Vec<usize>> {
 
     // Initialize queue with vertices having in-degree 0
     let mut queue = VecDeque::new();
-    for i in 0..n {
-        if in_degree[i] == 0 {
+    for (i, degree) in in_degree.iter().enumerate() {
+        if *degree == 0 {
             queue.push_back(i);
         }
     }
