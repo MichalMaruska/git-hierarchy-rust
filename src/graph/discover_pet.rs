@@ -55,7 +55,7 @@ impl<'repo> GitHierarchyProvider<'repo> {
             }
             GitHierarchy::Sum(ref s) => {
                 // copy
-                for summand in s.summands(&repository) {
+                for summand in s.summands(repository) {
                     ch.push(summand.name().unwrap().to_owned());
                 }
             }
@@ -71,7 +71,7 @@ impl<'repo> GitHierarchyProvider<'repo> {
         self.object_map.insert(vertex.to_owned(), gh);
         // return as Strings
         // convert vec<&str> to vec<String> ?
-        return ch;
+        ch
     }
 }
 
