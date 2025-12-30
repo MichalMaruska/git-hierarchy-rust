@@ -34,6 +34,6 @@ fn main() {
     let gh = git_hierarchy::git_hierarchy::load(&repository, &cli.segment_name).unwrap();
     if let GitHierarchy::Segment(segment) = gh {
         check_segment(&repository, &segment);
-        rebase_segment(&repository, &segment);
+        rebase_segment(&repository, &segment).unwrap();
     }
 }

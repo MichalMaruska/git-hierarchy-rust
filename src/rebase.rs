@@ -218,16 +218,18 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
 /// Given a @segment, and HEAD ....
 /// either exit or rewrite the segment ....its reference should update oid.
-pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) -> RebaseResult {
+pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>) -> Result<RebaseResult, RebaseError> {
     if segment.uptodate(repository) {
         info!("nothing to do -- base and start equal");
-        return RebaseResult::Nothing;
+        return Ok(RebaseResult::Nothing);
     }
 
     let new_start = segment.base(repository);
 
     if segment.empty(repository) {
-        return rebase_empty_segment(segment, repository);
+        return Ok(rebase_empty_segment(segment, repository));
+    }
+
     }
 
     info!("rebase_segment: {}", segment.name());
@@ -294,7 +296,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
             .get(),
     );
     cleanup_segment_rebase(repository, segment, temp_head);
-    RebaseResult::Done
+    Ok(RebaseResult::Done)
 }
 
 // The old, using git(1)
