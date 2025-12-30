@@ -36,6 +36,19 @@ pub enum RebaseResult {
     // Failed,
 }
 
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum RebaseError {
+    Default
+}
+
+impl std::convert::From<crate::execute::Error> for RebaseError {
+    fn from(_e: crate::execute::Error) -> RebaseError{
+       RebaseError::Default
+    }
+}
+
+
 const TEMP_HEAD_NAME: &str = "tempSegment";
 const MARKER_FILENAME: &str = ".segment-cherry-pick";
 
