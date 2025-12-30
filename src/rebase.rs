@@ -213,7 +213,6 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 
     let new_start = segment.base(repository);
 
-    // todo: segment_empty()
     if segment.empty(repository) {
         return rebase_empty_segment(segment, repository);
     }
