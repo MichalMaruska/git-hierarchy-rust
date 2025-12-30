@@ -230,6 +230,9 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
         return Ok(rebase_empty_segment(segment, repository));
     }
 
+    // fixme: if we are in the middle of rebase?
+    if repository.state() != RepositoryState::Clean {
+        panic!("the repository is not clean");
     }
 
     info!("rebase_segment: {}", segment.name());
