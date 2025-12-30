@@ -17,7 +17,7 @@ pub fn git_same_ref(
     next: &Reference<'_>,
 ) -> bool {
     fn sha<'a>(_repository: &'a Repository, reference: &Reference<'a>) -> Oid {
-        let direct = reference.resolve().unwrap(); // symbolic -> direct
+        let direct = reference.resolve().unwrap();
         let oid = direct.target().unwrap();
         debug!("git_same_ref: {:?} {:?}",
                reference.name().unwrap(),
@@ -55,7 +55,7 @@ pub fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oi
 pub const GIT_HEADS_PATTERN: &str = "refs/heads/";
 
 /// alternative to:
-/// git checkout name -b target
+/// `git checkout name -b target`
 /// git_run(repository, &["checkout", "--no-track", "-B", temp_head, new_start.name().unwrap()]);
 pub fn checkout_new_head_at<'repo>(
     repository: &'repo Repository,
@@ -97,7 +97,7 @@ pub fn checkout_new_head_at<'repo>(
     }
 }
 
-
+// get the status: list of file modified in Index
 pub fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'repo>, Error>{
     let mut status_options = StatusOptions::new();
     status_options
@@ -107,7 +107,8 @@ pub fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'re
     repository.statuses(Some(&mut status_options))
 }
 
-//Todo: I need my error.
+// Todo: I need my error.
+// why not repository.state() == RepositoryState::Clean
 pub fn repository_clean(repository: &Repository) -> bool {
     // rely on
     let options = &mut StatusOptions::new();
@@ -123,16 +124,17 @@ pub fn repository_clean(repository: &Repository) -> bool {
     true
 }
 
+// either a throw-away branch or fully determined ... sum.
+// git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
+// git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
+// fixme: why 2 things:
 pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {
     let oid = new_head.peel_to_commit().unwrap();
-    // create it:
+
     debug!("relocating {:?} to {:?}", name, oid);
     repository.branch(name, &oid, true).unwrap();
-    // git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
 
-    // checkout, since then I drop ...:
-    let full_name = concatenate("refs/heads/", name);
+    // and `checkout'! Why?
+    let full_name = concatenate(GIT_HEADS_PATTERN, name);
     repository.set_head(&full_name).expect("failed to checkout");
-    // git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
 }
-

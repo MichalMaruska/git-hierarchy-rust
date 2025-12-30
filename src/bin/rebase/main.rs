@@ -177,7 +177,7 @@ fn remerge_sum<'repo>(
                 repository,
                 &["branch", "-D", temp_head.name().unwrap().unwrap()],
             )
-                .success()
+                .is_ok_and(|x| x.success())
             {
                 panic!("branch -D failed");
             }
