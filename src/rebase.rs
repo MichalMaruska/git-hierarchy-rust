@@ -248,7 +248,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
             repository,
             &["cherry-pick", segment.git_revisions().as_str()],
         )
-            .success()
+            .is_ok_and(|x| x.success())
         {
             // return RebaseResult::Failed;
             panic!("cherry-pick failed");
@@ -286,7 +286,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 
 // The old, using git(1)
 fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseResult {
-    if !git_run(repository, &["cherry-pick", "--continue"]).success() {
+    if !git_run(repository, &["cherry-pick", "--continue"]).is_ok_and(|x| x.success()) {
         info!("Good?")
         // panic!("cherry-pick failed");
     }
@@ -445,7 +445,7 @@ fn drop_temporary_head(repository: &Repository, mut temp_head: Branch<'_>) {
     } else if !git_run(
             repository,
             &["branch", "-D", temp_head.name().unwrap().unwrap()],
-        ).success()
+        ).is_ok_and(|x| x.success())
         {
             panic!("branch -D failed");
         }
