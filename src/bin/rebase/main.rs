@@ -23,7 +23,8 @@ use ::git_hierarchy::utils::{
     divide_str, extract_name, find_non_matching_elements, init_tracing,
 };
 use ::git_hierarchy::rebase::{check_segment, check_sum,
-                              rebase_segment,rebase_segment_continue,RebaseResult};
+                              rebase_segment,rebase_segment_continue,
+                              RebaseResult, RebaseError};
 use std::collections::HashMap;
 use std::iter::Iterator;
 
@@ -78,7 +79,7 @@ fn remerge_sum<'repo>(
     repository: &'repo Repository,
     sum: &Sum<'repo>,
     object_map: &HashMap<String, GitHierarchy<'repo>>, // this lifetime
-) -> RebaseResult {
+) -> Result<RebaseResult, RebaseError> {
     let summands = sum.summands(repository);
 
 /* assumption:
@@ -158,7 +159,7 @@ fn remerge_sum<'repo>(
             ];
             cmdline.extend(graphed_summands.iter().map(|s| s.node_identity()));
 
-            git_run(repository, &cmdline);
+            git_run(repository, &cmdline)?;
 
 
             // "commit": move the SUM head with reflog message:
@@ -263,7 +264,7 @@ fn remerge_sum<'repo>(
 
     // do we have a hint -- another merge?
     // git merge
-    RebaseResult::Done
+    Ok(RebaseResult::Done)
 }
 
 /// Given full git-reference name /refs/remotes/xx/bb return xx and bb
@@ -361,7 +362,7 @@ fn rebase_node<'repo>(
             rebase_segment(repo, segment).unwrap(); // todo!
         }
         GitHierarchy::Sum(sum) => {
-            remerge_sum(repo, sum, object_map);
+            remerge_sum(repo, sum, object_map).unwrap();
         }
     }
 }
