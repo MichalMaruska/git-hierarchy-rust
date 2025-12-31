@@ -29,27 +29,28 @@ pub fn git_same_ref(
 }
 
 // ancestor <---is parent-- ........ descendant
-pub fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oid) -> bool
+pub fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oid) -> Result<bool,git2::Error>
 {
-    if ancestor == descendant { return true;}
+    if ancestor == descendant { return Ok(true);}
 
-    let mut walk = repository.revwalk().unwrap();
-    walk.push(descendant).expect("should set upper bound for Walk");
+    let mut walk = repository.revwalk()?;
+    walk.push(descendant)?; // .expect("should set upper bound for Walk");
     // segment.reference.borrow().target().unwrap()
-    walk.hide(ancestor).expect("should set the lower bound for Walk");
+    walk.hide(ancestor)?; // .expect("should set the lower bound for Walk");
 
-    walk.set_sorting(Sort::TOPOLOGICAL).expect("should set the topo ordering of the Walk");
+    walk.set_sorting(Sort::TOPOLOGICAL)?; // .expect("should set the topo ordering of the Walk");
 
     if walk.next().is_none() {
-        return false;
+        return Ok(false);
     }
 
     for oid in walk {
-        if repository.find_commit(oid.unwrap()).unwrap().parent_count() > 1 {
-            panic!("a merge found");
+        if repository.find_commit(oid.unwrap())?.parent_count() > 1 {
+            return Ok(false)
+            // panic!("a merge found");
         }
     }
-    true
+    Ok(true)
 }
 
 pub const GIT_HEADS_PATTERN: &str = "refs/heads/";
