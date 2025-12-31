@@ -351,33 +351,30 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<R
 fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
                                        segment: &'_ Segment<'repo>,
                                        commit_id: Oid,
-                                       skip: usize) {
+                                       skip: usize
+) -> Result<(), RebaseError> {
     // Find & skip:
     let iter = segment.iter(repository).unwrap()
         .skip_while(|x| x.as_ref().unwrap() != &commit_id );
 
     let mut peek = iter.peekable();
     if peek.peek().is_none() {
-        println!("Empty!");
-        panic!("not found or last");
+        debug!("Couldn't find the commmit on the segment");
+        return Err(RebaseError::WrongHierarchy);
     }
 
     // todo: check the index
-    let parent = repository.head().unwrap().peel_to_commit().unwrap();
-
-    // panic!("not supported currently");
-    // commit
-    // find where to resume
+    let parent = repository.head()?.peel_to_commit()?;
 
     // here we continue the whole sub-segment chain:
     debug!("now continue to pick the rest of the segment '{}'", segment.name());
 
     // check we are in a clean state!
     // The default, if unspecified, is to show the index and the working
-    let statuses = repository.statuses(None).unwrap();
+    let statuses = repository.statuses(None)?;
     if ! statuses.len() == 0 {
         eprintln!("Status is not clean!");
-        exit(-1);
+        return Err(RebaseError::WrongState);
     }
 
     let commit = cherry_pick_commits(repository,
@@ -387,6 +384,7 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
     segment.reset(repository, commit.id());
     // fixme:
     // rebase_segment_finish(
+    return Ok(());
 }
 
 
