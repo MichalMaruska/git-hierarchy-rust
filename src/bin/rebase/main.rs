@@ -119,8 +119,9 @@ fn remerge_sum<'repo>(
         // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
         |gh| {
             debug!("mapping {:?} to {:?}", gh.node_identity(),
-                   gh.commit().id());
-            gh.commit().id()
+                   gh.commit().unwrap().id());
+            // fixme!
+            gh.commit().unwrap().id()
         }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
     );
 
@@ -139,7 +140,8 @@ fn remerge_sum<'repo>(
         );
 
         if graphed_summands.len() > 2 {
-            let temp_head = checkout_new_head_at(repository, Some("temp-sum"), &first.commit())
+            let temp_head = checkout_new_head_at(repository, Some("temp-sum"),
+                                                 &first.commit()?)
                 .unwrap();
 
             // use  git_run or?
@@ -186,7 +188,7 @@ fn remerge_sum<'repo>(
         } else {
             // libgit2
 
-            assert!(checkout_new_head_at(repository, None, &first.commit()).is_none());
+            assert!(checkout_new_head_at(repository, None, &first.commit()?).is_none());
 
             // Options:
             let mut merge_opts = MergeOptions::new();
@@ -207,7 +209,8 @@ fn remerge_sum<'repo>(
             let annotated_commits : Vec<AnnotatedCommit<'_>> =
                 graphed_summands.iter().skip(1).map(
                     |gh| {
-                        let oid = gh.commit().id();
+                        // fixme:
+                        let oid = gh.commit().unwrap().id();
                         repository.find_annotated_commit(oid).unwrap()
                     }).collect();
             // the references vec:
@@ -236,7 +239,7 @@ fn remerge_sum<'repo>(
             // Create the commit:
             // another one: Reference -> Commit -> Oid >>> lookup >>> AnnotatedCommit->Oid
             let commits : Vec<Commit<'_>> = graphed_summands.iter()
-                .map(|gh| gh.commit())
+                .map(|gh| gh.commit().unwrap()) // fixme!
                 .collect();
             // references
             let commits_refs = commits.iter().collect::<Vec<_>>();

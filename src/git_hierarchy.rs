@@ -343,10 +343,11 @@ pub enum GitHierarchy<'repo> {
 }
 
 impl<'repo> GitHierarchy<'repo> {
-    pub fn commit(&self) -> Commit<'_> {
+    pub fn commit(&self) -> Result<Commit<'_>, git2::Error> {
         let reference: &Reference<'_> = match &self {
             GitHierarchy::Name(x) => {
                 eprintln!("trying {x}");
+                // fixme:
                 panic!("bad state");
                 // unimplemented!(),
             }
@@ -354,7 +355,7 @@ impl<'repo> GitHierarchy<'repo> {
             GitHierarchy::Sum(s) => &s.reference.borrow(),
             GitHierarchy::Reference(r) => r,
         };
-        reference.peel_to_commit().unwrap()
+        reference.peel_to_commit()
     }
 }
 
