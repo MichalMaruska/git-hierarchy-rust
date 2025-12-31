@@ -384,7 +384,7 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
     segment.reset(repository, commit.id());
     // fixme:
     // rebase_segment_finish(
-    return Ok(());
+    Ok(())
 }
 
 
@@ -406,7 +406,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
     let segment_name = lines.next().unwrap().trim();
 
     if false {
-        return rebase_continue_git1(repository, segment_name);
+        rebase_continue_git1(repository, segment_name)
     } else if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
         // higher level .. our file:
 
