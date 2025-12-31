@@ -277,8 +277,10 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
         )
             .is_ok_and(|x| x.success())
         {
-            // return RebaseResult::Failed;
-            panic!("cherry-pick failed");
+            debug!("git cherry-pick failed");
+            return Err(RebaseError::Default)
+        } else {
+            return Ok(RebaseResult::Done);
         }
     } else {
         let commit = cherry_pick_commits(repository,
@@ -314,8 +316,8 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 // The old, using git(1)
 fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<RebaseResult, RebaseError> {
     if !git_run(repository, &["cherry-pick", "--continue"]).is_ok_and(|x| x.success()) {
-        info!("Good?")
-        // panic!("cherry-pick failed");
+        info!("git cherry-pick --continue failed");
+        return Err(RebaseError::Default);
     }
 
     if let GitHierarchy::Segment(segment) = load(repository, segment_name)? {
@@ -336,7 +338,7 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<R
             Ok(RebaseResult::Done)
         } else {
             // mismatch
-            panic!();
+            Err(RebaseError::Default)
         }
     } else {
         Ok(RebaseResult::Nothing)
