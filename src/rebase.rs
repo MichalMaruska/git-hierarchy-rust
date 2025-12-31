@@ -397,7 +397,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
     let segment_name = lines.next().unwrap().trim();
 
     if false {
-        rebase_continue_git1(repository, segment_name)
+        return rebase_continue_git1(repository, segment_name);
     } else if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
         // higher level .. our file:
 
@@ -441,7 +441,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         eprintln!("should cherry-pick starting from oid {}", commit_id);
 
         assert!(repository_clean(repository));
-        continue_segment_cherry_pick(repository, &segment, commit_id, skip);
+        continue_segment_cherry_pick(repository, &segment, commit_id, skip)?;
 
         segment.reset(repository,
                       repository.head().unwrap().peel_to_commit().unwrap().id());
