@@ -371,7 +371,7 @@ fn check_node<'repo>(
     repo: &'repo Repository,
     node: &GitHierarchy<'repo>,
     object_map: &HashMap<String, GitHierarchy<'repo>>,
-) {
+) -> Result<(), RebaseError>{
     match node {
         GitHierarchy::Name(_n) => {
             panic!();
@@ -386,6 +386,8 @@ fn check_node<'repo>(
             check_sum(repo, sum, object_map);
         }
     }
+
+    Ok(())
 }
 
 
@@ -414,7 +416,8 @@ fn rebase_tree(repository: &Repository,
             continue;
         }
         let vertex = hierarchy_graph.labeled_objects.get(v).unwrap();
-        check_node(repository, vertex, &hierarchy_graph.labeled_objects);
+        check_node(repository, vertex, &hierarchy_graph.labeled_objects)
+            .expect("nodes should be in correct state");
     }
 
     for v in hierarchy_graph.discovery_order {
