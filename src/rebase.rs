@@ -48,6 +48,12 @@ impl std::convert::From<crate::execute::Error> for RebaseError {
     }
 }
 
+impl std::convert::From<git2::Error> for RebaseError {
+    fn from(_e: git2::Error) -> RebaseError{
+       RebaseError::Default
+    }
+}
+
 
 const TEMP_HEAD_NAME: &str = "tempSegment";
 const MARKER_FILENAME: &str = ".segment-cherry-pick";
@@ -309,7 +315,7 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<R
         // panic!("cherry-pick failed");
     }
 
-    if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
+    if let GitHierarchy::Segment(segment) = load(repository, segment_name)? {
         let tmp_head: Branch<'_> = repository
             .find_branch(TEMP_HEAD_NAME, BranchType::Local)
             .unwrap();
