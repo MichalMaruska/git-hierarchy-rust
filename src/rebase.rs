@@ -40,6 +40,7 @@ pub enum RebaseResult {
 #[derive(Debug)]
 pub enum RebaseError {
     WrongHierarchy,
+    WrongState,
     Default,
 }
 
@@ -239,7 +240,8 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 
     // fixme: if we are in the middle of rebase?
     if repository.state() != RepositoryState::Clean {
-        panic!("the repository is not clean");
+        debug!("the repository is not clean");
+        return Err(RebaseError::WrongState);
     }
 
     info!("rebase_segment: {}", segment.name());
