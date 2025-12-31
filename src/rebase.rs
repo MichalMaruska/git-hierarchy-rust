@@ -235,7 +235,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
     let new_start = segment.base(repository);
 
     if segment.empty(repository) {
-        return Ok(rebase_empty_segment(segment, repository));
+        return rebase_empty_segment(segment, repository);
     }
 
     // fixme: if we are in the middle of rebase?
@@ -495,12 +495,12 @@ fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>,
 fn rebase_empty_segment<'repo>(
     segment: &Segment<'repo>,
     repository: &'repo Repository,
-) -> RebaseResult {
+) -> Result<RebaseResult, RebaseError> {
     debug!("rebase empty segment: {}", segment.name());
 
     segment.reset(repository,
-                  segment.base(repository).peel_to_commit().unwrap().id());
-    RebaseResult::Done
+                  segment.base(repository).peel_to_commit()?.id());
+    Ok(RebaseResult::Done)
 }
 
 fn rebase_segment_finish<'repo>(
