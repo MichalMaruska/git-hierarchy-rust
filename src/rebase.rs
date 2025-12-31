@@ -39,7 +39,8 @@ pub enum RebaseResult {
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum RebaseError {
-    Default
+    WrongHierarchy,
+    Default,
 }
 
 impl std::convert::From<crate::execute::Error> for RebaseError {
@@ -511,13 +512,13 @@ fn rebase_segment_finish<'repo>(
     force_head_to(repository, segment.name(), new_head);
 }
 
-pub fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'repo>)
+pub fn check_segment(repository: &Repository, segment: &Segment<'_>) -> Result<(), RebaseError>
 {
     // no merge commits
     if ! is_linear_ancestor(repository,
                             segment.start(),
-                            segment.reference.borrow().target().unwrap()) {
-        panic!("segment {} in mess", segment.name());
+                            segment.reference.borrow().target().unwrap())? {
+        return Err(RebaseError::WrongHierarchy);
     }
 
     // no segments inside. lenght limited....
@@ -531,6 +532,7 @@ pub fn check_segment<'repo>(repository: &'repo Repository, segment: &Segment<'re
     // descendant of start.
 
     // start.is_ancestor(reference);
+    Ok(())
 }
 
 pub fn check_sum<'repo>(
