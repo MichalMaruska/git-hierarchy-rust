@@ -303,7 +303,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 }
 
 // The old, using git(1)
-fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseResult {
+fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<RebaseResult, RebaseError> {
     if !git_run(repository, &["cherry-pick", "--continue"]).is_ok_and(|x| x.success()) {
         info!("Good?")
         // panic!("cherry-pick failed");
@@ -324,13 +324,13 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> RebaseRe
                     .get(),
             );
             cleanup_segment_rebase(repository, &segment, tmp_head);
-            RebaseResult::Done
+            Ok(RebaseResult::Done)
         } else {
             // mismatch
             panic!();
         }
     } else {
-        RebaseResult::Nothing
+        Ok(RebaseResult::Nothing)
     }
 }
 
@@ -382,7 +382,7 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
 // Continue after an issue:
 // either cherry-pick conflicts resolved by the user, or
 // he left mess, and ....on detached head. Unlike other tools.
-pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
+pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, RebaseError> {
     let path = marker_filename(repository);
 
     // todo: maybe this before calling this function?
@@ -450,7 +450,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> RebaseResult {
             .find_branch(TEMP_HEAD_NAME, BranchType::Local)
             .unwrap();
         cleanup_segment_rebase(repository, &segment, tmp_head);
-        RebaseResult::Done
+        Ok(RebaseResult::Done)
     } else {
         panic!("segment not found");
     }

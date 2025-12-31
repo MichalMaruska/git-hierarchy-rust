@@ -484,7 +484,7 @@ fn main() {
     // if file exists -> cli.cont
 
     if cli.cont {
-        rebase_segment_continue(&repository);
+        rebase_segment_continue(&repository).unwrap();
     }
 
     // todo: I must rewrite ignore to full ref names!
