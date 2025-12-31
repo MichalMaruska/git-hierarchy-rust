@@ -397,7 +397,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
     // todo: maybe this before calling this function?
     if ! fs::exists(&path).unwrap() {
         error!("marker file does not exist -- no segment is being rebased.");
-        exit(1);
+        return Err(RebaseError::WrongState);
     }
 
     // load persistent state:
@@ -461,7 +461,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         cleanup_segment_rebase(repository, &segment, tmp_head);
         Ok(RebaseResult::Done)
     } else {
-        panic!("segment not found");
+        Err(RebaseError::WrongHierarchy)
     }
 }
 
