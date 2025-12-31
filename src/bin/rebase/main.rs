@@ -383,7 +383,7 @@ fn check_node<'repo>(
             check_segment(repo, segment)?;
         }
         GitHierarchy::Sum(sum) => {
-            check_sum(repo, sum, object_map);
+            check_sum(repo, sum, object_map)?;
         }
     }
 
