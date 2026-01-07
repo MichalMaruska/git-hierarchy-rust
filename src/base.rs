@@ -46,8 +46,8 @@ pub fn is_linear_ancestor(repository: &Repository, ancestor: Oid, descendant: Oi
 
     for oid in walk {
         if repository.find_commit(oid.unwrap())?.parent_count() > 1 {
-            return Ok(false)
-            // panic!("a merge found");
+            warn!("is_linear_ancestor: merge commit found");
+            return Ok(false);
         }
     }
     Ok(true)
