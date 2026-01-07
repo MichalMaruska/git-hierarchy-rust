@@ -56,12 +56,18 @@ where
 }
 
 pub fn init_tracing(verbose: u8) {
-    if verbose > 0 {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
-            .init();
     } else {
-        tracing_subscriber::fmt::init();
+        if verbose > 1 {
+            tracing_subscriber::fmt()
+                .with_max_level(tracing::Level::DEBUG)
+                .init();
+        } else if verbose == 1 {
+            tracing_subscriber::fmt()
+                .with_max_level(tracing::Level::INFO)
+                .init();
+        } else {
+            tracing_subscriber::fmt::init();
+        }
     }
 }
 
