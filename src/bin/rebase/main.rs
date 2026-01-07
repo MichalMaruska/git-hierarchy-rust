@@ -20,7 +20,7 @@ use tracing::{span, Level, debug, info, warn,error};
 use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref, force_head_to,};
 use ::git_hierarchy::execute::git_run;
 use ::git_hierarchy::utils::{
-    divide_str, extract_name, find_non_matching_elements, init_tracing,
+    divide_str, extract_name, iterator_symmetric_difference, init_tracing,
 };
 use ::git_hierarchy::rebase::{check_segment, check_sum,
                               rebase_segment,rebase_segment_continue,
@@ -111,19 +111,47 @@ fn remerge_sum<'repo>(
         debug!("  {}", c);
     }
 
-    let v = find_non_matching_elements(
-        // iter2 - hash(iter1)
-        graphed_summands.iter(), // these are &GitHierarchy
-        sum.parent_commits(),
-        // we get reference.
-        // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
-        |gh| {
+    // todo: apply the function HERE lazily!
+
+    // P & C ->  P xor C  // or C - f(P)  ?
+/*
+    let v =
+        if false {
+            find_non_matching_elements(
+                // iter2 - hash(iter1)
+                graphed_summands.iter(), // these are &GitHierarchy
+                parent_commits,
+                // we get reference.
+                // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
+                |gh| {
+                    debug!("mapping {:?} to {:?}", gh.node_identity(),
+                           gh.commit().unwrap().id());
+                    // fixme!
+                    gh.commit().unwrap().id()
+                }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
+            )
+        } else {
+            iterator_difference(
+                graphed_summands.iter().map(|gh| {
+                    debug!("mapping {:?} to {:?}", gh.node_identity(),
+                           gh.commit().unwrap().id());
+                    // fixme!
+                    gh.commit().unwrap().id()
+                }),
+                // minus:
+                parent_commits
+            )
+        };
+*/
+
+    let (u,v) = iterator_symmetric_difference(
+        graphed_summands.iter().map(|gh| {
             debug!("mapping {:?} to {:?}", gh.node_identity(),
                    gh.commit().unwrap().id());
-            // fixme!
             gh.commit().unwrap().id()
-        }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
-    );
+        }),
+        parent_commits);
+
 
     if v.is_empty() {
         debug!("sum is update: summands & parent commits align");
