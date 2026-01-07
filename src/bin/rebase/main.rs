@@ -122,7 +122,7 @@ fn remerge_sum<'repo>(
 
 
     if v.is_empty() {
-        debug!("sum is update: summands & parent commits align");
+        info!("sum is update: summands & parent commits align");
     } else {
         info!("so the sum is not up-to-date!");
 
@@ -400,9 +400,10 @@ fn rebase_tree(repository: &Repository,
     let hierarchy_graph = find_hierarchy(repository, root);
 
     // verify we can do it:
+    debug!("Verify");
     for v in &hierarchy_graph.discovery_order {
         let name = hierarchy_graph.labeled_objects.get(v).unwrap().node_identity();
-        println!(
+        debug!(
             "{:?} {:?} {:?}",
             v,
             name,
@@ -411,7 +412,7 @@ fn rebase_tree(repository: &Repository,
                 .unwrap()
         );
         if ignore.iter().any(|x| x == name) {
-            eprintln!("found to be ignored {name}");
+            info!("found to be ignored {name}");
             continue;
         }
         let vertex = hierarchy_graph.labeled_objects.get(v).unwrap();
@@ -423,11 +424,11 @@ fn rebase_tree(repository: &Repository,
         let name = hierarchy_graph.labeled_objects.get(&v).unwrap().node_identity();
 
         if skip.iter().any(|x| x == name) {
-            eprintln!("Skipping: {name}");
+            info!("Skipping: {name}");
             continue;
         }
 
-        eprintln!(
+        debug!(
             "{:?} {:?} {:?}",
             v,
             hierarchy_graph.labeled_objects.get(&v).unwrap().node_identity(),
@@ -438,6 +439,7 @@ fn rebase_tree(repository: &Repository,
         let vertex = hierarchy_graph.labeled_objects.get(&v).unwrap();
         rebase_node(repository, vertex, fetch, &hierarchy_graph.labeled_objects);
     }
+    debug!("done");
 }
 
 #[derive(Parser, Debug)]
@@ -481,10 +483,9 @@ fn main() {
         .unwrap_or_else(|| repository.head().unwrap().name().unwrap().to_owned());
 
     let root = GitHierarchy::Name(root); // not load?
-    println!("root is {}", root.node_identity());
 
-    // if file exists -> cli.cont
-
+    debug!("root is {}", root.node_identity());
+    // todo: if file exists -> cli.cont
     if cli.cont {
         rebase_segment_continue(&repository).unwrap();
     }
