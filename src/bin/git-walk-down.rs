@@ -83,7 +83,8 @@ fn process_node<'repo>(
         GitHierarchy::Sum(sum) => {
             let summands = sum.summands(repository);
 
-            println!("a sum of: ");
+            // todo: colors!
+            println!("sum {} of: ", sum.name());
             for s in &summands {
                 println!("  {}", s.name().unwrap());
             }
