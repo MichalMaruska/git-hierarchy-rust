@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::hash::Hash;
-use tracing_subscriber;
+use tracing_subscriber::{FmtSubscriber,self};
 
 pub fn concatenate(prefix: &str, suffix: &str) -> String {
     let mut s = String::from(prefix);
@@ -56,6 +56,10 @@ where
 }
 
 pub fn init_tracing(verbose: u8) {
+    if let Ok(rust_log) = std::env::var("RUST_LOG") {
+        tracing::subscriber::set_global_default(
+            FmtSubscriber::builder().with_env_filter(rust_log).finish(),
+        ).expect("tracing setup failed");
     } else {
         if verbose > 1 {
             tracing_subscriber::fmt()
