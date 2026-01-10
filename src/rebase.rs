@@ -10,9 +10,11 @@ use git2::{Branch, BranchType, Error, Commit,
            build::CheckoutBuilder,
 };
 
+use crate::utils::{iterator_symmetric_difference};
 
 #[allow(unused)]
 use crate::git_hierarchy::{GitHierarchy, Segment, Sum, load};
+use crate::graph::discover::NodeExpander;
 
 use crate::execute::git_run;
 use crate::base::{checkout_new_head_at,
@@ -539,9 +541,9 @@ pub fn check_segment(repository: &Repository, segment: &Segment<'_>) -> Result<(
 }
 
 pub fn check_sum<'repo>(
-    _repository: &'repo Repository,
+    repository: &'repo Repository,
     sum: &Sum<'repo>,
-    _object_map: &HashMap<String, GitHierarchy<'repo>>,
+    object_map: &HashMap<String, GitHierarchy<'repo>>,
 ) -> Result<(), RebaseError> {
     let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
 
@@ -554,7 +556,52 @@ pub fn check_sum<'repo>(
     };
 
     // each of the summands has relationship to a parent commit.
-    // divide
+    let summands = sum.summands(repository);
+    /* assumption:
+    sum has its summands   base/1 ... base/N
+    these might resolve to References. -- how is that different from Branch?
+
+    During the rebasing we change ... Branches (References), and update them in the `object_map'
+    so we .... prefer to look up there.
+     */
+
+    // find the representation which we already have and keep updating.
+
+    // Map through object_map to the Nodes:
+    let graphed_summands: Vec<&GitHierarchy<'_>> = summands
+        .iter()
+        .map(
+            |s| {
+                let gh = object_map.get(s.name().unwrap()).unwrap();
+                debug!(
+                    "convert {:?} to {:?}",
+                    s.name().unwrap(),
+                    gh.node_identity()
+                );
+                gh
+            })
+        .collect();
+
+    let parent_commits = sum.parent_commits();
+
+    debug!("The current parent commits are: {:?}", parent_commits);
+    for c in sum.parent_commits() {
+        debug!("  {}", c);
+    }
+
+    let (u,v) = iterator_symmetric_difference(
+        graphed_summands.iter().map(|gh| {
+            debug!("mapping {:?} to {:?}", gh.node_identity(),
+                   gh.commit().unwrap().id());
+            gh.commit().unwrap().id()
+        }),
+        parent_commits);
+
+
+    if u.is_empty() && v.is_empty() {
+        warn!("sum {} is not well-positioned", sum.name());
+        return Err(RebaseError::WrongHierarchy(sum.name().to_owned()));
+    }
     /*
     (mapped, rest_summands, left_overs_parent_commits) = distribute(sum);
     // either it went ahead ....or? what if it's rebased?
