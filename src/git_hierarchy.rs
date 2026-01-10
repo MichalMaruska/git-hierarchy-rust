@@ -372,7 +372,7 @@ pub fn load<'repo>(
 
     if let Ok(base) = repository.find_reference(base_name(name).as_str()) {
         if let Ok(start) = repository.find_reference(start_name(name).as_str()) {
-            info!("segment found {}", name);
+            info!("segment detect {}", name);
             return Ok(GitHierarchy::Segment(Segment::new(reference, base, start)));
         } else {
             return Err(git2::Error::from_str("start not found"));
@@ -381,7 +381,7 @@ pub fn load<'repo>(
 
     let summands = sum_summands(repository, name);
     if !summands.is_empty() {
-        info!("a sum detected {}", name);
+        info!("sum detected {}", name);
         return Ok(GitHierarchy::Sum(Sum::new(reference, summands)))
     };
 
