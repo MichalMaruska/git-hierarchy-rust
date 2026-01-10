@@ -54,6 +54,7 @@ tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 petgraph = "0.8.3"
 # discover-graph = {path = "../discover-graph/"}
 discover-graph = {path = "submodules/discover-graph/"}
+colored = "3.0.0"
 
 # This tells Cargo to use a local version of `some-crate`
 # instead of the one from crates.io.
