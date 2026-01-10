@@ -22,7 +22,7 @@ use ::git_hierarchy::graph::discover::NodeExpander;
 use ::git_hierarchy::graph::discover_pet::find_hierarchy;
 
 #[allow(unused)]
-use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
+use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load, segment_fmt, sum_fmt};
 
 #[allow(unused)]
 use tracing::{debug, info};
@@ -73,7 +73,7 @@ fn process_node<'repo>(
                 };
             println!(
                 "segment {}: {:?} on {:?}",
-                segment.name(),
+                segment_fmt(segment.name()),
                 base.name().unwrap(),
                 state // base.peel_to_commit().unwrap().id(),
             );
@@ -84,7 +84,7 @@ fn process_node<'repo>(
             let summands = sum.summands(repository);
 
             // todo: colors!
-            println!("sum {} of: ", sum.name());
+            println!("sum {} of: ", sum_fmt(sum.name()));
             for s in &summands {
                 println!("  {}", s.name().unwrap());
             }

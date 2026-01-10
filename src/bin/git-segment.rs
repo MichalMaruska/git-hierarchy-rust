@@ -3,7 +3,9 @@ use clap::{Parser,Subcommand,CommandFactory,FromArgMatches};
 use git2::{Repository,Oid}; // ,build::CheckoutBuilder
 
 #[allow(unused_imports)]
-use git_hierarchy::git_hierarchy::{GitHierarchy,Segment,segments,load};
+use git_hierarchy::git_hierarchy::{GitHierarchy,Segment,segments,load,
+                                   segment_fmt,
+};
 
 use tracing::debug;
 
@@ -176,7 +178,7 @@ fn delete(repository: &Repository, args: &DeleteCmd) {
 
 // see list_segment in git-walk-down.rs
 fn describe(repository: &Repository, segment_name: &str) {
-    println!("Segment {} in {:?}", segment_name, repository.path());
+    println!("Segment {} in {:?}", segment_fmt(segment_name), repository.path());
 
     let gh = git_hierarchy::git_hierarchy::load(repository, segment_name).unwrap();
     if let GitHierarchy::Segment(segment) = gh {
@@ -199,7 +201,7 @@ fn list_segments(repository: &Repository) {
     let ref_iterator = segments(repository);
 
     for r in ref_iterator {
-        println!("{}", r);
+        println!("{}", segment_fmt(&r));
     }
 }
 

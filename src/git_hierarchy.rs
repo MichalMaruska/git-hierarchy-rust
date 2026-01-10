@@ -3,6 +3,7 @@
 
 #[allow(unused)]
 use tracing::{debug, info, warn};
+use colored::Colorize;
 
 use crate::base::{GIT_HEADS_PATTERN, git_same_ref};
 
@@ -20,6 +21,20 @@ const SEGMENT_BASE_PATTERN: &str = "refs/base/";
 const SEGMENT_START_PATTERN: &str = "refs/start/";
 const SUM_SUMMAND_PATTERN: &str = "refs/sums/";
 const SEPARATOR : &str = "/";
+
+#[inline]
+// can we return Cow<&str, String> ?
+pub fn segment_fmt(s: &str) -> colored::ColoredString //  maybe a method?
+{
+    s.red().bold().underline()
+}
+
+#[inline]
+pub fn sum_fmt(s: &str) -> colored::ColoredString //  maybe a method?
+{
+    s.yellow().bold().italic()
+}
+
 
 fn base_name(name: &str) -> String {
     concatenate(SEGMENT_BASE_PATTERN, name)
