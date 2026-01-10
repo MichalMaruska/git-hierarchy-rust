@@ -396,7 +396,7 @@ fn rebase_tree(repository: &Repository,
                fetch: bool,
                ignore: &[String],
                skip: &[String]
-) {
+) -> Result<(), RebaseError> {
     let hierarchy_graph = find_hierarchy(repository, root);
 
     // verify we can do it:
@@ -416,8 +416,8 @@ fn rebase_tree(repository: &Repository,
             continue;
         }
         let vertex = hierarchy_graph.labeled_objects.get(v).unwrap();
-        check_node(repository, vertex, &hierarchy_graph.labeled_objects)
-            .expect("nodes should be in correct state");
+        check_node(repository, vertex, &hierarchy_graph.labeled_objects)?
+            // with context .expect("nodes should be in correct state");
     }
 
     for v in &hierarchy_graph.discovery_order {
@@ -441,6 +441,7 @@ fn rebase_tree(repository: &Repository,
         rebase_node(repository, vertex, fetch, &hierarchy_graph.labeled_objects);
     }
     debug!("done");
+    Ok(())
 }
 
 #[derive(Parser, Debug)]
@@ -502,5 +503,5 @@ fn main() {
 
     rebase_tree(&repository, root.node_identity().to_owned(), !cli.no_fetch,
                 &cli.ignore,
-                &cli.skip);
+                &cli.skip).expect("failed");
 }
