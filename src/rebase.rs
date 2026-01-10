@@ -39,7 +39,7 @@ pub enum RebaseResult {
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum RebaseError {
-    WrongHierarchy,
+    WrongHierarchy(String),
     WrongState,
     Default,
 }
@@ -360,7 +360,7 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
     let mut peek = iter.peekable();
     if peek.peek().is_none() {
         debug!("Couldn't find the commmit on the segment");
-        return Err(RebaseError::WrongHierarchy);
+        return Err(RebaseError::WrongHierarchy(segment.name().to_owned()));
     }
 
     // todo: check the index
@@ -461,7 +461,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         cleanup_segment_rebase(repository, &segment, tmp_head);
         Ok(RebaseResult::Done)
     } else {
-        Err(RebaseError::WrongHierarchy)
+        Err(RebaseError::WrongHierarchy(segment_name.to_owned()))
     }
 }
 
@@ -520,7 +520,8 @@ pub fn check_segment(repository: &Repository, segment: &Segment<'_>) -> Result<(
     if ! is_linear_ancestor(repository,
                             segment.start(),
                             segment.reference.borrow().target().unwrap())? {
-        return Err(RebaseError::WrongHierarchy);
+        warn!("check_segment failed for {}", segment.name());
+        return Err(RebaseError::WrongHierarchy(segment.name().to_owned()));
     }
 
     // no segments inside. lenght limited....
@@ -548,8 +549,8 @@ pub fn check_sum<'repo>(
     // !i>2 in Rust  means ~i>2 in C
     // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
     if count <= 1 {
-        debug!("not a merge: {}, only {} parent commits", sum.name(), count);
-        return Err(RebaseError::WrongHierarchy);
+        warn!("not a merge: {}, only {} parent commits", sum.name(), count);
+        return Err(RebaseError::WrongHierarchy(sum.name().to_owned()));
     };
 
     // each of the summands has relationship to a parent commit.
