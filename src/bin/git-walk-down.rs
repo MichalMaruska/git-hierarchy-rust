@@ -299,11 +299,12 @@ fn main() {
     let repository = open_repository(cli.directory.as_ref()).unwrap();
     if !cli.replace.is_empty() {
         if cli.replace.len() != 2 {
-            panic!("--rename takes 2 parameters");
+            panic!("--replace takes 2 parameters");
         }
         // also, in this case I don't start *implicitly* by HEAD.
         if cli.root_reference.is_none() {
-            panic!("when --rename is used, the top must be stated")
+            eprintln!("when --replace is used, the top must be stated ... {}", current_branch(&repository));
+            std::process::exit(1);
         }
     }
 
