@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 use tracing_subscriber::{FmtSubscriber,self};
+use std::borrow::Borrow;
 
 pub fn concatenate(prefix: &str, suffix: &str) -> String {
     let mut s = String::from(prefix);
@@ -54,6 +55,48 @@ where
         )
         .collect()
 }
+
+// Return: iter2 - hash(iter1)
+pub fn iterator_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> Vec<U>
+where
+    T: Hash + Eq,
+    U: Borrow<T> + Clone,
+    I1: IntoIterator<Item = T>,
+    I2: IntoIterator<Item = U>,
+{
+    let hashed_set: HashSet<T> = iter1.into_iter().collect();
+
+    iter2.into_iter()
+        .filter(|item|
+                hashed_set.contains(item.borrow()))
+        .collect()
+    // todo: return an iterator?
+}
+
+
+pub fn iterator_symmetric_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> (Vec<T>, Vec<U>)
+where
+    T: Hash + Eq,
+    U: Borrow<T> + Clone,
+    I1: IntoIterator<Item = T>,
+    I2: IntoIterator<Item = U>,
+{
+    let mut hashed_set: HashSet<T> = iter1.into_iter().collect();
+    let mut not_found = Vec::<U>::new();
+
+    iter2.into_iter()
+        .for_each(|item|
+                  if hashed_set.contains(item.borrow()) {
+                      hashed_set.remove(item.borrow());
+                  } else {
+                      not_found.push(item);
+                  }
+        );
+    return(
+        hashed_set.drain().collect(),
+        not_found)
+}
+
 
 pub fn init_tracing(verbose: u8) {
     if let Ok(rust_log) = std::env::var("RUST_LOG") {
