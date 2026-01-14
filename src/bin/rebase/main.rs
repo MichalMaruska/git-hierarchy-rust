@@ -111,40 +111,7 @@ fn remerge_sum<'repo>(
         debug!("  {}", c);
     }
 
-    // todo: apply the function HERE lazily!
-
-    // P & C ->  P xor C  // or C - f(P)  ?
-/*
-    let v =
-        if false {
-            find_non_matching_elements(
-                // iter2 - hash(iter1)
-                graphed_summands.iter(), // these are &GitHierarchy
-                parent_commits,
-                // we get reference.
-                // sum.reference.peel_to_commit().unwrap().parent_ids().into_iter(),
-                |gh| {
-                    debug!("mapping {:?} to {:?}", gh.node_identity(),
-                           gh.commit().unwrap().id());
-                    // fixme!
-                    gh.commit().unwrap().id()
-                }, // I get:  ^^^^^^^^^^^ expected `Oid`, found `Commit<'_>`
-            )
-        } else {
-            iterator_difference(
-                graphed_summands.iter().map(|gh| {
-                    debug!("mapping {:?} to {:?}", gh.node_identity(),
-                           gh.commit().unwrap().id());
-                    // fixme!
-                    gh.commit().unwrap().id()
-                }),
-                // minus:
-                parent_commits
-            )
-        };
-*/
-
-    let (u,v) = iterator_symmetric_difference(
+    let (_u,v) = iterator_symmetric_difference(
         graphed_summands.iter().map(|gh| {
             debug!("mapping {:?} to {:?}", gh.node_identity(),
                    gh.commit().unwrap().id());
