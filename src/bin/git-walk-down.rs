@@ -93,7 +93,7 @@ fn process_node<'repo>(
     }
 }
 
-fn rename_nodes<'repo>(
+fn replace_nodes<'repo>(
     repository: &'repo Repository,
     node: &GitHierarchy<'repo>,
     _object_map: &HashMap<String, GitHierarchy<'repo>>,
@@ -273,7 +273,7 @@ struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
     #[arg(long, short = 'r', num_args(2))]
-    rename: Vec<String>,
+    replace: Vec<String>,
 
     // prefix or suffix?
     #[arg(long, short = 'c')]
@@ -285,8 +285,8 @@ fn main() {
 
     init_tracing(cli.verbose);
 
-    if !cli.rename.is_empty() {
-        if cli.rename.len() != 2 {
+    if !cli.replace.is_empty() {
+        if cli.replace.len() != 2 {
             panic!("--rename takes 2 parameters");
         }
         // also, in this case I don't start *implicitly* by HEAD.
@@ -326,17 +326,17 @@ fn main() {
                   });
     }
     // and possibly *then* rename?
-    if !cli.rename.is_empty() {
-        info!("Renaming");
+    if !cli.replace.is_empty() {
+        info!("Replacing");
         // resolve them...
         let mut remapped = HashMap::new();
 
-        let from = repository.resolve_reference_from_short_name(&cli.rename[0]).unwrap();
-        let target = repository.resolve_reference_from_short_name(&cli.rename[1]).unwrap();
+        let from = repository.resolve_reference_from_short_name(&cli.replace[0]).unwrap();
+        let target = repository.resolve_reference_from_short_name(&cli.replace[1]).unwrap();
         register_for_replacement(&mut remapped, &from, &target);
         // move object_map ?
         walk_down(&repository, &root, |repository, node, object_map| {
-            rename_nodes(repository, node, object_map, &mut remapped)
+            replace_nodes(repository, node, object_map, &mut remapped)
         });
     } else {
         walk_down(&repository, &root, process_node);
