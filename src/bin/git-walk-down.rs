@@ -296,6 +296,7 @@ fn main() {
 
     init_tracing(cli.verbose);
 
+    let repository = open_repository(cli.directory.as_ref()).unwrap();
     if !cli.replace.is_empty() {
         if cli.replace.len() != 2 {
             panic!("--rename takes 2 parameters");
@@ -305,11 +306,6 @@ fn main() {
             panic!("when --rename is used, the top must be stated")
         }
     }
-
-    let repository = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
-        Ok(repo) => repo,
-        Err(e) => panic!("failed to open: {}", e),
-    };
 
     let root = cli
         .root_reference
