@@ -1,5 +1,3 @@
-// walk the hierarchy
-// - visit & display a list of segments/sums.
 //
 // - clone
 // - replaceInHierarchy ...the base from->to, mapping
@@ -264,8 +262,10 @@ where
     }
 }
 
+/// walk the hierarchy
+/// - visit & display a list of segments/sums.
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version)]
 struct Cli {
     #[arg(long, short='g')]
     directory: Option<PathBuf>,
