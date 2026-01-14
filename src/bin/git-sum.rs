@@ -5,7 +5,7 @@ use git2::{Repository,Reference,Oid};
 // use git2::Branch;
 
 #[allow(unused_imports)]
-use git_hierarchy::git_hierarchy::{GitHierarchy,Sum,load,sums};
+use git_hierarchy::git_hierarchy::{GitHierarchy,Sum,load,sums, sum_fmt};
 
 
 #[allow(unused)]
@@ -202,7 +202,7 @@ fn list_sums(repository: &Repository) {
 }
 
 fn describe_sum<'repo>(repository: &'repo Repository, sum: &git_hierarchy::git_hierarchy::Sum<'repo>) {
-    println!("sum {}", sum.name());
+    println!("sum {}", sum_fmt(sum.name()));
     let summands = sum.summands(repository);
     for s in &summands {
         println!("\t {}", s.name().unwrap());
