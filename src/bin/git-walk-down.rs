@@ -43,18 +43,16 @@ fn list_segment_commits<'repo>(repository: &'repo Repository, segment: &Segment<
     println!();
 }
 
-fn process_node<'repo>(
+
+fn describe_node<'repo>(
     repository: &'repo Repository,
     node: &GitHierarchy<'repo>,
-    _object_map: &HashMap<String, GitHierarchy<'repo>>, // _remapped : HashMap<String, String>,
+    _object_map: &HashMap<String, GitHierarchy<'repo>>,
+    // _remapped : HashMap<String, String>,
+    brief: bool,
 ) {
-    debug!(
-        "{:?}",
-        // object_map.get(&v).unwrap()
-        node.node_identity(),
-        // object_map
-        // graph.node_weight(hash_to_graph.get(node).unwrap().clone()).unwrap()
-    );
+    debug!("describe_node: {:?}", node.node_identity());
+    // let = false;
 
     match node {
         GitHierarchy::Name(_n) => {
@@ -65,8 +63,6 @@ fn process_node<'repo>(
         }
         GitHierarchy::Segment(segment) => {
             let base = segment.base(repository);
-            // let start = &segment._start;
-            // start == base.peel_to_commit().unwrap())
 
             let state : colored::ColoredString =
                 if segment.uptodate(repository) {
@@ -82,15 +78,18 @@ fn process_node<'repo>(
                 state
             );
 
-            list_segment_commits(repository, segment);
+            if !brief {
+                list_segment_commits(repository, segment);
+            }
         }
         GitHierarchy::Sum(sum) => {
             let summands = sum.summands(repository);
 
-            // todo: colors!
             println!("sum {} of: ", sum_fmt(sum.name()));
-            for s in &summands {
-                println!("  {}", s.name().unwrap());
+            if !brief {
+                for s in &summands {
+                    println!("  {}", s.name().unwrap());
+                }
             }
         }
     }
@@ -275,6 +274,9 @@ struct Cli {
 
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+    #[arg(short='s')]
+    short: bool,
+
     #[arg(long, short = 'r', num_args(2))]
     replace: Vec<String>,
 
@@ -351,6 +353,8 @@ fn main() {
             replace_nodes(repository, node, object_map, &mut remapped)
         });
     } else {
-        walk_down(&repository, &root, process_node);
+        walk_down(&repository, &root,
+                  |repository, node, _object_map|
+                  describe_node(repository, node, _object_map, cli.short));
     }
 }
