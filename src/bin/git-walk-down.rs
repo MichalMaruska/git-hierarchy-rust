@@ -1,6 +1,6 @@
 // walk the hierarchy
-// - assemble list of segments/sums.
-// todo:
+// - visit & display a list of segments/sums.
+//
 // - clone
 // - replaceInHierarchy ...the base from->to, mapping
 
