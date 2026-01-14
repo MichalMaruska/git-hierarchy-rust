@@ -29,6 +29,12 @@ pub fn segment_fmt(s: &str) -> colored::ColoredString //  maybe a method?
     s.red().bold().underline()
 }
 
+pub fn plain_ref_fmt(s: &str) -> colored::ColoredString //  maybe a method?
+{
+    s.green().bold().underline()
+}
+
+
 #[inline]
 pub fn sum_fmt(s: &str) -> colored::ColoredString //  maybe a method?
 {
