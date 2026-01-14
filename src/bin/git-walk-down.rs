@@ -280,6 +280,17 @@ struct Cli {
     clone: Option<String>,
 }
 
+fn current_branch(repository: &'_ Repository) -> String {
+    let head = repository.head().unwrap().name().unwrap().to_owned();
+    // let head = repo.head().unwrap().name().unwrap();
+    //                       ^^^
+    // creates a temporary value which is freed while still in use
+    // what? that is no more temporary?
+    // let head = repo.head().unwrap();
+    // let head = head.name().unwrap().to_owned();
+    head.to_owned()
+}
+
 fn main() {
     let cli = Cli::parse();
 
