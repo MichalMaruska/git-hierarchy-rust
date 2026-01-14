@@ -25,7 +25,8 @@ use ::git_hierarchy::graph::discover::NodeExpander;
 use ::git_hierarchy::graph::discover_pet::find_hierarchy;
 
 #[allow(unused)]
-use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load, segment_fmt, sum_fmt};
+use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load,
+                                     segment_fmt, sum_fmt, plain_ref_fmt};
 
 #[allow(unused)]
 use tracing::{debug, info};
@@ -60,7 +61,7 @@ fn process_node<'repo>(
             panic!();
         }
         GitHierarchy::Reference(r) => {
-            println!("a ref {}", r.name().unwrap());
+            println!("a ref {}", plain_ref_fmt(r.name().unwrap()));
         }
         GitHierarchy::Segment(segment) => {
             let base = segment.base(repository);
