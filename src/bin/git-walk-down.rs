@@ -285,15 +285,23 @@ struct Cli {
     clone: Option<String>,
 }
 
-fn current_branch(repository: &'_ Repository) -> String {
-    let head = repository.head().unwrap().name().unwrap().to_owned();
-    // let head = repo.head().unwrap().name().unwrap();
-    //                       ^^^
-    // creates a temporary value which is freed while still in use
-    // what? that is no more temporary?
-    // let head = repo.head().unwrap();
-    // let head = head.name().unwrap().to_owned();
-    head.to_owned()
+// detached head? -> None
+fn current_branch(repository: &'_ Repository) -> Option<String> {
+    let head = repository.head().unwrap();
+
+    if head.is_branch() {
+        let head = head.name().unwrap().to_owned();
+
+        // let head = repo.head().unwrap().name().unwrap();
+        //                       ^^^
+        // creates a temporary value which is freed while still in use
+        // what? that is no more temporary?
+        // let head = repo.head().unwrap();
+        // let head = head.name().unwrap().to_owned();
+        Some(head.to_owned())
+    } else {
+        None
+    }
 }
 
 fn main() {
@@ -308,7 +316,7 @@ fn main() {
         }
         // also, in this case I don't start *implicitly* by HEAD.
         if cli.root_reference.is_none() {
-            eprintln!("when --replace is used, the top must be stated ... {}", current_branch(&repository));
+            eprintln!("when --replace is used, the top must be stated ... {}", current_branch(&repository).unwrap());
             std::process::exit(1);
         }
     }
@@ -316,7 +324,7 @@ fn main() {
     let root = cli
         .root_reference
         .unwrap_or_else(|| {
-            let head = current_branch(&repository);
+            let head = current_branch(&repository).expect("wrong state");
             info!("Start from the HEAD = {}", head);
             head
         });
