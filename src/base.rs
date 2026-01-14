@@ -9,6 +9,7 @@ use git2::{Branch, Commit, Oid,
            StatusShow,StatusOptions, Statuses,};
 #[allow(unused)]
 use tracing::{debug, info, warn};
+use std::path::PathBuf;
 
 // this consults the store.
 pub fn git_same_ref(
@@ -138,4 +139,7 @@ pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'
     // and `checkout'! Why?
     let full_name = concatenate(GIT_HEADS_PATTERN, name);
     repository.set_head(&full_name).expect("failed to checkout");
+}
+pub fn open_repository(directory_option: Option<&PathBuf>) -> Result<Repository, Error> {
+    Repository::open(directory_option.unwrap_or(&std::env::current_dir().expect("failed to get cwd")))
 }

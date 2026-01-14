@@ -10,7 +10,8 @@ use git2::{Repository,Reference};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use ::git_hierarchy::utils::{init_tracing,concatenate};
+use git_hierarchy::utils::{init_tracing,concatenate};
+use git_hierarchy::base::{open_repository};
 /*
  note: ambiguous because of a conflict between a name from a glob
        import and an outer scope during import or macro resolution
