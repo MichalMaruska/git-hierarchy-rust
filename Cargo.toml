@@ -58,6 +58,6 @@ colored = "3.0.0"
 
 # This tells Cargo to use a local version of `some-crate`
 # instead of the one from crates.io.
-[patch.crates-io]
-clap =  { path = "/home/michal/git/clap/", features = ["derive"] }
+# [patch.crates-io]
+# clap =  { path = "/home/michal/git/clap/", features = ["derive"] }
 
