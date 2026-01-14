@@ -319,15 +319,21 @@ fn main() {
     info!("Start from the HEAD = {}", &root);
 
     // clone.
-    if cli.clone.is_some() {
+
+    // is_some()
+    // map, inspect, and_then
+    cli.clone.inspect( |clone| {
         let mut remapped = HashMap::new();
-        let suffix = cli.clone.unwrap();
+        let suffix = clone;
+        info!("cloning");
+        // todo: drop suffix, add a new one.
         walk_down(&repository, &root,
                   |repository, node, object_map| {
                       clone_node(repository, node, object_map, &mut remapped,
                                  &suffix)
                   });
-    }
+    });
+
     // and possibly *then* rename?
     if !cli.replace.is_empty() {
         info!("Replacing");
