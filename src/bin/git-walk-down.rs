@@ -7,6 +7,8 @@
 use clap::Parser;
 use git2::{Repository,Reference};
 
+use colored::Colorize;
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -65,18 +67,18 @@ fn process_node<'repo>(
             // let start = &segment._start;
             // start == base.peel_to_commit().unwrap())
 
-            // target
-            let state =
+            let state : colored::ColoredString =
                 if segment.uptodate(repository) {
-                    "up-to-date"
+                    "up-to-date".normal()
+                    // how did I get this? use Trait and get the str type extended?
                 } else {
-                    "need-rebase"
+                    "need-rebase".bright_red().on_white()
                 };
             println!(
-                "segment {}: {:?} on {:?}",
+                "segment {}: on {}\t{}",
                 segment_fmt(segment.name()),
                 base.name().unwrap(),
-                state // base.peel_to_commit().unwrap().id(),
+                state
             );
 
             list_segment_commits(repository, segment);
