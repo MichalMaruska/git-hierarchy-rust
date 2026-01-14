@@ -105,8 +105,9 @@ fn remerge_sum<'repo>(
             })
         .collect();
 
-    // convert to the nodes?
-    debug!("The current parent commits are: {:?}", sum.parent_commits());
+    let parent_commits = sum.parent_commits();
+
+    debug!("The current parent commits are: {:?}", parent_commits);
     for c in sum.parent_commits() {
         debug!("  {}", c);
     }
