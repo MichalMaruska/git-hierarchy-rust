@@ -310,14 +310,9 @@ fn main() {
     let root = cli
         .root_reference
         .unwrap_or_else(|| {
-            let head = repository.head().unwrap().name().unwrap().to_owned();
-            // let head = repo.head().unwrap().name().unwrap();
-            //                       ^^^
-            // creates a temporary value which is freed while still in use
-            // what? that is no more temporary?
-            // let head = repo.head().unwrap();
-            // let head = head.name().unwrap().to_owned();
-            head.to_owned()
+            let head = current_branch(&repository);
+            info!("Start from the HEAD = {}", head);
+            head
         });
 
     info!("Start from the HEAD = {}", &root);
