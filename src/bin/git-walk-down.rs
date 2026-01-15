@@ -284,9 +284,9 @@ struct Cli {
     #[arg(long, short = 'r', num_args(2))]
     replace: Vec<String>,
 
-    // prefix or suffix?
-    #[arg(long, short = 'c')]
-    clone: Option<String>,
+    // suffix, or  suffix-remove, suffix-add
+    #[arg(long, short = 'c', num_args(1..3))]
+    clone: Vec<String>,
 }
 
 // detached head? -> None
@@ -333,20 +333,32 @@ fn main() {
     info!("Start from the HEAD = {}", &root);
 
     // clone.
+    if !cli.clone.is_empty() {
 
-    // is_some()
-    // map, inspect, and_then
-    cli.clone.inspect( |clone| {
         let mut remapped = HashMap::new();
-        let suffix = clone;
-        info!("cloning");
+        info!("cloning {:?}", cli.clone);
         // todo: drop suffix, add a new one.
+        // fn(&str)->String =
+        let new_name : Box<dyn Fn(&str) -> String> =
+            if cli.clone.len() == 1 {
+                debug!("Will only append suffix {}", cli.clone[0]);
+                Box::new(
+                    move |x : &str|
+                    concatenate(x, &cli.clone[0]))
+            } else {
+                Box::new(
+                move |x : &str|
+                concatenate(
+                    x.strip_suffix(&cli.clone[0]).unwrap(),
+                    &cli.clone[1]))
+            };
+
         walk_down(&repository, &root,
                   |repository, node, object_map| {
                       clone_node(repository, node, object_map, &mut remapped,
-                                 &suffix)
+                                 &new_name)
                   });
-    });
+    };
 
     // and possibly *then* rename?
     if !cli.replace.is_empty() {
