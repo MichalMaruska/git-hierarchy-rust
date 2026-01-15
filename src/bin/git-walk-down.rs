@@ -250,18 +250,19 @@ fn clone_node<'repo>(
 fn walk_down<F>(repository: &Repository, root: &str, mut process: F)
 where
     F: for<'repo, 'a> FnMut(
-        &'repo git2::Repository,
-        &GitHierarchy<'repo>,
-        &'a HashMap<String, GitHierarchy<'repo>>,
-    ) // F : FnMut(&Repository, GitHierarchy,
-      // &HashMap<String, GitHierarchy>) -> ()
+    &'repo git2::Repository,
+    &GitHierarchy<'repo>,
+    &'a HashMap<String, GitHierarchy<'repo>>,
+)
 {
     let hierarchy_graph = find_hierarchy(repository, root.to_owned());
 
     // convert the gh objects?
     for v in hierarchy_graph.discovery_order {
         let vertex = hierarchy_graph.labeled_objects.get(&v).unwrap();
-        process(repository, vertex, &hierarchy_graph.labeled_objects);
+        process(repository,
+                vertex,
+                &hierarchy_graph.labeled_objects);
     }
 }
 
