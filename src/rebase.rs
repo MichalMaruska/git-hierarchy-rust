@@ -598,7 +598,7 @@ pub fn check_sum<'repo>(
         parent_commits);
 
 
-    if u.is_empty() && v.is_empty() {
+    if !(u.is_empty() && v.is_empty()) {
         warn!("sum {} is not well-positioned", sum.name());
         return Err(RebaseError::WrongHierarchy(sum.name().to_owned()));
     }
