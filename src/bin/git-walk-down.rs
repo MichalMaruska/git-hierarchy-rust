@@ -165,8 +165,9 @@ fn clone_node<'repo>(
     node: &GitHierarchy<'repo>,
     _object_map: &HashMap<String, GitHierarchy<'repo>>,
     remapped: &mut HashMap<String, String>,
-    suffix: &str,
-) {
+    new_name_fn: &Box<dyn Fn(&str) -> String>,
+)
+{
     debug!("clone {:?}", node.node_identity(),);
 
     // so I create, and put into remapped!
@@ -179,7 +180,8 @@ fn clone_node<'repo>(
         }
         GitHierarchy::Segment(segment) => {
             // if segment itself in replace ... ignore it.
-            let new_name = concatenate(segment.name(), suffix);
+            let new_name = new_name_fn(segment.name());
+            info!("new name is {}", new_name);
 
             // get the base:
             // ReferenceType::Symbolic
@@ -204,7 +206,8 @@ fn clone_node<'repo>(
                                      &new_segment.reference.borrow());
         }
         GitHierarchy::Sum(sum) => {
-            let new_name = concatenate(sum.name(), suffix);
+            let new_name = new_name_fn(sum.name());
+            info!("new sum name is {}", new_name);
 
             let summands = sum.summands(repository);
             // we need references, so the References are not moved/consumed
