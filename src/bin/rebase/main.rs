@@ -1,4 +1,5 @@
 #![deny(elided_lifetimes_in_paths)]
+#![feature(iter_next_chunk)]
 // walk the hierarchy
 // - assemble list of segments/sums.
 // - graph, toposort
@@ -20,7 +21,7 @@ use tracing::{span, Level, debug, info, warn,error};
 use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref, force_head_to,};
 use ::git_hierarchy::execute::git_run;
 use ::git_hierarchy::utils::{
-    divide_str, extract_name, iterator_symmetric_difference, init_tracing,
+    extract_name, iterator_symmetric_difference, init_tracing,
 };
 use ::git_hierarchy::rebase::{check_segment, check_sum,
                               rebase_segment,rebase_segment_continue,
@@ -320,7 +321,8 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
             // or merge/rebase.
         }
 
-        let (rem, br) = divide_str(upstream_name, '/');
+        let [rem, br] = upstream_name.split('/').take(2).next_chunk().unwrap();
+
         let mut remote = repository.find_remote(rem)?;
 
         info!("fetch {} {} ....", rem, br);
