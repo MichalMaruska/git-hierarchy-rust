@@ -16,13 +16,6 @@ pub fn extract_name(refname: &str) -> &str {
     a
 }
 
-pub fn divide_str(s: &'_ str, split_char: char) -> (&'_ str, &'_ str) {
-    let v: Vec<&str> = s.split(split_char).take(2).collect();
-
-    (v[0], v[1])
-}
-
-
 // Return: iter2 - hash(iter1)
 pub fn iterator_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> Vec<U>
 where
@@ -91,11 +84,6 @@ mod test {
     #[test]
     fn test_concatenate() {
         assert_eq!("Hello World", concatenate("Hello ", "World"));
-    }
-
-    #[test]
-    fn test_divide_str() {
-        assert_eq!(divide_str("Hello World", ' '), ("Hello", "World"));
     }
 
     #[test]
