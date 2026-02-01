@@ -153,7 +153,7 @@ mod tests {
         assert!(is_valid_topological_order(&graph, &result));
     }
 
-    fn is_valid_topological_order(graph: &Vec<Vec<usize>>, order: &Vec<usize>) -> bool {
+    fn is_valid_topological_order(graph: &[Vec<usize>], order: &[usize]) -> bool {
         let mut position = vec![0; graph.len()];
         for (i, &vertex) in order.iter().enumerate() {
             position[vertex] = i;
