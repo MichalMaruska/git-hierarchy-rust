@@ -165,7 +165,7 @@ fn clone_node<'repo>(
     node: &GitHierarchy<'repo>,
     _object_map: &HashMap<String, GitHierarchy<'repo>>,
     remapped: &mut HashMap<String, String>,
-    new_name_fn: &Box<dyn Fn(&str) -> String>,
+    new_name_fn: &dyn Fn(&str) -> String,
 )
 {
     debug!("clone {:?}", node.node_identity(),);
