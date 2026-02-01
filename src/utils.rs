@@ -34,6 +34,8 @@ where
 }
 
 
+// returns: I1 - I2,  I2 - I1
+// but the order is different
 pub fn iterator_symmetric_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> (Vec<T>, Vec<U>)
 where
     T: Hash + Eq,
@@ -98,16 +100,17 @@ mod test {
         let real = vec![1, 2, 10, 16];
         let selected = vec![0, 2, 5, 6];
 
-        let (unselected, missing) = iterator_symmetric_difference(
+        let (mut unselected, missing) = iterator_symmetric_difference(
             real.iter(),
             selected.iter()
             );
 
         // found is only &
+        unselected.sort();
         assert_eq!(
             &unselected,
             // not found in first, which *are* in 2nd
-            &[&0,&5,&6]
+            &[&1,&10,&16]
         );
 
         assert_eq!(
