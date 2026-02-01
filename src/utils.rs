@@ -54,9 +54,9 @@ where
                       not_found.push(item);
                   }
         );
-    return(
-        hashed_set.drain().collect(),
-        not_found)
+
+    (hashed_set.drain().collect(),
+     not_found)
 }
 
 
