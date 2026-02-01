@@ -97,8 +97,8 @@ mod test {
 
     #[test]
     fn test_iterator_symmetric_difference() {
-        let real = vec![1, 2, 10, 16];
-        let selected = vec![0, 2, 5, 6];
+        let real = [1, 2, 10, 16];
+        let selected = [0, 2, 5, 6];
 
         let (mut unselected, missing) = iterator_symmetric_difference(
             real.iter(),
