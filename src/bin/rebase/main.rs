@@ -414,7 +414,7 @@ fn rebase_tree(repository: &Repository,
                 .unwrap()
         );
         if ignore.iter().any(|x| x == name) {
-            info!("found to be ignored {name}");
+            info!("not checking: {name}");
             continue;
         }
         let vertex = hierarchy_graph.labeled_objects.get(v).unwrap();
