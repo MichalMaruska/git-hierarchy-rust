@@ -142,11 +142,11 @@ fn define<'repo> (repository: &'repo Repository, args: &DefineArgs) -> Result<Se
     let base = repository.resolve_reference_from_short_name(&args.base)?;
 
     // no: either ref or sha
-    let start = if args.start.is_none() {
-        base.target().unwrap()
-    } else {
+    let start = if let Some(s) = &args.start {
         // note: as_ref().unwrap()  vs unwrap().as_ref() ...
-        resolve_user_commit(repository, args.start.as_ref().unwrap()).unwrap()
+        resolve_user_commit(repository, s).unwrap()
+    } else {
+        base.target().unwrap()
     };
 
     let head =
