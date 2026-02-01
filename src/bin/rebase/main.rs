@@ -503,7 +503,11 @@ fn main() {
         }
     }
 
-    rebase_tree(&repository, root.node_identity().to_owned(), !cli.no_fetch,
-                &cli.ignore,
-                &cli.skip).expect("failed");
+    if let Err(e) = rebase_tree(&repository, root.node_identity().to_owned(), !cli.no_fetch,
+                                &cli.ignore,
+                                &cli.skip)
+    {
+        eprintln!("Failed: {:?}", e); // RebaseError
+        exit(-1);
+    }
 }
