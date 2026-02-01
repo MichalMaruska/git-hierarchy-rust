@@ -156,6 +156,7 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
 
 
 // on top of HEAD
+// cherry-picks each commits from the iterator, and returns the HEAD afterwards/on error?
 fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                                  iter: T,
                                  base_commit: Commit<'repo>)
