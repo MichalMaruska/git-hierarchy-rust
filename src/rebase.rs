@@ -391,10 +391,8 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
 }
 
 
-// Continue after an issue:
-// either cherry-pick conflicts resolved by the user, or
-// he left mess, and ....on detached head. Unlike other tools.
-pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, RebaseError> {
+fn segment_to_continue(repository: &Repository) -> Result<String, RebaseError>
+{
     let path = marker_filename(repository);
 
     // todo: maybe this before calling this function?
@@ -408,9 +406,19 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
     let mut lines = content.lines();
     let segment_name = lines.next().unwrap().trim();
 
+    Ok(segment_name.to_owned())
+}
+
+// Continue after an issue:
+// either cherry-pick conflicts resolved by the user, or
+// he left mess, and ....on detached head. Unlike other tools.
+pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, RebaseError> {
+
+    let segment_name = segment_to_continue(repository).unwrap();
+
     if false {
-        rebase_continue_git1(repository, segment_name)
-    } else if let GitHierarchy::Segment(segment) = load(repository, segment_name).unwrap() {
+        rebase_continue_git1(repository, &segment_name)
+    } else if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
         // higher level .. our file:
 
         // this should contain the `skip'
@@ -464,7 +472,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         cleanup_segment_rebase(repository, &segment, tmp_head);
         Ok(RebaseResult::Done)
     } else {
-        Err(RebaseError::WrongHierarchy(segment_name.to_owned()))
+        Err(RebaseError::WrongHierarchy(segment_name))
     }
 }
 
