@@ -391,22 +391,25 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
 }
 
 
-fn segment_to_continue(repository: &Repository) -> Result<String, RebaseError>
+// loads the persistent state.
+fn segment_to_continue(repository: &Repository) -> Result<(String,String,usize), RebaseError>
 {
     let path = marker_filename(repository);
 
-    // todo: maybe this before calling this function?
     if ! fs::exists(&path).unwrap() {
         error!("marker file does not exist -- no segment is being rebased.");
         return Err(RebaseError::WrongState);
     }
 
-    // load persistent state:
     let content: String = fs::read_to_string(path).unwrap(); // .... and the oid
     let mut lines = content.lines();
     let segment_name = lines.next().unwrap().trim();
 
-    Ok(segment_name.to_owned())
+    let oid = lines.next_back().unwrap();
+    let skip : usize = lines.next_back().unwrap().parse().unwrap();
+
+    debug!("from file: continue on {}, after {:?}", segment_name, oid);
+    Ok((segment_name.to_owned(), oid.to_owned(), skip))
 }
 
 // Continue after an issue:
@@ -414,19 +417,9 @@ fn segment_to_continue(repository: &Repository) -> Result<String, RebaseError>
 // he left mess, and ....on detached head. Unlike other tools.
 pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, RebaseError> {
 
-    let segment_name = segment_to_continue(repository).unwrap();
+    let (segment_name,oid,mut skip) = segment_to_continue(repository)?;
 
-    if false {
-        rebase_continue_git1(repository, &segment_name)
-    } else if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
-        // higher level .. our file:
-
-        // this should contain the `skip'
-        let oid = lines.next_back().unwrap();
-        let mut skip : usize = lines.next_back().unwrap().parse().unwrap();
-        // native:
-        debug!("from file: continue on {}, after {:?}", segment_name, oid);
-
+    if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
         let commit_id =
             if repository.state() == RepositoryState::CherryPick {
                 // read the CHERRY_PICK_HEAD
@@ -455,7 +448,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
                 // we need the next one.
                 commit_id
             } else {
-                Oid::from_str(oid).unwrap()
+                Oid::from_str(&oid).unwrap()
             };
 
         eprintln!("should cherry-pick starting from oid {}", commit_id);
