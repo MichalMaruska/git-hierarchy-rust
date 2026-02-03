@@ -4,6 +4,7 @@
 use git2::{Branch, BranchType, Error, Commit,
            Oid,
            Reference, Repository,RepositoryState,
+           StatusOptions, StatusShow,
 
            CherrypickOptions,
            MergeOptions,
@@ -427,8 +428,10 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
                 let commit_id = Oid::from_str(read_cherry_pick_head(repository).as_str().trim()).unwrap();
                 debug!("should continue the cherry-pick {:?}", commit_id);
 
-                // commit it, or reset the state?
-                if !repository.index().unwrap().is_empty() {
+                let mut option =  StatusOptions::new();
+                option.show(StatusShow::Index);
+                let statuses = repository.statuses(Some(&mut option))?;
+                if ! statuses.is_empty() {
                     debug!("non-empty index -> commit...");
                     let to_apply = repository.find_commit(commit_id).unwrap();
 
