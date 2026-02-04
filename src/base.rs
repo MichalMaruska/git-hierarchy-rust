@@ -141,5 +141,9 @@ pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'
     repository.set_head(&full_name).expect("failed to checkout");
 }
 pub fn open_repository(directory_option: Option<&PathBuf>) -> Result<Repository, Error> {
-    Repository::open(directory_option.unwrap_or(&std::env::current_dir().expect("failed to get cwd")))
+    if directory_option.is_some() {
+        Repository::open(directory_option.unwrap())
+    } else {
+        Repository::open_from_env()
+    }
 }
