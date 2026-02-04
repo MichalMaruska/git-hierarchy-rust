@@ -47,15 +47,22 @@ struct ClapGitRepo {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// List all segments
     List(ListArgs),
+    /// Reposition the Start of a segment
     Restart(RestartArgs),
+    /// Reposition the Base of a segment
     Update(RebaseArgs),
+    /// Delete a segment
     Delete(DeleteCmd),
-    #[command(name="define", version, about, long_about = None,long_flag("define"),short_flag('D'))]
+    #[command(name="define", version, long_about = None,long_flag("define"),short_flag('D'))]
+    /// Define a new segment
     Define(DefineArgs),
+
     // Command git-hierarchy: command name `define` is duplicated
     //       define vvvvv
-    #[command(name="create", version, about, long_about = None,long_flag("create"),short_flag('c'))]
+    #[command(name="create", version, long_about = None,long_flag("create"),short_flag('c'))]
+    /// Create a new segment, and checkout it
     Create(DefineArgs),
 }
 
