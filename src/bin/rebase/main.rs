@@ -18,7 +18,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
 #[allow(unused_imports)]
 use tracing::{span, Level, debug, info, warn,error};
 
-use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref, force_head_to,};
+use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref, force_head_to, open_repository};
 use ::git_hierarchy::execute::git_run;
 use ::git_hierarchy::utils::{
     extract_name, iterator_symmetric_difference, init_tracing,
@@ -474,10 +474,7 @@ fn main() {
     // cli can override the Env variable.
     init_tracing(cli.verbose);
 
-    let repository = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
-        Ok(repository) => repository,
-        Err(e) => panic!("failed to open: {}", e),
-    };
+    let repository = open_repository(cli.directory.as_ref()).expect("should find the Git directory");
 
     // todo:
     // normalize_name(refname: &str, flags: ReferenceFormat) -> Result<String, Error> {
