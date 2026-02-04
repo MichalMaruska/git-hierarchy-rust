@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use ::git_hierarchy::git_hierarchy::{GitHierarchy};
 use ::git_hierarchy::rebase::{check_segment, rebase_segment};
 use ::git_hierarchy::utils::{init_tracing};
-
+use ::git_hierarchy::base::open_repository;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -26,7 +26,8 @@ fn main() {
     let cli = Cli::parse();
     init_tracing(cli.verbose);
 
-    let repository = match Repository::open(cli.directory.unwrap_or(std::env::current_dir().unwrap())) {
+    let repository = match open_repository(cli.directory.as_ref())
+    {
         Ok(repository) => repository,
         Err(e) => panic!("failed to open: {}", e),
     };
