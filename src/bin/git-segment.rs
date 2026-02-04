@@ -185,10 +185,11 @@ fn delete(repository: &Repository, args: &DeleteCmd) {
 
 // see list_segment in git-walk-down.rs
 fn describe(repository: &Repository, segment_name: &str) {
-    println!("Segment {} in {:?}", segment_fmt(segment_name), repository.path());
 
     let gh = git_hierarchy::git_hierarchy::load(repository, segment_name).unwrap();
     if let GitHierarchy::Segment(segment) = gh {
+        println!("Segment {} in {:?}", segment_fmt(segment_name), repository.path());
+
         // todo: drop the refs/
         println!("Base {}", segment.base(repository).name().unwrap());
         println!("Start {} lenght {} {}", segment.start(),
@@ -201,6 +202,8 @@ fn describe(repository: &Repository, segment_name: &str) {
             let commit = repository.find_commit(oid).unwrap();
             println!("{}: {}", oid, commit.summary().unwrap());
         }
+    } else {
+        println!("Segment {} does not exist", segment_fmt(segment_name));
     }
 }
 
