@@ -60,6 +60,13 @@ impl std::convert::From<git2::Error> for RebaseError {
     }
 }
 
+impl std::convert::From<std::io::Error> for RebaseError {
+    fn from(_e: std::io::Error) -> RebaseError{
+        // fixme!
+       RebaseError::Default
+    }
+}
+
 
 const TEMP_HEAD_NAME: &str = "tempSegment";
 const MARKER_FILENAME: &str = ".segment-cherry-pick";
@@ -241,9 +248,10 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 
     info!("rebase_segment: {}", segment.name());
     debug!("rebasing by Cherry-picking {}!", segment.name());
-    // can I raii ? so drop() would remove the file?
-    create_marker_file(repository,
-                       &format!("{}\n", segment.name())).unwrap();
+
+    // fixme: we should convert/wrap this io::error
+    // std::convert::From<std::io::Error>` is not implemented for `rebase::RebaseError`
+    create_marker_file(repository, &format!("{}\n", segment.name()))?;
 
     // checkout to that ref
     // todo: git stash
