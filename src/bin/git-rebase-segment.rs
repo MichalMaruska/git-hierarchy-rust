@@ -1,7 +1,6 @@
 // todo: global?
 #![deny(elided_lifetimes_in_paths)]
 
-use git2::{Repository};
 use std::path::PathBuf;
 use ::git_hierarchy::git_hierarchy::{GitHierarchy};
 use ::git_hierarchy::rebase::{check_segment, rebase_segment};
