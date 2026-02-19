@@ -141,8 +141,8 @@ pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'
     repository.set_head(&full_name).expect("failed to checkout");
 }
 pub fn open_repository(directory_option: Option<&PathBuf>) -> Result<Repository, Error> {
-    if directory_option.is_some() {
-        Repository::open(directory_option.unwrap())
+    if let Some(directory) = directory_option {
+        Repository::open(directory)
     } else {
         Repository::open_from_env()
     }
