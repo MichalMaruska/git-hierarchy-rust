@@ -489,10 +489,7 @@ fn main() {
         }
     }
 
-    // todo:
-    // normalize_name(refname: &str, flags: ReferenceFormat) -> Result<String, Error> {
-    let root = cli.root_reference
-        // if in detached HEAD -- will panic.
+    let root = cli.root_reference // if in detached HEAD -- will panic.
         .unwrap_or_else(|| repository.head().unwrap().name().unwrap().to_owned());
 
     let root = GitHierarchy::Name(root); // not load?

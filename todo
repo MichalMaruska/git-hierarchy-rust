@@ -1,0 +1,32 @@
+* join
+git-rebase-segment & git-rebase-poset
+
+
+* creating segment
+should remove the start/base if creating head fails.
+
+
+* TEST
+either find an interesting repo
+or just create one from scratch.
+
+
+
+* rebase the sum only if it is still the original merge commit!
+****** done?  check_sum
+src/rebase.rs
+
+if it's not -- need -i option
+
+
+* rename GIT_HEADS_PATTERN to GIT_HEADS_PREFIX
+
+
+* split off graph?
+
+
+* build on github
+
+// todo:
+// shorthand
+Reference::normalize_name(refname: &str, flags: ReferenceFormat) -> Result<String, Error> {
