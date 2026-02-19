@@ -32,6 +32,8 @@ use std::path::PathBuf;
 use std::process::exit; // fixme: drop in library
 #[allow(unused_imports)]
 use tracing::{span, Level, debug, info, warn,error};
+use colored::Colorize;
+
 
 pub enum RebaseResult {
     Nothing,
@@ -105,8 +107,8 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
                                parent_commit: &Commit<'repo>) -> Oid {
     let mut index = repository.index().unwrap();
     if index.has_conflicts() {
-        eprintln!("SORRY conflicts detected");
-        eprintln!("resolve them, and either commit or stage them");
+        eprintln!("{}",Colorize::red("SORRY conflicts detected"));
+        eprintln!("{}",Colorize::red("resolve them, and either commit or stage them"));
 
         // next time resumve from this, exclusive.
         // todo: unify these 2 calls into 1
