@@ -290,18 +290,17 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
         let (remote_name, branch) = extract_remote_name(reference.name().unwrap());
         let mut remote = repository.find_remote(remote_name).unwrap();
         debug!("fetching from remote {:?}: {:?}",
-               remote.name().unwrap(),
-               branch
-        );
+               remote_name, // remote.name().unwrap(),
+               branch);
 
         // FetchOptions, message
         if remote.fetch(&[branch], None, Some("part of poset-rebasing")).is_err() {
             panic!("** Fetch failed");
         }
-    } else if reference.is_branch() {
+    } else if reference.is_branch() { // and we know it's not Segment/Sum, right?
         // the user has a reason to use local branch.
         // So we don't want to change it (by fetching) without explicit permission.
-        // implicit permission -- that it's just following a remove branch.
+        // implicit permission -- that it's just following a remote branch.
         let name = Reference::normalize_name(reference.name().unwrap(), ReferenceFormat::NORMAL).unwrap();
 
         // let b = Branch::wrap(*reference); // cannot move out of `*reference` which is behind a mutable reference
@@ -314,14 +313,14 @@ fn fetch_upstream_of(repository: &Repository, reference: &Reference<'_>) -> Resu
         let upstream = branch.upstream().unwrap();
         let upstream_name = upstream.name().unwrap().unwrap();
 
-        // todo: check if still in sync, to not lose local changes.
         if git_same_ref(repository, reference, upstream.get()) {
+            // we might be behind?
             debug!("in sync, so let's fetch & update");
         } else {
+            // Check if still in sync, to not lose local changes.
             panic!("{} not in sync with upstream {}; should not update.", name, upstream_name);
             // or merge/rebase.
         }
-
         let [rem, br] = upstream_name.split('/').take(2).next_chunk().unwrap();
 
         let mut remote = repository.find_remote(rem)?;
