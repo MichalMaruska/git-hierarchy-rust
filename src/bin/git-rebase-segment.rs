@@ -21,7 +21,7 @@ struct Cli {
 }
 
 // should we check the segment first?
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>>{
     let cli = Cli::parse();
     init_tracing(cli.verbose);
 
@@ -33,7 +33,8 @@ fn main() {
 
     let gh = git_hierarchy::git_hierarchy::load(&repository, &cli.segment_name).unwrap();
     if let GitHierarchy::Segment(segment) = gh {
-        check_segment(&repository, &segment).expect("segment should be clean"); // todo  use  .?
+        check_segment(&repository, &segment)?;
         rebase_segment(&repository, &segment).unwrap();
     }
+    Ok(())
 }
