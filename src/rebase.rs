@@ -78,7 +78,8 @@ fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> 
 }
 
 /// Store persistently (between runs) the commit we stubled on
-fn append_oid(repository: &'_ Repository, oid: &str) -> io::Result<()> {
+/// see `segment_to_continue'() for the read part
+fn record_processed_commit(repository: &'_ Repository, oid: Oid, applied: bool) -> io::Result<()>{
     let path = marker_filename(repository);
     debug!("Update persistent state: {:?}", path);
 
@@ -87,12 +88,17 @@ fn append_oid(repository: &'_ Repository, oid: &str) -> io::Result<()> {
         .open(path)
         .unwrap();
 
-    if let Err(e) = writeln!(file, "{}", oid) {
-        eprintln!("Couldn't write to file: {}", e);
-        return Err(e);
-    }
+    let marker =
+        if applied {
+            "0"
+        } else {
+            "1"
+        };
+    writeln!(file, "{}", marker)?;
+    writeln!(file, "{}", &format!("{}", oid))?;
     Ok(())
 }
+
 
 fn read_cherry_pick_head(repository: &'_ Repository) -> String {
     fs::read_to_string(repository.commondir().join("CHERRY_PICK_HEAD")).unwrap()
@@ -110,11 +116,8 @@ fn commit_cherry_picked<'repo>(repository: &'repo Repository,
         eprintln!("{}",Colorize::red("SORRY conflicts detected"));
         eprintln!("{}",Colorize::red("resolve them, and either commit or stage them"));
 
-        // next time resumve from this, exclusive.
-        // todo: unify these 2 calls into 1
-        // record_applied(original.id())
-        append_oid(repository, "1").unwrap();
-        append_oid(repository, &format!("{}", original.id())).unwrap();
+        // next time resume from this, `exclusive'.
+        record_processed_commit(repository, original.id(), false).unwrap();
         exit(1);
     }
 
@@ -204,8 +207,7 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
                                     e.message()
                           );
                           // code: -13, klass: 22, message: "1 uncommitted change would be overwritten by merge" }
-                          append_oid(repository, "0").unwrap();
-                          append_oid(repository, &format!("{}", to_apply.id())).unwrap();
+                          record_processed_commit(repository, to_apply.id(), true).unwrap();
 
                           let index = repository.index().unwrap();
                           if index.has_conflicts() {
