@@ -17,9 +17,9 @@ pub fn extract_name(refname: &str) -> &str {
 }
 
 // Return: iter2 - hash(iter1)
-pub fn iterator_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> Vec<U>
+pub fn iterator_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<Item = U>
 where
-    T: Hash + Eq,
+    T: Hash + Eq + 'static,
     U: Borrow<T> + Clone,
     I1: IntoIterator<Item = T>,
     I2: IntoIterator<Item = U>,
@@ -27,10 +27,8 @@ where
     let hashed_set: HashSet<T> = iter1.into_iter().collect();
 
     iter2.into_iter()
-        .filter(|item|
-                hashed_set.contains(item.borrow()))
-        .collect()
-    // todo: return an iterator?
+        .filter(move |item|
+                !hashed_set.contains(item.borrow()))
 }
 
 
@@ -118,5 +116,32 @@ mod test {
             // not found in first, which *are* in 2nd
             &[&0,&5,&6]
         )
+    }
+
+    #[test]
+    fn test_iterator_difference () {
+        let real = [1, 2, 10, 16];
+        let selected = [0, 2, 5, 6];
+
+        let mut minus  = iterator_difference(
+            real.into_iter(),
+            selected.iter()
+            );
+
+        // found is only &
+        assert_eq!(
+            minus.next(),
+            Some(&0));
+        assert_eq!(
+            minus.next(),
+            Some(&5));
+
+        assert_eq!(
+            minus.next(),
+            Some(&6));
+
+        assert_eq!(
+            minus.next(),
+            None);
     }
 }
