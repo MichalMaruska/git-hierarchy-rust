@@ -322,6 +322,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 }
 
 // The old, using git(1)
+#[allow(unused)]
 fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<RebaseResult, RebaseError> {
     if !git_run(repository, &["cherry-pick", "--continue"]).is_ok_and(|x| x.success()) {
         info!("git cherry-pick --continue failed");
