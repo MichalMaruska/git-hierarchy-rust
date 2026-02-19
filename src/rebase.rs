@@ -7,7 +7,6 @@ use git2::{Branch, BranchType, Error, Commit,
            StatusOptions, StatusShow,
 
            CherrypickOptions,
-           MergeOptions,
            build::CheckoutBuilder,
 };
 
@@ -172,14 +171,6 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
     let final_commit =
         iter.fold(base_commit,
                   |base_commit, oid_to_apply| {
-                      // todo: these are always the same
-                      let mut options = MergeOptions::new();
-                      options.fail_on_conflict(true)
-                          .standard_style(true)
-                          .ignore_whitespace(true)
-                          .patience(true)
-                          .minimal(true)
-                          ;
 
                       let to_apply = repository.find_commit(oid_to_apply.unwrap()).unwrap();
 
