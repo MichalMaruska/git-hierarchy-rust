@@ -21,12 +21,12 @@ pub fn iterator_difference<T, U, I1, I2>(iter1: I1, iter2: I2) -> impl Iterator<
 where
     T: Hash + Eq + 'static,
     U: Borrow<T> + Clone,
-    I1: IntoIterator<Item = T>,
-    I2: IntoIterator<Item = U>,
+    I1: IntoIterator<Item = U>,
+    I2: IntoIterator<Item = T>,
 {
-    let hashed_set: HashSet<T> = iter1.into_iter().collect();
+    let hashed_set: HashSet<T> = iter2.into_iter().collect();
 
-    iter2.into_iter()
+    iter1.into_iter()
         .filter(move |item|
                 !hashed_set.contains(item.borrow()))
 }
@@ -124,8 +124,8 @@ mod test {
         let selected = [0, 2, 5, 6];
 
         let mut minus  = iterator_difference(
+            selected.iter(),
             real.into_iter(),
-            selected.iter()
             );
 
         // found is only &
