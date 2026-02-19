@@ -67,6 +67,21 @@ impl std::convert::From<std::io::Error> for RebaseError {
     }
 }
 
+impl std::fmt::Display for RebaseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::WrongHierarchy(name) => {
+                write!(f, "Rebase failed: hierarchy broken at {name}")
+            },
+            _ => {
+                write!(f, "Rebase failed")
+            }
+        }
+    }
+}
+
+impl std::error::Error for RebaseError {}
+
 
 const TEMP_HEAD_NAME: &str = "tempSegment";
 const MARKER_FILENAME: &str = ".segment-cherry-pick";
