@@ -396,13 +396,13 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
 }
 
 
-// loads the persistent state.
-fn segment_to_continue(repository: &Repository) -> Result<(String,String,usize), RebaseError>
+/// loads the persistent state: the commit we last processed
+pub fn segment_to_continue(repository: &Repository) -> Result<(String,String,usize), RebaseError>
 {
     let path = marker_filename(repository);
 
     if ! fs::exists(&path).unwrap() {
-        error!("marker file does not exist -- no segment is being rebased.");
+        warn!("marker file does not exist -- no segment is being rebased.");
         return Err(RebaseError::WrongState);
     }
 

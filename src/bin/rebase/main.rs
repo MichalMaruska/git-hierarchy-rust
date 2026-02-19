@@ -25,6 +25,7 @@ use ::git_hierarchy::utils::{
 };
 use ::git_hierarchy::rebase::{check_segment, check_sum,
                               rebase_segment,rebase_segment_continue,
+                              segment_to_continue,
                               RebaseResult, RebaseError};
 use std::collections::HashMap;
 use std::iter::Iterator;
@@ -477,9 +478,19 @@ fn main() {
 
     let repository = open_repository(cli.directory.as_ref()).expect("should find the Git directory");
 
+
+    if cli.cont {
+        // old: rebase_continue_git1(repository, &segment_name)
+        rebase_segment_continue(&repository).unwrap();
+    } else {
+        if let Ok((segment, _commit, _skip)) = segment_to_continue(&repository) {
+            eprintln!("{} {}",Colorize::bright_magenta("rebase underway, must use continue -c"), segment);
+            exit(1);
+        }
+    }
+
     // todo:
     // normalize_name(refname: &str, flags: ReferenceFormat) -> Result<String, Error> {
-
     let root = cli.root_reference
         // if in detached HEAD -- will panic.
         .unwrap_or_else(|| repository.head().unwrap().name().unwrap().to_owned());
@@ -487,10 +498,6 @@ fn main() {
     let root = GitHierarchy::Name(root); // not load?
 
     debug!("root is {}", root.node_identity());
-    // todo: if file exists -> cli.cont
-    if cli.cont {
-        rebase_segment_continue(&repository).unwrap();
-    }
 
     // todo: I must rewrite ignore to full ref names!
     if !cli.skip.is_empty() {
