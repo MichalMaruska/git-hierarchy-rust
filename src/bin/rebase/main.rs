@@ -348,23 +348,24 @@ fn rebase_node<'repo>(
     node: &GitHierarchy<'repo>,
     fetch: bool,
     object_map: &HashMap<String, GitHierarchy<'repo>>,
-) {
+) -> Result<RebaseResult, RebaseError> {
     match node {
         GitHierarchy::Name(_n) => {
             panic!();
         }
         GitHierarchy::Reference(r) => {
             if fetch {
-                fetch_upstream_of(repo, r).expect("fetch failed");
+                fetch_upstream_of(repo, r)?; // .expect("fetch failed")
             }
+            Ok(RebaseResult::Done)
         }
         GitHierarchy::Segment(segment) => {
             let my_span = span!(Level::INFO, "segment", name = segment.name());
             let _enter = my_span.enter();
-            rebase_segment(repo, segment).unwrap(); // todo!
+            rebase_segment(repo, segment)
         }
         GitHierarchy::Sum(sum) => {
-            remerge_sum(repo, sum, object_map).unwrap();
+            remerge_sum(repo, sum, object_map)
         }
     }
 }
@@ -441,7 +442,7 @@ fn rebase_tree(repository: &Repository,
         );
         let vertex = hierarchy_graph.labeled_objects.get(v).unwrap();
 
-        rebase_node(repository, vertex, fetch, &hierarchy_graph.labeled_objects);
+        rebase_node(repository, vertex, fetch, &hierarchy_graph.labeled_objects)?;
     }
     debug!("done");
     Ok(())
