@@ -180,10 +180,6 @@ fn cherry_pick_commits<'repo, T>(repository: &'repo Repository,
 
                       let mut checkout_opts = CheckoutBuilder::new();
                       checkout_opts.safe();
-
-                      // todo: we need to register that we resume from some point.
-                      // if this fails, the user might .... clean up the repo,
-                      // and we can resume.
                       let mut cherrypick_opts = CherrypickOptions::new();
                       cherrypick_opts.checkout_builder(checkout_opts);
 
