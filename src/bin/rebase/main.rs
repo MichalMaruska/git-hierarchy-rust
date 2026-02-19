@@ -37,6 +37,7 @@ use ::git_hierarchy::git_hierarchy::{GitHierarchy, Segment, Sum, load};
 
 use std::path::PathBuf;
 use std::process::exit;
+use colored::Colorize;
 
 /*
  note: ambiguous because of a conflict between a name from a glob import and an outer scope during import or macro resolution
@@ -506,5 +507,7 @@ fn main() {
     {
         eprintln!("Failed: {:?}", e); // RebaseError
         exit(-1);
+    } else {
+        eprintln!("{}",Colorize::green("Done"));
     }
 }
