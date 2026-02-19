@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::exit;
 use clap::{Parser,Subcommand};
 use git2::{Repository,Reference,Oid};
-// use git2::Branch;
+use colored::Colorize;
 
 #[allow(unused_imports)]
 use git_hierarchy::git_hierarchy::{GitHierarchy,Sum,load,sums, sum_fmt};
@@ -119,7 +119,6 @@ fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
         }
     }
 
-    // todo:
     let sum = Sum::create(
         repository,
         name,
@@ -128,9 +127,8 @@ fn define_sum<'repo,'a, T: AsRef<str> + 'a>(repository: &'repo Repository,
     );
 
     if sum.is_err() {
-        error!("failed to create sum");
+        eprintln!("{}",Colorize::green("failed to create sum"));
         exit(1);
-        // panic!("failed to create sum");
     }
 }
 
