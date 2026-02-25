@@ -19,6 +19,9 @@ use std::process::exit; // fixme: drop in library
 use tracing::{span, Level, debug, info, warn,error};
 use colored::Colorize;
 
+use thiserror::Error;
+
+
 use crate::utils::{iterator_symmetric_difference};
 
 #[allow(unused)]
@@ -41,11 +44,15 @@ pub enum RebaseResult {
 }
 
 #[non_exhaustive]
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RebaseError {
+    #[error("hierarchy broken at {0}")]
     WrongHierarchy(String),
+    #[error("repository in wrong state during rebase")]
     WrongState,
+    #[error("rebase error")]
     Default,
+    // Git2Error(#[from] git2::Error),
 }
 
 impl std::convert::From<crate::execute::Error> for RebaseError {
@@ -66,22 +73,6 @@ impl std::convert::From<std::io::Error> for RebaseError {
        RebaseError::Default
     }
 }
-
-impl std::fmt::Display for RebaseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::WrongHierarchy(name) => {
-                write!(f, "Rebase failed: hierarchy broken at {name}")
-            },
-            _ => {
-                write!(f, "Rebase failed")
-            }
-        }
-    }
-}
-
-impl std::error::Error for RebaseError {}
-
 
 const TEMP_HEAD_NAME: &str = "tempSegment";
 const MARKER_FILENAME: &str = ".segment-cherry-pick";
