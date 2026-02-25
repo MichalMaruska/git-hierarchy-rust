@@ -10,6 +10,15 @@ use git2::{Branch, BranchType, Error, Commit,
            build::CheckoutBuilder,
 };
 
+use std::collections::HashMap;
+use std::fs::{self,OpenOptions};
+use std::io::{Write,self};
+use std::path::PathBuf;
+use std::process::exit; // fixme: drop in library
+#[allow(unused_imports)]
+use tracing::{span, Level, debug, info, warn,error};
+use colored::Colorize;
+
 use crate::utils::{iterator_symmetric_difference};
 
 #[allow(unused)]
@@ -23,15 +32,6 @@ use crate::base::{checkout_new_head_at,
                   staged_files,
                   is_linear_ancestor,
 };
-
-use std::collections::HashMap;
-use std::fs::{self,OpenOptions};
-use std::io::{Write,self};
-use std::path::PathBuf;
-use std::process::exit; // fixme: drop in library
-#[allow(unused_imports)]
-use tracing::{span, Level, debug, info, warn,error};
-use colored::Colorize;
 
 
 pub enum RebaseResult {
