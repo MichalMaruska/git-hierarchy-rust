@@ -240,7 +240,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
         return Ok(RebaseResult::Nothing);
     }
 
-    let new_start = segment.base(repository);
+    let new_start = segment.base(repository).peel_to_commit().unwrap();
 
     if segment.empty(repository) {
         return rebase_empty_segment(segment, repository);
@@ -265,11 +265,10 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
     let temp_head = TEMP_HEAD_NAME;
     Branch::name_is_valid(temp_head).unwrap();
     let mut temp_head =
-        checkout_new_head_at(repository, Some(temp_head),
-                             &new_start.peel_to_commit().unwrap())
+        checkout_new_head_at(repository, Some(temp_head), &new_start)
         .unwrap();
 
-    let sha = new_start.peel_to_commit().unwrap().id();
+    let sha = new_start.id();
     debug!("set-head: {:?}", &sha);
     // If I cherry-pick with temp as HEAD, it fails with ... "old reference value does not match"
     repository.set_head_detached(sha).unwrap();
