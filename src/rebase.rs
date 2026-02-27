@@ -19,7 +19,7 @@ use std::process::exit; // fixme: drop in library
 use tracing::{span, Level, debug, info, warn,error};
 use colored::Colorize;
 
-use thiserror::Error;
+use thiserror;
 
 
 use crate::utils::{iterator_symmetric_difference};
@@ -44,7 +44,7 @@ pub enum RebaseResult {
 }
 
 #[non_exhaustive]
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum RebaseError {
     #[error("hierarchy broken at {0}")]
     WrongHierarchy(String),
