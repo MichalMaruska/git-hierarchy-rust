@@ -31,7 +31,6 @@ use crate::graph::discover::NodeExpander;
 use crate::execute::git_run;
 use crate::base::{checkout_new_head_at,
                   repository_clean,
-                  force_head_to,
                   staged_files,
                   is_linear_ancestor,
 };

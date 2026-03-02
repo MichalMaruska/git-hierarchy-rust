@@ -126,20 +126,6 @@ pub fn repository_clean(repository: &Repository) -> bool {
     true
 }
 
-// either a throw-away branch or fully determined ... sum.
-// git_run(repository, &["branch", "--force", segment.name(), new_head.name().unwrap()]);
-// git_run(repository, &["checkout", "--no-track", "-B", segment.name()]);
-// fixme: why 2 things:
-pub fn force_head_to(repository: &Repository, name: &str, new_head: &Reference<'_>) {
-    let oid = new_head.peel_to_commit().unwrap();
-
-    debug!("relocating {:?} to {:?}", name, oid);
-    repository.branch(name, &oid, true).unwrap();
-
-    // and `checkout'! Why?
-    let full_name = concatenate(GIT_HEADS_PATTERN, name);
-    repository.set_head(&full_name).expect("failed to checkout");
-}
 pub fn open_repository(directory_option: Option<&PathBuf>) -> Result<Repository, Error> {
     if let Some(directory) = directory_option {
         Repository::open(directory)
