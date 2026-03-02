@@ -263,9 +263,8 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
     // must change to the directory!
     let temp_head = TEMP_HEAD_NAME;
     Branch::name_is_valid(temp_head).unwrap();
-    let mut temp_head =
-        checkout_new_head_at(repository, Some(temp_head), &new_start)
-        .unwrap();
+
+    checkout_new_head_at(repository, None, &new_start) ;
 
     let sha = new_start.id();
     debug!("set-head: {:?}", &sha);
