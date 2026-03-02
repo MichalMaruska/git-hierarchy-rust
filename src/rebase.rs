@@ -369,32 +369,39 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
 
 
 /// loads the persistent state: the commit we last processed
-pub fn segment_to_continue(repository: &Repository) -> Result<(String,String,usize), RebaseError>
+// This should be <>
+pub fn segment_to_continue(repository: &Repository) -> Option<(String,Option<(String,usize)>)>
 {
     let path = marker_filename(repository);
 
     if ! fs::exists(&path).unwrap() {
         warn!("marker file does not exist -- no segment is being rebased.");
-        return Err(RebaseError::WrongState);
+        return None;
     }
 
     let content: String = fs::read_to_string(path).unwrap(); // .... and the oid
     let mut lines = content.lines();
-    let segment_name = lines.next().unwrap().trim();
+    let segment_name = lines.next().unwrap().trim().to_owned();
 
-    let oid = lines.next_back().unwrap();
-    let skip : usize = lines.next_back().unwrap().parse().unwrap();
-
-    debug!("from file: continue on {}, after {:?}", segment_name, oid);
-    Ok((segment_name.to_owned(), oid.to_owned(), skip))
+    // this can fail: if we failed on the last commit, at the moment of commit -- empty or whatever.
+    match lines.next_back() {
+        None =>
+            return Some((segment_name, None)),
+        Some(oid) => {
+            let skip : usize = lines.next_back().unwrap().parse().unwrap();
+            debug!("from file: continue on {}, after {:?}", segment_name, oid);
+            Some((segment_name, Some((oid.to_owned(), skip))))
+        }
+    }
 }
 
 // Continue after an issue:
 // either cherry-pick conflicts resolved by the user, or
 // he left mess, and ....on detached head. Unlike other tools.
 pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, RebaseError> {
-
-    let (segment_name,oid,mut skip) = segment_to_continue(repository)?;
+    // todo: this might be the input:
+    let (segment_name, rest) = segment_to_continue(repository).unwrap();
+    let mut skip=0;
 
     if let GitHierarchy::Segment(segment) = load(repository, &segment_name).unwrap() {
         let commit_id =
@@ -427,7 +434,11 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
                 // we need the next one.
                 commit_id
             } else {
-                Oid::from_str(&oid).unwrap()
+                if let Some((oid, _stored_skip)) = rest {
+                    Oid::from_str(&oid).unwrap()
+                } else {
+                    panic!("don't know which commit to continue from")
+                }
             };
 
         eprintln!("should cherry-pick starting from oid {}", commit_id);

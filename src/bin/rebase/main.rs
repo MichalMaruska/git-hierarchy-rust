@@ -458,8 +458,8 @@ fn main() {
         // old: rebase_continue_git1(repository, &segment_name)
         rebase_segment_continue(&repository).unwrap();
     } else {
-        if let Ok((segment, _commit, _skip)) = segment_to_continue(&repository) {
-            eprintln!("{} {}",Colorize::bright_magenta("rebase underway, must use continue -c"), segment);
+        if let Some((segment_name, _)) = segment_to_continue(&repository) {
+            eprintln!("{} {}",Colorize::bright_magenta("rebase underway, must use continue -c"), segment_name);
             exit(1);
         }
     }
