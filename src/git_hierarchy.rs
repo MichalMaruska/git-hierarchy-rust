@@ -178,18 +178,23 @@ impl<'repo> Segment<'repo> {
         )
     }
 
-    // reference to oid
-    // start to base ?
-    pub fn reset(&self, repository: &'repo Repository, oid: Oid) {
+    // reference to head_oid
+    // start to base.
+    // todo: reflog message?
+    pub fn reset(&self, repository: &'repo Repository, head_oid: Oid) {
 
-        let head_reference = self.reference.borrow();
-        // I want to refresh this!
-        debug!("reset: the head itself? {} with {}",
-               head_reference.name().unwrap(),
-               oid);
-        drop(head_reference);
+        if true {
+            let head_reference = self.reference.borrow();
+            // I want to refresh this!
+            debug!("reset: the head itself? {} with {}",
+                   head_reference.name().unwrap(),
+                   head_oid);
+            drop(head_reference);
+        }
+
         // we cannot extract other references from there.
-        self.reference.replace_with(|r| r.set_target(oid, "rebased").unwrap());
+        self.reference.replace_with(|r|
+                                    r.set_target(head_oid, "rebased").unwrap());
 
         let base = self.base(repository);
         debug!("base to {:?}", base.target());
