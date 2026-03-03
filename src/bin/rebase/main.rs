@@ -18,7 +18,7 @@ use git2::{Branch, BranchType, Error, Commit, Reference, ReferenceFormat, Reposi
 #[allow(unused_imports)]
 use tracing::{span, Level, debug, info, warn,error};
 
-use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref, force_head_to, open_repository};
+use ::git_hierarchy::base::{checkout_new_head_at, git_same_ref, open_repository};
 use ::git_hierarchy::execute::git_run;
 use ::git_hierarchy::utils::{
     extract_name, iterator_symmetric_difference, init_tracing,
@@ -161,32 +161,10 @@ fn remerge_sum<'repo>(
             cmdline.extend(graphed_summands.iter().map(|s| s.node_identity()));
 
             git_run(repository, &cmdline)?;
-
-
             // "commit": move the SUM head with reflog message:
-            force_head_to(
-                repository,
-                sum.name(),
-                // have to sync
-                repository
-                    .find_branch("temp-sum", BranchType::Local)
-                    .unwrap()
-                    .get(),
-            );
-            // git_run("branch", "--force", sum.Name(), tempHead)
-            debug!("delete: {:?}", temp_head.name());
-            if !git_run(
-                repository,
-                &["branch", "-D", temp_head.name().unwrap().unwrap()],
-            )
-                .is_ok_and(|x| x.success())
-            {
-                panic!("branch -D failed");
-            }
-
+            sum.reset(repository.head()?.resolve()?.target().unwrap());
         } else {
             // libgit2
-
             assert!(checkout_new_head_at(repository, None, &first.commit()?).is_none());
 
             // Options:
@@ -259,8 +237,7 @@ fn remerge_sum<'repo>(
             repository.cleanup_state().expect("cleaning up should succeed");
 
             // this both on the Repo/storer both here in our Data ?
-            sum.reference.borrow_mut().set_target(new_oid, "re-merge")
-                .expect("should update the symbolic reference -- sum");
+            sum.reset(new_oid);
         }
     }
 
