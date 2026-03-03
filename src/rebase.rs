@@ -80,9 +80,10 @@ fn marker_filename(repository: &Repository) -> PathBuf {
     repository.commondir().join(MARKER_FILENAME)
 }
 
+// see `cleanup_segment_rebase' which removes it.
 fn create_marker_file(repository: &Repository, content: &str) -> io::Result<()> {
     let path = marker_filename(repository);
-    // todo: a Git reference?
+    // todo: use a Git reference instead?
     // persistent mark, if we fail, and during the session.
     debug!("Create marker: {:?}", path);
     fs::write(path, content)
@@ -261,6 +262,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
     // checkout to that ref
     // todo: git stash
     // must change to the directory!
+
     let temp_head = TEMP_HEAD_NAME;
     Branch::name_is_valid(temp_head).unwrap();
 
@@ -375,6 +377,7 @@ pub fn segment_to_continue(repository: &Repository) -> Option<(String,Option<(St
     let path = marker_filename(repository);
 
     if ! fs::exists(&path).unwrap() {
+        // eprintln!
         warn!("marker file does not exist -- no segment is being rebased.");
         return None;
     }
@@ -408,6 +411,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
             if repository.state() == RepositoryState::CherryPick {
                 // read the CHERRY_PICK_HEAD
                 // todo: convert to step.step2...
+                // mmc: so this is the same as `oid' ?
                 let commit_id = Oid::from_str(read_cherry_pick_head(repository).as_str().trim()).unwrap();
                 debug!("should continue the cherry-pick {:?}", commit_id);
 
@@ -415,11 +419,17 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
                 option.show(StatusShow::Index);
                 let statuses = repository.statuses(Some(&mut option))?;
                 if ! statuses.is_empty() {
+                    debug!("so we have {} changed files", statuses.len());
+                    // if !repository.index().unwrap().is_empty()
+                    // fixme: this is misleading!
+
+                    // commit it, or reset the state?
                     debug!("non-empty index -> commit...");
                     let to_apply = repository.find_commit(commit_id).unwrap();
 
                     let parent = repository.head().unwrap().peel_to_commit().unwrap();
                     let new_oid = commit_cherry_picked(repository,
+                                                       // todo: it's okay to skip:
                                                        &to_apply,
                                                        &parent);
                     debug!("new commit created {new_oid}");
@@ -446,7 +456,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         record_processed_commit(repository, commit_id, true).unwrap();
 
         assert!(repository_clean(repository));
-        continue_segment_cherry_pick(repository, &segment, commit_id, skip)?;
+        continue_segment_cherry_pick(repository, &segment, commit_id, skip)?; // starting from where?
 
         segment.reset(repository,
                       repository.head().unwrap().peel_to_commit().unwrap().id());
