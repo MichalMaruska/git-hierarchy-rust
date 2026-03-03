@@ -2,11 +2,12 @@
 #![deny(elided_lifetimes_in_paths)]
 
 use std::path::PathBuf;
-use ::git_hierarchy::git_hierarchy::{GitHierarchy};
-use ::git_hierarchy::rebase::{check_segment, rebase_segment};
-use ::git_hierarchy::utils::{init_tracing};
-use ::git_hierarchy::base::open_repository;
 use clap::Parser;
+
+use git_hierarchy::git_hierarchy::{GitHierarchy};
+use git_hierarchy::rebase::{check_segment, rebase_segment};
+use git_hierarchy::utils::{init_tracing};
+use git_hierarchy::base::open_repository;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
