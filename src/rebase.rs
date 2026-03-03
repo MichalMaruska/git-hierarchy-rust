@@ -317,7 +317,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
             .unwrap()
             .get(),
     );
-    cleanup_segment_rebase(repository, segment, temp_head);
+    cleanup_segment_rebase(repository, segment);
     Ok(RebaseResult::Done)
 }
 
@@ -343,7 +343,7 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<R
                     .unwrap()
                     .get(),
             );
-            cleanup_segment_rebase(repository, &segment, tmp_head);
+            cleanup_segment_rebase(repository, &segment);
             Ok(RebaseResult::Done)
         } else {
             // mismatch
@@ -467,10 +467,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         segment.reset(repository,
                       repository.head().unwrap().peel_to_commit().unwrap().id());
 
-        let tmp_head: Branch<'_> = repository
-            .find_branch(TEMP_HEAD_NAME, BranchType::Local)
-            .unwrap();
-        cleanup_segment_rebase(repository, &segment, tmp_head);
+        cleanup_segment_rebase(repository, &segment);
         Ok(RebaseResult::Done)
     } else {
         Err(RebaseError::WrongHierarchy(segment_name))
@@ -491,16 +488,9 @@ fn drop_temporary_head(repository: &Repository, mut temp_head: Branch<'_>) {
 }
 
 // bad name:
-fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>,
-                          temp_head: Branch<'_>) {
-
-    debug!("delete: {:?} {}", temp_head.name().unwrap().unwrap(),
-           temp_head.get().target().unwrap());
-
-    drop_temporary_head(repository, temp_head);
-
+fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>) {
     let path = marker_filename(repository);
-    debug!("delete: {:?}", path);
+    debug!("delete marker: {:?}", path);
     fs::remove_file(path).unwrap();
 }
 
