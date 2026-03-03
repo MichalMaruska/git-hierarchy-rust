@@ -474,19 +474,6 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
     }
 }
 
-// strange this mut. caller makes a copy?
-fn drop_temporary_head(repository: &Repository, mut temp_head: Branch<'_>) {
-    if true {
-        temp_head.delete().expect("failed to delete a branch");
-    } else if !git_run(
-            repository,
-            &["branch", "-D", temp_head.name().unwrap().unwrap()],
-        ).is_ok_and(|x| x.success())
-        {
-            panic!("branch -D failed");
-        }
-}
-
 // bad name:
 fn cleanup_segment_rebase(repository: &Repository, _segment: &Segment<'_>) {
     let path = marker_filename(repository);
