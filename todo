@@ -30,3 +30,17 @@ if it's not -- need -i option
 // todo:
 // shorthand
 Reference::normalize_name(refname: &str, flags: ReferenceFormat) -> Result<String, Error> {
+
+
+* globally:
+#![deny(elided_lifetimes_in_paths)]
+
+
+* bug:
+SORRY nothing staged, empty -- skip?
+
+then
+-c
+removes the ...
+and
+-c fails
