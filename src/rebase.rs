@@ -3,7 +3,7 @@
 // rebase segment.
 use git2::{Branch, BranchType, Error, Commit,
            Oid,
-           Reference, Repository,RepositoryState,
+           Repository,RepositoryState,
            StatusOptions, StatusShow,
 
            CherrypickOptions,
