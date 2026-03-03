@@ -118,6 +118,7 @@ pub fn repository_clean(repository: &Repository) -> bool {
         .include_ignored(false);
     let statuses = repository.statuses(Some(options)).unwrap();
     if ! statuses.is_empty() {
+        eprintln!("repository is not clean: ");
         for entry in statuses.iter() {
             eprintln!("{:?}", entry.path());
         }
