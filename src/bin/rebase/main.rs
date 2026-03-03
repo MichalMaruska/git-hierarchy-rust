@@ -139,9 +139,7 @@ fn remerge_sum<'repo>(
         );
 
         if graphed_summands.len() > 2 {
-            let temp_head = checkout_new_head_at(repository, Some("temp-sum"),
-                                                 &first.commit()?)
-                .unwrap();
+            checkout_new_head_at(repository, None, &first.commit()?);
 
             // use  git_run or?
             let mut cmdline = vec![
