@@ -296,14 +296,6 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
                                          ).unwrap();
         // move
         segment.reset(repository, commit.id());
-
-        // mmc: why still keeping the temp_head?
-        // set temp_head to point at commit:
-        debug!("setting {:?} at {:?} to {:?}",temp_head.name().unwrap().unwrap(),
-               temp_head.get().target().unwrap(),
-               commit.id());
-        temp_head = Branch::wrap(
-            temp_head.get_mut().set_target(commit.id(), "rebased").unwrap());
     }
 
     cleanup_segment_rebase(repository, segment);
