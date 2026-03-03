@@ -1,4 +1,3 @@
-// todo: global?
 #![deny(elided_lifetimes_in_paths)]
 
 use std::path::PathBuf;
@@ -17,7 +16,8 @@ struct Cli {
 
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
-
+    // todo: continue -> use git-rebase-poset -c
+    // should this be an invocation of git-rebase-poset?
     segment_name: String,
 }
 
@@ -32,6 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         Err(e) => panic!("failed to open: {}", e),
     };
 
+    // continue...
     let gh = git_hierarchy::git_hierarchy::load(&repository, &cli.segment_name).unwrap();
     if let GitHierarchy::Segment(segment) = gh {
         check_segment(&repository, &segment)?;

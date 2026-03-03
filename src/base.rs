@@ -109,7 +109,7 @@ pub fn staged_files<'repo>(repository: &'repo Repository) -> Result<Statuses<'re
     repository.statuses(Some(&mut status_options))
 }
 
-// Todo: I need my error.
+// todo: I need my error.  Result<Statuses<'_>, Error>
 // why not repository.state() == RepositoryState::Clean
 pub fn repository_clean(repository: &Repository) -> bool {
     // rely on
