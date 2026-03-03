@@ -283,6 +283,13 @@ impl<'repo> Sum<'repo> {
         }
     }
 
+    pub fn reset(&self, head_oid: Oid) {
+        // we cannot extract other references from there.
+        // self.reference.borrow_mut().set_target(new_oid, "re-merge")
+        self.reference.replace_with(|r|
+                                    r.set_target(head_oid, "re-merged").unwrap());
+    }
+
     pub fn create<'a>(
         repository: &'repo Repository,
         name: &str,
