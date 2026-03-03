@@ -318,7 +318,8 @@ fn main() {
     if !cli.replace.is_empty() {
         // also, in this case I don't start *implicitly* by HEAD.
         if cli.root_reference.is_none() {
-            eprintln!("when --replace is used, the top must be stated ... {}", current_branch(&repository).unwrap());
+            eprintln!("when --replace is used, the top must be stated ... {}",
+                      current_branch(&repository).unwrap());
             std::process::exit(1);
         }
     }
@@ -326,8 +327,9 @@ fn main() {
     let root = cli
         .root_reference
         .unwrap_or_else(|| {
-            let head = current_branch(&repository).expect("wrong state");
+            let head = current_branch(&repository).expect("no current branch chosen");
             info!("Start from the HEAD = {}", head);
+
             head
         });
 
