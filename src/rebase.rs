@@ -307,16 +307,6 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
             temp_head.get_mut().set_target(commit.id(), "rebased").unwrap());
     }
 
-    // I have to re-find it?
-    rebase_segment_finish(
-        repository,
-        segment,
-        // temp_head.get()
-        repository
-            .find_branch(TEMP_HEAD_NAME, BranchType::Local)
-            .unwrap()
-            .get(),
-    );
     cleanup_segment_rebase(repository, segment);
     Ok(RebaseResult::Done)
 }
@@ -335,14 +325,7 @@ fn rebase_continue_git1(repository: &Repository, segment_name: &str) -> Result<R
             .unwrap();
         if tmp_head.is_head() {
             //name: &str, branch_type: BranchType) -> Result<Branch<'_>, Error> {head();
-            rebase_segment_finish(
-                repository,
-                &segment,
-                repository
-                    .find_branch(TEMP_HEAD_NAME, BranchType::Local)
-                    .unwrap()
-                    .get(),
-            );
+            panic!("rebase_segment_finish not supported anymore");
             cleanup_segment_rebase(repository, &segment);
             Ok(RebaseResult::Done)
         } else {
@@ -391,8 +374,6 @@ fn continue_segment_cherry_pick<'repo>(repository: &'repo Repository,
                                      parent).unwrap();
     // might need this if nothing to cherrypick anymore.
     segment.reset(repository, commit.id());
-    // fixme:
-    // rebase_segment_finish(
     Ok(())
 }
 
@@ -490,17 +471,6 @@ fn rebase_empty_segment<'repo>(
     segment.reset(repository,
                   segment.base(repository).peel_to_commit()?.id());
     Ok(RebaseResult::Done)
-}
-
-fn rebase_segment_finish<'repo>(
-    repository: &'repo Repository,
-    segment: &Segment<'repo>,
-    new_head: &Reference<'_>,
-) {
-    // bug: segment.reset(repository);  // bug: does not reload the head of the segment!
-
-    // reflog etc.
-    force_head_to(repository, segment.name(), new_head);
 }
 
 pub fn check_segment(repository: &Repository, segment: &Segment<'_>) -> Result<(), RebaseError>
