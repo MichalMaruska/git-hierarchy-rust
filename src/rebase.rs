@@ -45,7 +45,7 @@ pub enum RebaseResult {
 #[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum RebaseError {
-    #[error("hierarchy broken at {0}")]
+    #[error("hierarchy broken at {}", .0)]
     WrongHierarchy(String),
     #[error("repository in wrong state during rebase")]
     WrongState,
