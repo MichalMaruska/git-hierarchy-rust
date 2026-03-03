@@ -247,7 +247,7 @@ pub fn rebase_segment<'repo>(repository: &'repo Repository, segment: &Segment<'r
 
     // fixme: if we are in the middle of rebase?
     if repository.state() != RepositoryState::Clean {
-        debug!("the repository is not clean");
+        error!("the repository is not clean");
         return Err(RebaseError::WrongState);
     }
 
