@@ -274,8 +274,6 @@ struct Cli {
     #[arg(long, short='g')]
     directory: Option<PathBuf>,
 
-    root_reference: Option<String>,
-
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
     #[arg(short='s')]
@@ -287,6 +285,9 @@ struct Cli {
     // suffix, or  suffix-remove, suffix-add
     #[arg(long, short = 'c', num_args(1..3))]
     clone: Vec<String>,
+
+    // fixme: here we can use -- to end the vector?
+    root_reference: Option<String>,
 }
 
 // detached head? -> None
