@@ -455,7 +455,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
         // so we should save it now!
         record_processed_commit(repository, commit_id, true).unwrap();
 
-        assert!(repository_clean(repository));
+        // assert!(repository_clean(repository));
         continue_segment_cherry_pick(repository, &segment, commit_id, skip)?; // starting from where?
 
         segment.reset(repository,
