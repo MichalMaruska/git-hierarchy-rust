@@ -444,7 +444,10 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
                 // we need the next one.
                 commit_id
             } else {
-                if let Some((oid, _stored_skip)) = rest {
+                debug!("so cherry-pick finished, for some reason we need to continue");
+                // this means .... we couldn't start cherry-pick?
+                if let Some((oid, stored_skip)) = rest {
+                    skip = stored_skip;
                     Oid::from_str(&oid).unwrap()
                 } else {
                     panic!("don't know which commit to continue from")
