@@ -102,12 +102,13 @@ fn record_processed_commit(repository: &'_ Repository, oid: Oid, applied: bool) 
 
     let marker =
         if applied {
-            "0"
-        } else {
             "1"
+        } else {
+            "0"
         };
     writeln!(file, "{}", marker)?;
-    writeln!(file, "{}", &format!("{}", oid))?;
+    writeln!(file, "{}", oid)?;
+    debug!("{} {}", oid, marker);
     Ok(())
 }
 
