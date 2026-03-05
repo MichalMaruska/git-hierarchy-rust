@@ -454,7 +454,7 @@ pub fn rebase_segment_continue(repository: &Repository) -> Result<RebaseResult, 
                 }
             };
 
-        eprintln!("should cherry-pick starting from oid {}", commit_id);
+        eprintln!("should cherry-pick starting from oid {} + {}", commit_id, skip);
         // so we should save it now!
         record_processed_commit(repository, commit_id, true).unwrap();
 
