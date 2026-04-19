@@ -354,6 +354,10 @@ impl<'repo> Sum<'repo> {
             }).collect()
     }
 
+    pub fn summand_count(&self) -> usize {
+        self.reference.borrow().peel_to_commit().unwrap().parent_count()
+    }
+
     pub fn name(&self) -> &str {
         // fixme: same as ....
         // branch_name(&self.reference.borrow());

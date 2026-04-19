@@ -518,12 +518,11 @@ pub fn check_sum<'repo>(
     sum: &Sum<'repo>,
     object_map: &HashMap<String, GitHierarchy<'repo>>,
 ) -> Result<(), RebaseError> {
-    let count = sum.reference.borrow().peel_to_commit().unwrap().parent_count();
 
     // terrible:
     // !i>2 in Rust  means ~i>2 in C
     // https://users.rust-lang.org/t/why-does-rust-use-the-same-symbol-for-bitwise-not-or-inverse-and-logical-negation/117337/2
-    if count <= 1 {
+    if let count = sum.summand_count() && count <= 1 {
         warn!("not a merge: {}, only {} parent commits", sum.name(), count);
         return Err(RebaseError::WrongHierarchy(sum.name().to_owned()));
     };
